@@ -1,25 +1,27 @@
-﻿using Rocket.Unturned;
-using Rocket.Unturned.Commands;
+﻿using Rocket.API;
+using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using System;
+using System.Collections.Generic;
 
 namespace ApokPT.RocketPlugins
 {
     class WreckingBallCommand : IRocketCommand
     {
-
-        public void Execute(RocketPlayer caller, string[] cmd)
+        public void Execute(IRocketPlayer caller, string[] cmd)
         {
 
             string command = String.Join(" ", cmd);
 
-            if (!caller.IsAdmin && !WreckingBall.Instance.Configuration.Enabled) return;
+            if (!caller.IsAdmin && !WreckingBall.Instance.Configuration.Instance.Enabled) return;
 
-            if (!caller.IsAdmin && !caller.Permissions.Contains("wreck")) return;
+            if (!caller.IsAdmin && !caller.HasPermission("wreck")) return;
+
+            UnturnedPlayer player = (UnturnedPlayer)caller;
 
             if (String.IsNullOrEmpty(command.Trim()))
             {
-                RocketChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help"));
+                UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help"));
                 return;
             }
             else
@@ -31,20 +33,20 @@ namespace ApokPT.RocketPlugins
                     switch (oper[0])
                     {
                         case "confirm":
-                            WreckingBall.Instance.Confirm(caller);
+                            WreckingBall.Instance.Confirm(player);
                             break;
                         case "abort":
-                            RocketChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_aborted"));
+                            UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_aborted"));
                             WreckingBall.Instance.Abort();
                             break;
                         case "scan":
                             if (oper.Length == 3)
                             {
-                                WreckingBall.Instance.Scan(caller, oper[1], Convert.ToUInt32(oper[2]));
+                                WreckingBall.Instance.Scan(player, oper[1], Convert.ToUInt32(oper[2]));
                             }
                             else
                             {
-                                RocketChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_scan"));
+                                UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_scan"));
                             }
                             break;
                         case "teleport":
@@ -54,32 +56,32 @@ namespace ApokPT.RocketPlugins
                                 switch (oper[1])
                                 {
                                     case "b":
-                                        WreckingBall.Instance.Teleport(caller, true);
+                                        WreckingBall.Instance.Teleport(player, true);
                                         break;
                                     case "s":
-                                        WreckingBall.Instance.Teleport(caller, false);
+                                        WreckingBall.Instance.Teleport(player, false);
                                         break;
                                     default:
-                                        RocketChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_teleport"));
+                                        UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_teleport"));
                                         break;
                                 }
                             }
                             else
                             {
-                                RocketChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_teleport"));
+                                UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_teleport"));
                                 break;
                             }
                             break;
                         default:
-                            try { WreckingBall.Instance.Wreck(caller, oper[0], Convert.ToUInt32(oper[1])); }
-                            catch { WreckingBall.Instance.Wreck(caller, oper[0], 20); }
+                            try { WreckingBall.Instance.Wreck(player, oper[0], Convert.ToUInt32(oper[1])); }
+                            catch { WreckingBall.Instance.Wreck(player, oper[0], 20); }
                             break;
                     }
                     return;
                 }
                 else
                 {
-                    RocketChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help"));
+                    UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help"));
                 }
             }
         }
@@ -91,12 +93,39 @@ namespace ApokPT.RocketPlugins
 
         public string Name
         {
-            get { return "wreck"; }
+            get { return "w"; }
         }
 
-        public bool RunFromConsole
+        public AllowedCaller AllowedCaller
         {
-            get { return false; }
+            get
+            {
+                return AllowedCaller.Player;
+            }
+        }
+
+        public string Syntax
+        {
+            get
+            {
+                return ".";
+            }
+        }
+
+        public List<string> Aliases
+        {
+            get
+            {
+                return new List<string> { "wreck" };
+            }
+        }
+
+        public List<string> Permissions
+        {
+            get
+            {
+                return new List<string> { "WreckingBall.wreck" };
+            }
         }
     }
 }

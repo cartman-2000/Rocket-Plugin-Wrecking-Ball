@@ -4,17 +4,8 @@ namespace ApokPT.RocketPlugins
 {
     public class WreckingBallConfiguration : IRocketPluginConfiguration
     {
+        public bool Enabled = true;
 
-        public bool Enabled;
-
-        public IRocketPluginConfiguration DefaultConfiguration
-        {
-            get
-            {
-                WreckingBallConfiguration config = new WreckingBallConfiguration();
-                config.Enabled = true;
-                return config;
-            }
-        }
+        public void LoadDefaults() { }
     }
 }

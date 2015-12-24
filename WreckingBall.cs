@@ -1,7 +1,8 @@
-﻿using Rocket.Unturned;
+﻿using Rocket.API.Collections;
+using Rocket.Core.Plugins;
+using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
-using Rocket.Unturned.Plugins;
-using SDG;
+using SDG.Unturned;
 using System;
 using System.Collections.Generic;
 using System.Timers;
@@ -47,13 +48,13 @@ namespace ApokPT.RocketPlugins
         private bool processing = false;
 
 
-        internal void Wreck(RocketPlayer player, string filter, uint radius, bool scan = false)
+        internal void Wreck(UnturnedPlayer player, string filter, uint radius, bool scan = false)
         {
             if (!scan)
             {
                 if (processing)
                 {
-                    RocketChat.Say(player, Translate("wreckingball_progress", (destroyList.Count - dIdx), (Math.Ceiling((double)(destroyList.Count * delSpeed) / 1000))));
+                    UnturnedChat.Say(player, Translate("wreckingball_progress", (destroyList.Count - dIdx), (Math.Ceiling((double)(destroyList.Count * delSpeed) / 1000))));
                     return;
                 }
                 Abort();
@@ -69,39 +70,45 @@ namespace ApokPT.RocketPlugins
 
             ushort item = 0;
             float distance = 0;
-
-            foreach (Transform trf in SDG.StructureManager.Structures)
+            for (int k = 0; k < StructureManager.StructureRegions.GetLength(0); k++)
             {
-                distance = Vector3.Distance(trf.position, player.Position);
-                if (distance < radius)
+                for (int l = 0; l < StructureManager.StructureRegions.GetLength(1); l++)
                 {
-                    item = Convert.ToUInt16(trf.name);
-                    if (WreckCategories.Instance.filterItem(item, Filter) || Filter.Contains('*'))
+                    foreach (Transform current in StructureManager.StructureRegions[k, l].Structures)
                     {
-                        if (scan)
-                            WreckCategories.Instance.report(item, (int)distance);
-                        else
-                            destroyList.Add(new Destructible(trf, "s"));
-                    }
-                }
-            }
-
-            for (int k = 0; k < BarricadeManager.BarricadeRegions.GetLength(0); k++)
-            {
-                for (int l = 0; l < BarricadeManager.BarricadeRegions.GetLength(1); l++)
-                {
-                    foreach (Transform trf in BarricadeManager.BarricadeRegions[k, l].Barricades)
-                    {
-                        distance = Vector3.Distance(trf.position, player.Position);
+                        distance = Vector3.Distance(current.position, player.Position);
                         if (distance < radius)
                         {
-                            item = Convert.ToUInt16(trf.name);
+                            item = Convert.ToUInt16(current.name);
                             if (WreckCategories.Instance.filterItem(item, Filter) || Filter.Contains('*'))
                             {
                                 if (scan)
                                     WreckCategories.Instance.report(item, (int)distance);
                                 else
-                                    destroyList.Add(new Destructible(trf, "b"));
+                                    destroyList.Add(new Destructible(current, "s"));
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            for (int k = 0; k < BarricadeManager.BarricadeRegions.GetLength(0); k++)
+            {
+                for (int l = 0; l < BarricadeManager.BarricadeRegions.GetLength(1); l++)
+                {
+                    foreach (Transform current in BarricadeManager.BarricadeRegions[k, l].Barricades)
+                    {
+                        distance = Vector3.Distance(current.position, player.Position);
+                        if (distance < radius)
+                        {
+                            item = Convert.ToUInt16(current.name);
+                            if (WreckCategories.Instance.filterItem(item, Filter) || Filter.Contains('*'))
+                            {
+                                if (scan)
+                                    WreckCategories.Instance.report(item, (int)distance);
+                                else
+                                    destroyList.Add(new Destructible(current, "b"));
                             }
                         }
                     }
@@ -110,7 +117,7 @@ namespace ApokPT.RocketPlugins
 
             if (Filter.Contains('v') || Filter.Contains('*'))
             {
-                foreach (InteractableVehicle vehicle in SDG.VehicleManager.Vehicles)
+                foreach (InteractableVehicle vehicle in VehicleManager.Vehicles)
                 {
                     distance = Vector3.Distance(vehicle.transform.position, player.Position);
                     if (distance < radius)
@@ -151,10 +158,10 @@ namespace ApokPT.RocketPlugins
             if (destroyList.Count >= 1)
                 Instruct(player);
             else
-                RocketChat.Say(player, Translate("wreckingball_not_found", radius));
+                UnturnedChat.Say(player, Translate("wreckingball_not_found", radius));
         }
 
-        internal void Scan(RocketPlayer caller, string filter, uint radius)
+        internal void Scan(UnturnedPlayer caller, string filter, uint radius)
         {
             Wreck(caller, filter, radius, true);
             string report = "";
@@ -163,23 +170,23 @@ namespace ApokPT.RocketPlugins
                 foreach (KeyValuePair<char, uint> reportFilter in WreckCategories.Instance.reportList)
                     report += " " + WreckCategories.Instance.category[reportFilter.Key].Name + ": " + reportFilter.Value + ",";
                 if (report != "") report = report.Remove(report.Length - 1);
-                RocketChat.Say(caller, Translate("wreckingball_scan", radius, report));
+                UnturnedChat.Say(caller, Translate("wreckingball_scan", radius, report));
             }
             else
             {
-                RocketChat.Say(caller, Translate("wreckingball_not_found", radius));
+                UnturnedChat.Say(caller, Translate("wreckingball_not_found", radius));
             }
 
 
 
         }
 
-        internal void Teleport(RocketPlayer caller, bool toBarricades = false)
+        internal void Teleport(UnturnedPlayer caller, bool toBarricades = false)
         {
 
-            if (SDG.StructureManager.Structures.Count == 0 && BarricadeManager.BarricadeRegions.LongLength == 0)
+            if (StructureManager.StructureRegions.LongLength == 0 && BarricadeManager.BarricadeRegions.LongLength == 0)
             {
-                RocketChat.Say(caller, Translate("wreckingball_map_clear"));
+                UnturnedChat.Say(caller, Translate("wreckingball_map_clear"));
                 return;
             }
 
@@ -187,13 +194,19 @@ namespace ApokPT.RocketPlugins
 
             if (!toBarricades)
             {
-                foreach (Transform trf in SDG.StructureManager.Structures)
+                for (int k = 0; k < StructureManager.StructureRegions.GetLength(0); k++)
                 {
-                    if (Vector3.Distance(trf.position, caller.Position) > 200)
+                    for (int l = 0; l < StructureManager.StructureRegions.GetLength(1); l++)
                     {
-                        tpVector = new Vector3(trf.position.x, trf.position.y + 3, trf.position.z);
-                        caller.Teleport(tpVector, caller.Rotation);
-                        return;
+                        foreach (Transform current in StructureManager.StructureRegions[k, l].Structures)
+                        {
+                            if (Vector3.Distance(current.position, caller.Position) > 20)
+                            {
+                                tpVector = new Vector3(current.position.x, current.position.y + 3, current.position.z);
+                                caller.Teleport(tpVector, caller.Rotation);
+                                return;
+                            }
+                        }
                     }
                 }
             }
@@ -203,11 +216,11 @@ namespace ApokPT.RocketPlugins
                 {
                     for (int l = 0; l < BarricadeManager.BarricadeRegions.GetLength(1); l++)
                     {
-                        foreach (Transform trf in BarricadeManager.BarricadeRegions[k, l].Barricades)
+                        foreach (Transform current in BarricadeManager.BarricadeRegions[k, l].Barricades)
                         {
-                            if (Vector3.Distance(trf.position, caller.Position) > 20)
+                            if (Vector3.Distance(current.position, caller.Position) > 20)
                             {
-                                tpVector = new Vector3(trf.position.x, trf.position.y + 3, trf.position.z + 3);
+                                tpVector = new Vector3(current.position.x, current.position.y + 3, current.position.z + 2);
                                 caller.Teleport(tpVector, caller.Rotation);
                                 return;
                             }
@@ -215,22 +228,19 @@ namespace ApokPT.RocketPlugins
                     }
                 }
             }
-            Vector3 trfPos = SDG.StructureManager.Structures[UnityEngine.Random.Range(0, SDG.StructureManager.Structures.Count - 1)].position;
-            tpVector = new Vector3(trfPos.x, trfPos.y + 5, trfPos.z);
-            caller.Teleport(tpVector, caller.Rotation);
         }
 
-        private void Instruct(RocketPlayer caller)
+        private void Instruct(UnturnedPlayer caller)
         {
-            RocketChat.Say(caller, Translate("wreckingball_queued", destroyList.Count, (Math.Ceiling((double)(destroyList.Count * delSpeed) / 1000))));
-            RocketChat.Say(caller, Translate("wreckingball_prompt"));
+            UnturnedChat.Say(caller, Translate("wreckingball_queued", destroyList.Count, (Math.Ceiling((double)(destroyList.Count * delSpeed) / 1000))));
+            UnturnedChat.Say(caller, Translate("wreckingball_prompt"));
         }
 
-        internal void Confirm(RocketPlayer caller)
+        internal void Confirm(UnturnedPlayer caller)
         {
             if (destroyList.Count <= 0)
             {
-                RocketChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help"));
+                UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help"));
             }
             else
             {
@@ -241,7 +251,7 @@ namespace ApokPT.RocketPlugins
                     aTimer.AutoReset = true;
                 }
                 processing = true;
-                RocketChat.Say(caller, Translate("wreckingball_initiated", (Math.Ceiling((double)(destroyList.Count * delSpeed) / 1000))));
+                UnturnedChat.Say(caller, Translate("wreckingball_initiated", (Math.Ceiling((double)(destroyList.Count * delSpeed) / 1000))));
                 dIdx = 0;
                 aTimer.Enabled = true;
             }
@@ -255,7 +265,7 @@ namespace ApokPT.RocketPlugins
             dIdx = 0;
         }
 
-        private void OnTimedEvent(RocketPlayer caller)
+        private void OnTimedEvent(UnturnedPlayer caller)
         {
 
             try
@@ -274,7 +284,7 @@ namespace ApokPT.RocketPlugins
 
                 else if (destroyList[dIdx].Type == "v")
                 {
-                    try { destroyList[dIdx].Vehicle.askDamage(65535); }
+                    try { destroyList[dIdx].Vehicle.askDamage(65535,false); }
                     catch { }
                 }
                 else if (destroyList[dIdx].Type == "z")
@@ -291,8 +301,9 @@ namespace ApokPT.RocketPlugins
                 dIdx++;
                 if (destroyList.Count == dIdx)
                 {
-                    RocketChat.Say(caller, Translate("wreckingball_complete", dIdx));
+                    UnturnedChat.Say(caller, Translate("wreckingball_complete", dIdx));
                     StructureManager.save();
+                    BarricadeManager.save();
                     Abort();
                     processing = false;
                 }
@@ -306,11 +317,12 @@ namespace ApokPT.RocketPlugins
 
         // Translations
 
-        public override Dictionary<string, string> DefaultTranslations
+        public override TranslationList DefaultTranslations
         {
             get
             {
-                return new Dictionary<string, string>(){
+                return new TranslationList
+                {
                     {"wreckingball_scan","Found @ {0}m:{1}"},
                     {"wreckingball_map_clear","Map has no elements!"},
                     {"wreckingball_not_found","No elements found in a {0} radius!"},
