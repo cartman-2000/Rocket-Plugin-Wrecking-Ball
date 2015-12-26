@@ -28,6 +28,8 @@ namespace ApokPT.RocketPlugins
                     i.category.Add('p', new Category("Pillar", ConsoleColor.DarkMagenta));
                     i.category.Add('r', new Category("Roof", ConsoleColor.DarkMagenta));
                     i.category.Add('s', new Category("Stair", ConsoleColor.DarkMagenta));
+                    i.category.Add('m', new Category("Freeform", ConsoleColor.DarkMagenta));
+                    i.category.Add('n', new Category("Sign", ConsoleColor.DarkBlue));
                     i.category.Add('g', new Category("Guard", ConsoleColor.DarkBlue));
                     i.category.Add('i', new Category("Illumination", ConsoleColor.Yellow));
                     i.category.Add('a', new Category("Agriculture", ConsoleColor.Green));
@@ -55,6 +57,12 @@ namespace ApokPT.RocketPlugins
                     i.items.Add(384, 't');
                     i.items.Add(385, 't');
                     i.items.Add(386, 't');
+                    i.items.Add(1101, 't');
+                    i.items.Add(1102, 't');
+                    i.items.Add(1113, 't');
+                    i.items.Add(1119, 't');
+                    i.items.Add(1130, 't');
+                    i.items.Add(1131, 't');
                     // Door - door
                     i.items.Add(281, 'd');
                     i.items.Add(282, 'd');
@@ -138,6 +146,42 @@ namespace ApokPT.RocketPlugins
                     i.items.Add(323, 's');
                     i.items.Add(324, 's');
                     i.items.Add(377, 's');
+                    // Free Form Buildables
+                    i.items.Add(1058, 'm');
+                    i.items.Add(1059, 'm');
+                    i.items.Add(1060, 'm');
+                    i.items.Add(1061, 'm');
+                    i.items.Add(1062, 'm');
+                    i.items.Add(1063, 'm');
+                    i.items.Add(1064, 'm');
+                    i.items.Add(1065, 'm');
+                    i.items.Add(1066, 'm');
+                    i.items.Add(1067, 'm');
+                    i.items.Add(1068, 'm');
+                    i.items.Add(1069, 'm');
+                    i.items.Add(1070, 'm');
+                    i.items.Add(1071, 'm');
+                    i.items.Add(1072, 'm');
+                    i.items.Add(1073, 'm');
+                    i.items.Add(1074, 'm');
+                    i.items.Add(1075, 'm');
+                    i.items.Add(1083, 'm');
+                    i.items.Add(1084, 'm');
+                    i.items.Add(1085, 'm');
+                    i.items.Add(1086, 'm');
+                    i.items.Add(1087, 'm');
+                    i.items.Add(1088, 'm');
+                    i.items.Add(1089, 'm');
+                    i.items.Add(1090, 'm');
+                    i.items.Add(1091, 'm');
+                    i.items.Add(1092, 'm');
+                    i.items.Add(1093, 'm');
+                    i.items.Add(1094, 'm');
+                    // Signs
+                    i.items.Add(1095, 'n');
+                    i.items.Add(1096, 'n');
+                    i.items.Add(1097, 'n');
+                    i.items.Add(1098, 'n');
                     // Guard
                     i.items.Add(29, 'g');
                     i.items.Add(30, 'g');
@@ -146,6 +190,7 @@ namespace ApokPT.RocketPlugins
                     i.items.Add(47, 'g');
                     i.items.Add(287, 'g');
                     i.items.Add(365, 'g');
+                    i.items.Add(1050, 'g');
                     // Light
                     i.items.Add(359, 'i');
                     i.items.Add(360, 'i');
@@ -153,6 +198,7 @@ namespace ApokPT.RocketPlugins
                     i.items.Add(362, 'i');
                     i.items.Add(458, 'i');
                     i.items.Add(459, 'i');
+                    i.items.Add(1049, 'i');
                     // Agriculture
                     i.items.Add(330, 'a');
                     i.items.Add(331, 'a');
@@ -161,6 +207,14 @@ namespace ApokPT.RocketPlugins
                     i.items.Add(341, 'a');
                     i.items.Add(343, 'a');
                     i.items.Add(345, 'a');
+                    i.items.Add(1045, 'a');
+                    i.items.Add(1104, 'a');
+                    i.items.Add(1105, 'a');
+                    i.items.Add(1106, 'a');
+                    i.items.Add(1107, 'a');
+                    i.items.Add(1108, 'a');
+                    i.items.Add(1109, 'a');
+                    i.items.Add(1110, 'a');
                 };
                 return i;
             }
