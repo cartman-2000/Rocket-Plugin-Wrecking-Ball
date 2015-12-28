@@ -34,6 +34,7 @@ namespace ApokPT.RocketPlugins
                     i.category.Add('i', new Category("Illumination", ConsoleColor.Yellow));
                     i.category.Add('a', new Category("Agriculture", ConsoleColor.Green));
                     i.category.Add('v', new Category("Vehicle", ConsoleColor.DarkRed));
+                    i.category.Add('!', new Category("Uncategorized", ConsoleColor.White));
                     //i.category.Add('z', new Category("Zombie", ConsoleColor.DarkGreen));
 
                     // Zombie
@@ -188,6 +189,7 @@ namespace ApokPT.RocketPlugins
                     i.items.Add(45, 'g');
                     i.items.Add(46, 'g');
                     i.items.Add(47, 'g');
+                    i.items.Add(48, 'g');
                     i.items.Add(287, 'g');
                     i.items.Add(365, 'g');
                     i.items.Add(1050, 'g');
@@ -222,25 +224,40 @@ namespace ApokPT.RocketPlugins
 
         internal bool filterItem(ushort itemId, List<char> userRequest)
         {
-            return (items.ContainsKey(itemId) && userRequest.Contains(items[itemId]));
+            return ((items.ContainsKey(itemId) && userRequest.Contains(items[itemId])) || (!items.ContainsKey(itemId) && userRequest.Contains('!')));
         }
 
 
         internal Dictionary<char, uint> reportList = new Dictionary<char, uint>();
 
-        internal void report(ushort itemId, int range)
+        internal void report(ushort itemId, int range, bool printConsole, ulong owner = 0)
         {
-            if (!items.ContainsKey(itemId)) return;
-
-            if (reportList.ContainsKey(items[itemId]))
-                reportList[items[itemId]] += 1;
+            Category cat;
+            if (!items.ContainsKey(itemId))
+            {
+                if (reportList.ContainsKey('!'))
+                    reportList['!'] += 1;
+                else
+                    reportList.Add('!', 1);
+                cat = category['!'];
+            }
             else
-                reportList.Add(items[itemId], 1);
-
-            Category cat = category[items[itemId]];
-            Console.ForegroundColor = cat.Color;
-            Console.WriteLine(cat.Name + " @ " + range + "m" );
-            Console.ResetColor();
+            {
+                if (reportList.ContainsKey(items[itemId]))
+                    reportList[items[itemId]] += 1;
+                else
+                    reportList.Add(items[itemId], 1);
+                cat = category[items[itemId]];
+            }
+            if (printConsole || !items.ContainsKey(itemId))
+            {
+                Console.ForegroundColor = cat.Color;
+                if (owner == 0)
+                    Console.WriteLine(cat.Name + " (Id: " + itemId + ") @ " + range + "m");
+                else
+                    Console.WriteLine(cat.Name + " (Id: " + itemId + ") @ " + range + "m, Owner: " + owner);
+                Console.ResetColor();
+            }
         }
     }
 }

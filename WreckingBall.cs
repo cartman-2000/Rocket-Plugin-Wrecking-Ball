@@ -3,6 +3,7 @@ using Rocket.Core.Plugins;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using SDG.Unturned;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Timers;
@@ -70,6 +71,13 @@ namespace ApokPT.RocketPlugins
 
             ushort item = 0;
             float distance = 0;
+            byte x;
+            byte y;
+            ushort index;
+            ushort plant;
+            StructureRegion structureRegion;
+            BarricadeRegion barricadeRegion;
+
             for (int k = 0; k < StructureManager.StructureRegions.GetLength(0); k++)
             {
                 for (int l = 0; l < StructureManager.StructureRegions.GetLength(1); l++)
@@ -83,7 +91,12 @@ namespace ApokPT.RocketPlugins
                             if (WreckCategories.Instance.filterItem(item, Filter) || Filter.Contains('*'))
                             {
                                 if (scan)
-                                    WreckCategories.Instance.report(item, (int)distance);
+                                {
+                                    if (distance <= 10)
+                                        WreckCategories.Instance.report(item, (int)distance, true, StructureManager.tryGetInfo(current, out x, out y, out index, out structureRegion) ? structureRegion.structures[(int)index].owner : 0);
+                                    else
+                                        WreckCategories.Instance.report(item, (int)distance, false);
+                                }
                                 else
                                     destroyList.Add(new Destructible(current, "s"));
                             }
@@ -91,8 +104,7 @@ namespace ApokPT.RocketPlugins
                     }
                 }
             }
-
-
+            
             for (int k = 0; k < BarricadeManager.BarricadeRegions.GetLength(0); k++)
             {
                 for (int l = 0; l < BarricadeManager.BarricadeRegions.GetLength(1); l++)
@@ -106,7 +118,12 @@ namespace ApokPT.RocketPlugins
                             if (WreckCategories.Instance.filterItem(item, Filter) || Filter.Contains('*'))
                             {
                                 if (scan)
-                                    WreckCategories.Instance.report(item, (int)distance);
+                                {
+                                    if (distance <= 10)
+                                        WreckCategories.Instance.report(item, (int)distance, true, BarricadeManager.tryGetInfo(current, out x, out y, out plant, out index, out barricadeRegion) ? barricadeRegion.barricades[(int)index].owner : 0);
+                                    else
+                                        WreckCategories.Instance.report(item, (int)distance, false);
+                                }
                                 else
                                     destroyList.Add(new Destructible(current, "b"));
                             }
@@ -123,7 +140,7 @@ namespace ApokPT.RocketPlugins
                     if (distance < radius)
                     {
                         if (scan)
-                            WreckCategories.Instance.report(9999, (int)distance);
+                            WreckCategories.Instance.report(9999, (int)distance, false);
                         else
                             destroyList.Add(new Destructible(vehicle.transform, "v", vehicle));
                     }
@@ -141,12 +158,9 @@ namespace ApokPT.RocketPlugins
                         if (distance < radius)
                         {
                             if (scan)
-                                WreckCategories.Instance.report(9998, (int)distance);
+                                WreckCategories.Instance.report(9998, (int)distance, false);
                             else
-                            {
                                 destroyList.Add(new Destructible(zombie.transform, "z", null, zombie));
-                            }
-
                         }
                     }
                 }
@@ -165,12 +179,18 @@ namespace ApokPT.RocketPlugins
         {
             Wreck(caller, filter, radius, true);
             string report = "";
+            uint totalCount = 0;
             if (WreckCategories.Instance.reportList.Count > 0)
             {
+
                 foreach (KeyValuePair<char, uint> reportFilter in WreckCategories.Instance.reportList)
+                {
                     report += " " + WreckCategories.Instance.category[reportFilter.Key].Name + ": " + reportFilter.Value + ",";
+                    totalCount += reportFilter.Value;
+                }
                 if (report != "") report = report.Remove(report.Length - 1);
-                UnturnedChat.Say(caller, Translate("wreckingball_scan", radius, report));
+                UnturnedChat.Say(caller, Translate("wreckingball_scan", totalCount, radius, report));
+                UnturnedChat.Say((CSteamID)0, Translate("wreckingball_scan", totalCount, radius, report));
             }
             else
             {
@@ -323,7 +343,7 @@ namespace ApokPT.RocketPlugins
             {
                 return new TranslationList
                 {
-                    {"wreckingball_scan","Found @ {0}m:{1}"},
+                    {"wreckingball_scan","Found {0} elements @ {1}m:{2}"},
                     {"wreckingball_map_clear","Map has no elements!"},
                     {"wreckingball_not_found","No elements found in a {0} radius!"},
                     {"wreckingball_complete","Wrecking Ball complete! {0} elements(s) Destroyed!"},
