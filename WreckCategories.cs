@@ -1,5 +1,9 @@
-﻿using System;
+﻿using Rocket.Core.Logging;
+using Rocket.Unturned.Chat;
+using Rocket.Unturned.Player;
+using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace ApokPT.RocketPlugins
 {
@@ -178,6 +182,18 @@ namespace ApokPT.RocketPlugins
                     i.items.Add(1092, 'm');
                     i.items.Add(1093, 'm');
                     i.items.Add(1094, 'm');
+                    i.items.Add(1144, 'm');
+                    i.items.Add(1145, 'm');
+                    i.items.Add(1146, 'm');
+                    i.items.Add(1147, 'm');
+                    i.items.Add(1148, 'm');
+                    i.items.Add(1149, 'm');
+                    i.items.Add(1150, 'm');
+                    i.items.Add(1151, 'm');
+                    i.items.Add(1152, 'm');
+                    i.items.Add(1153, 'm');
+                    i.items.Add(1154, 'm');
+                    i.items.Add(1155, 'm');
                     // Signs
                     i.items.Add(1095, 'n');
                     i.items.Add(1096, 'n');
@@ -230,7 +246,7 @@ namespace ApokPT.RocketPlugins
 
         internal Dictionary<char, uint> reportList = new Dictionary<char, uint>();
 
-        internal void report(ushort itemId, int range, bool printConsole, ulong owner = 0)
+        internal void report(UnturnedPlayer caller, ushort itemId, float range, bool printConsole, ulong owner = 0)
         {
             Category cat;
             if (!items.ContainsKey(itemId))
@@ -251,12 +267,20 @@ namespace ApokPT.RocketPlugins
             }
             if (printConsole || !items.ContainsKey(itemId))
             {
-                Console.ForegroundColor = cat.Color;
+                string msg = string.Empty;
                 if (owner == 0)
-                    Console.WriteLine(cat.Name + " (Id: " + itemId + ") @ " + range + "m");
+                    msg = cat.Name + " (Id: " + itemId + ") @ " + Math.Round(range, 2) + "m";
                 else
-                    Console.WriteLine(cat.Name + " (Id: " + itemId + ") @ " + range + "m, Owner: " + owner);
+                    msg = cat.Name + " (Id: " + itemId + ") @ " + Math.Round(range, 2) + "m, Owner: " + owner;
+
+                Console.ForegroundColor = cat.Color;
+                Console.WriteLine(msg);
                 Console.ResetColor();
+                WreckingBall.RconPrint(msg);
+                if (WreckingBall.Instance.Configuration.Instance.LogScans)
+                    Logger.Log(msg, false);
+                if (WreckingBall.Instance.Configuration.Instance.PrintToChat)
+                    UnturnedChat.Say(caller, msg, Color.yellow);
             }
         }
     }

@@ -1,5 +1,10 @@
-﻿using Rocket.API.Collections;
+﻿using Rocket.API;
+using Rocket.API.Collections;
+using Rocket.Core;
+using Rocket.Core.Commands;
+using Rocket.Core.Logging;
 using Rocket.Core.Plugins;
+using Rocket.Core.RCON;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using SDG.Unturned;
@@ -40,14 +45,45 @@ namespace ApokPT.RocketPlugins
         protected override void Load()
         {
             Instance = this;
+            if (Instance.Configuration.Instance.DestructionInterval == 0)
+            {
+                Instance.Configuration.Instance.DestructionInterval = 1;
+                Logger.LogWarning("Error: NumberPerSecond config value must be above 0.");
+            }
+            Instance.Configuration.Save();
+        }
+
+        [RocketCommand("wreck", "Destroy everything in a specific radius!", ".",AllowedCaller.Player)]
+        [RocketCommandPermission("WreckingBall.wreck")]
+        public void WreckExecute(IRocketPlayer caller, string[] cmd)
+        {
+            WreckingBallCommand.Execute(caller, cmd);
+        }
+
+        [RocketCommand("w", "Destroy everything in a specific radius!", ".", AllowedCaller.Player)]
+        [RocketCommandPermission("WreckingBall.wreck")]
+        public void WExecute(IRocketPlayer caller, string[] cmd)
+        {
+            WreckingBallCommand.Execute(caller, cmd);
         }
 
         private static List<Destructible> destroyList = new List<Destructible>();
         private static int dIdx = 0;
         private static Timer aTimer;
-        private uint delSpeed = 10;
         private bool processing = false;
 
+        internal static void RconPrint(CSteamID caller, string msg)
+        {
+            if (caller == CSteamID.Nil)
+                RconPrint(msg);
+            UnturnedChat.Say(caller, msg);
+        }
+
+        internal static void RconPrint(string msg)
+        {
+            if (R.Settings.Instance.RCON.Enabled && Instance.Configuration.Instance.PrintToRCON)
+                RCONServer.Broadcast(msg);
+        }
 
         internal void Wreck(UnturnedPlayer player, string filter, uint radius, bool scan = false)
         {
@@ -55,7 +91,7 @@ namespace ApokPT.RocketPlugins
             {
                 if (processing)
                 {
-                    UnturnedChat.Say(player, Translate("wreckingball_progress", (destroyList.Count - dIdx), (Math.Ceiling((double)(destroyList.Count * delSpeed) / 1000))));
+                    UnturnedChat.Say(player, Translate("wreckingball_progress", (destroyList.Count - dIdx), (Math.Ceiling((double)(destroyList.Count * Instance.Configuration.Instance.DestructionInterval) / 1000))));
                     return;
                 }
                 Abort();
@@ -93,9 +129,18 @@ namespace ApokPT.RocketPlugins
                                 if (scan)
                                 {
                                     if (distance <= 10)
-                                        WreckCategories.Instance.report(item, (int)distance, true, StructureManager.tryGetInfo(current, out x, out y, out index, out structureRegion) ? structureRegion.structures[(int)index].owner : 0);
+                                        try
+                                        {
+                                            WreckCategories.Instance.report(player, item, distance, true, StructureManager.tryGetInfo(current, out x, out y, out index, out structureRegion) ? structureRegion.structures[(int)index].owner : 0);
+                                        }
+                                        catch
+                                        {
+                                            UnturnedChat.Say(player, Translate("wreckingball_structure_array_sync_error"));
+                                            Logger.LogWarning(Translate("wreckingball_structure_array_sync_error"));
+                                            WreckCategories.Instance.report(player, item, distance, false);
+                                        }
                                     else
-                                        WreckCategories.Instance.report(item, (int)distance, false);
+                                        WreckCategories.Instance.report(player, item, distance, false);
                                 }
                                 else
                                     destroyList.Add(new Destructible(current, "s"));
@@ -120,9 +165,18 @@ namespace ApokPT.RocketPlugins
                                 if (scan)
                                 {
                                     if (distance <= 10)
-                                        WreckCategories.Instance.report(item, (int)distance, true, BarricadeManager.tryGetInfo(current, out x, out y, out plant, out index, out barricadeRegion) ? barricadeRegion.barricades[(int)index].owner : 0);
+                                        try
+                                        {
+                                            WreckCategories.Instance.report(player, item, distance, true, BarricadeManager.tryGetInfo(current, out x, out y, out plant, out index, out barricadeRegion) ? barricadeRegion.barricades[(int)index].owner : 0);
+                                        }
+                                        catch
+                                        {
+                                            UnturnedChat.Say(player, Translate("wreckingball_barricade_array_sync_error"));
+                                            Logger.LogWarning(Translate("wreckingball_barricade_array_sync_error"));
+                                            WreckCategories.Instance.report(player, item, distance, false);
+                                        }
                                     else
-                                        WreckCategories.Instance.report(item, (int)distance, false);
+                                        WreckCategories.Instance.report(player, item, distance, false);
                                 }
                                 else
                                     destroyList.Add(new Destructible(current, "b"));
@@ -140,7 +194,7 @@ namespace ApokPT.RocketPlugins
                     if (distance < radius)
                     {
                         if (scan)
-                            WreckCategories.Instance.report(9999, (int)distance, false);
+                            WreckCategories.Instance.report(player, 9999, (int)distance, false);
                         else
                             destroyList.Add(new Destructible(vehicle.transform, "v", vehicle));
                     }
@@ -158,7 +212,7 @@ namespace ApokPT.RocketPlugins
                         if (distance < radius)
                         {
                             if (scan)
-                                WreckCategories.Instance.report(9998, (int)distance, false);
+                                WreckCategories.Instance.report(player, 9998, (int)distance, false);
                             else
                                 destroyList.Add(new Destructible(zombie.transform, "z", null, zombie));
                         }
@@ -190,7 +244,9 @@ namespace ApokPT.RocketPlugins
                 }
                 if (report != "") report = report.Remove(report.Length - 1);
                 UnturnedChat.Say(caller, Translate("wreckingball_scan", totalCount, radius, report));
-                UnturnedChat.Say((CSteamID)0, Translate("wreckingball_scan", totalCount, radius, report));
+                if (Instance.Configuration.Instance.LogScans)
+                    Logger.Log(Translate("wreckingball_scan", totalCount, radius, report), false);
+                RconPrint(CSteamID.Nil, Translate("wreckingball_scan", totalCount, radius, report));
             }
             else
             {
@@ -211,48 +267,87 @@ namespace ApokPT.RocketPlugins
             }
 
             Vector3 tpVector;
+            bool match = false;
+            int tries = 0;
 
-            if (!toBarricades)
+            Transform current = null;
+
+            while (tries < 2000 && !match)
             {
-                for (int k = 0; k < StructureManager.StructureRegions.GetLength(0); k++)
+                tries++;
+                int x = 0;
+                int xCount = 0;
+                int z = 0;
+                int zCount = 0;
+                int idx = 0;
+                int idxCount = 0;
+                if (!toBarricades)
                 {
-                    for (int l = 0; l < StructureManager.StructureRegions.GetLength(1); l++)
+                    xCount = StructureManager.StructureRegions.GetLength(0);
+                    zCount = StructureManager.StructureRegions.GetLength(1);
+                    if (xCount == 0)
+                        continue;
+                    x = UnityEngine.Random.Range(0, xCount - 1);
+                    if (zCount == 0)
+                        continue;
+                    z = UnityEngine.Random.Range(0, zCount - 1);
+                    idxCount = StructureManager.StructureRegions[x, z].Structures.Count;
+                    if (idxCount == 0)
+                        continue;
+                    idx = UnityEngine.Random.Range(0, idxCount - 1);
+
+                    try
                     {
-                        foreach (Transform current in StructureManager.StructureRegions[k, l].Structures)
-                        {
-                            if (Vector3.Distance(current.position, caller.Position) > 20)
-                            {
-                                tpVector = new Vector3(current.position.x, current.position.y + 3, current.position.z);
-                                caller.Teleport(tpVector, caller.Rotation);
-                                return;
-                            }
-                        }
+                        current = StructureManager.StructureRegions[x, z].Structures[idx];
                     }
+                    catch
+                    {
+                        continue;
+                    }
+
+                    if (Vector3.Distance(current.position, caller.Position) > 20)
+                        match = true;
+                }
+                else
+                {
+                    xCount = BarricadeManager.BarricadeRegions.GetLength(0);
+                    zCount = BarricadeManager.BarricadeRegions.GetLength(1);
+                    if (xCount == 0)
+                        continue;
+                    x = UnityEngine.Random.Range(0, xCount - 1);
+                    if (zCount == 0)
+                        continue;
+                    z = UnityEngine.Random.Range(0, zCount - 1);
+                    idxCount = BarricadeManager.BarricadeRegions[x, z].Barricades.Count;
+                    if (idxCount == 0)
+                        continue;
+                    idx = UnityEngine.Random.Range(0, idxCount - 1);
+
+                    try
+                    {
+                        current = BarricadeManager.BarricadeRegions[x, z].Barricades[idx];
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+
+                    if (Vector3.Distance(current.position, caller.Position) > 20)
+                        match = true;
                 }
             }
-            else
+            if(match)
             {
-                for (int k = 0; k < BarricadeManager.BarricadeRegions.GetLength(0); k++)
-                {
-                    for (int l = 0; l < BarricadeManager.BarricadeRegions.GetLength(1); l++)
-                    {
-                        foreach (Transform current in BarricadeManager.BarricadeRegions[k, l].Barricades)
-                        {
-                            if (Vector3.Distance(current.position, caller.Position) > 20)
-                            {
-                                tpVector = new Vector3(current.position.x, current.position.y + 3, current.position.z + 2);
-                                caller.Teleport(tpVector, caller.Rotation);
-                                return;
-                            }
-                        }
-                    }
-                }
+                tpVector = new Vector3(current.position.x, current.position.y + 2, current.position.z);
+                caller.Teleport(tpVector, caller.Rotation);
+                return;
             }
+            UnturnedChat.Say(caller, Translate("wreckingball_teleport_not_found"));
         }
 
         private void Instruct(UnturnedPlayer caller)
         {
-            UnturnedChat.Say(caller, Translate("wreckingball_queued", destroyList.Count, (Math.Ceiling((double)(destroyList.Count * delSpeed) / 1000))));
+            UnturnedChat.Say(caller, Translate("wreckingball_queued", destroyList.Count, (Math.Ceiling((double)(destroyList.Count * Instance.Configuration.Instance.DestructionInterval) / 1000))));
             UnturnedChat.Say(caller, Translate("wreckingball_prompt"));
         }
 
@@ -266,12 +361,12 @@ namespace ApokPT.RocketPlugins
             {
                 if (aTimer == null)
                 {
-                    aTimer = new Timer(delSpeed);
+                    aTimer = new Timer(Instance.Configuration.Instance.DestructionInterval);
                     aTimer.Elapsed += delegate { OnTimedEvent(caller); };
                     aTimer.AutoReset = true;
                 }
                 processing = true;
-                UnturnedChat.Say(caller, Translate("wreckingball_initiated", (Math.Ceiling((double)(destroyList.Count * delSpeed) / 1000))));
+                UnturnedChat.Say(caller, Translate("wreckingball_initiated", (Math.Ceiling((double)(destroyList.Count * Instance.Configuration.Instance.DestructionInterval) / 1000))));
                 dIdx = 0;
                 aTimer.Enabled = true;
             }
@@ -343,18 +438,21 @@ namespace ApokPT.RocketPlugins
             {
                 return new TranslationList
                 {
-                    {"wreckingball_scan","Found {0} elements @ {1}m:{2}"},
-                    {"wreckingball_map_clear","Map has no elements!"},
-                    {"wreckingball_not_found","No elements found in a {0} radius!"},
-                    {"wreckingball_complete","Wrecking Ball complete! {0} elements(s) Destroyed!"},
-                    {"wreckingball_initiated","Wrecking Ball initiated : {0} sec(s)"},
-                    {"wreckingball_processing","Wrecking Ball destroying {0} element(s): {1} sec(s) left"},
-                    {"wreckingball_aborted","Wrecking Ball Aborted! Destruction queue cleared!"},
-                    {"wreckingball_help","Please define filter and radius: /wreck <filter> <radius> or /wreck teleport b|s"},
-                    {"wreckingball_help_teleport","Please define type for teleport: /wreck teleport s|b"},
-                    {"wreckingball_help_scan","Please define a scan filter and radius: /wreck scan <filter> <radius>"},
-                    {"wreckingball_queued","{0} elements(s) found - ({1} sec(s))"},
-                    {"wreckingball_prompt","Type '/wreck confirm' or '/wreck abort'"}
+                    { "wreckingball_scan", "Found {0} elements @ {1}m:{2}" },
+                    { "wreckingball_map_clear", "Map has no elements!" },
+                    { "wreckingball_not_found", "No elements found in a {0} radius!" },
+                    { "wreckingball_complete", "Wrecking Ball complete! {0} elements(s) Destroyed!" },
+                    { "wreckingball_initiated", "Wrecking Ball initiated : {0} sec(s)" },
+                    { "wreckingball_processing", "Wrecking Ball destroying {0} element(s): {1} sec(s) left" },
+                    { "wreckingball_aborted", "Wrecking Ball Aborted! Destruction queue cleared!" },
+                    { "wreckingball_help", "Please define filter and radius: /wreck <filter> <radius> or /wreck teleport b|s" },
+                    { "wreckingball_help_teleport", "Please define type for teleport: /wreck teleport s|b" },
+                    { "wreckingball_help_scan", "Please define a scan filter and radius: /wreck scan <filter> <radius>" },
+                    { "wreckingball_queued", "{0} elements(s) found - ({1} sec(s))" },
+                    { "wreckingball_prompt", "Type '/wreck confirm' or '/wreck abort'" },
+                    { "wreckingball_structure_array_sync_error", "Warning: Structure arrays out of sync, need to restart server." },
+                    { "wreckingball_barricade_array_sync_error", "Warning: Barricade arrays out of sync, need to restart server." },
+                    { "wreckingball_teleport_not_found", "Couldn't find any elements to teleport to, try to run the command again." }
                 };
             }
         }

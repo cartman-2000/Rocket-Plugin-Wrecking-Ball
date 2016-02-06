@@ -2,13 +2,12 @@
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using System;
-using System.Collections.Generic;
 
 namespace ApokPT.RocketPlugins
 {
-    class WreckingBallCommand : IRocketCommand
+    public class WreckingBallCommand
     {
-        public void Execute(IRocketPlayer caller, string[] cmd)
+        public static void Execute(IRocketPlayer caller, string[] cmd)
         {
 
             string command = String.Join(" ", cmd);
@@ -83,48 +82,6 @@ namespace ApokPT.RocketPlugins
                 {
                     UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help"));
                 }
-            }
-        }
-
-        public string Help
-        {
-            get { return "Destroy everything in a specific radius!"; }
-        }
-
-        public string Name
-        {
-            get { return "w"; }
-        }
-
-        public AllowedCaller AllowedCaller
-        {
-            get
-            {
-                return AllowedCaller.Player;
-            }
-        }
-
-        public string Syntax
-        {
-            get
-            {
-                return ".";
-            }
-        }
-
-        public List<string> Aliases
-        {
-            get
-            {
-                return new List<string> { "wreck" };
-            }
-        }
-
-        public List<string> Permissions
-        {
-            get
-            {
-                return new List<string> { "WreckingBall.wreck" };
             }
         }
     }
