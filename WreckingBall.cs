@@ -91,7 +91,7 @@ namespace ApokPT.RocketPlugins
             {
                 if (processing)
                 {
-                    UnturnedChat.Say(player, Translate("wreckingball_progress", (destroyList.Count - dIdx), (Math.Ceiling((double)(destroyList.Count * Instance.Configuration.Instance.DestructionInterval) / 1000))));
+                    UnturnedChat.Say(player, Translate("wreckingball_processing", (destroyList.Count - dIdx), (Math.Ceiling((double)(destroyList.Count * Instance.Configuration.Instance.DestructionInterval) / 1000))));
                     return;
                 }
                 Abort();
