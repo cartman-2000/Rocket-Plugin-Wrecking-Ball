@@ -245,8 +245,9 @@ namespace ApokPT.RocketPlugins
                 if (report != "") report = report.Remove(report.Length - 1);
                 UnturnedChat.Say(caller, Translate("wreckingball_scan", totalCount, radius, report));
                 if (Instance.Configuration.Instance.LogScans)
-                    Logger.Log(Translate("wreckingball_scan", totalCount, radius, report), false);
-                RconPrint(CSteamID.Nil, Translate("wreckingball_scan", totalCount, radius, report));
+                    Logger.Log(Translate("wreckingball_scan", totalCount, radius, report));
+                else
+                    RconPrint(CSteamID.Nil, Translate("wreckingball_scan", totalCount, radius, report));
             }
             else
             {

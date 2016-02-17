@@ -273,12 +273,15 @@ namespace ApokPT.RocketPlugins
                 else
                     msg = cat.Name + " (Id: " + itemId + ") @ " + Math.Round(range, 2) + "m, Owner: " + owner;
 
-                Console.ForegroundColor = cat.Color;
-                Console.WriteLine(msg);
-                Console.ResetColor();
-                WreckingBall.RconPrint(msg);
                 if (WreckingBall.Instance.Configuration.Instance.LogScans)
-                    Logger.Log(msg, false);
+                    Logger.Log(msg, cat.Color);
+                else
+                {
+                    Console.ForegroundColor = cat.Color;
+                    Console.WriteLine(msg);
+                    Console.ResetColor();
+                    WreckingBall.RconPrint(msg);
+                }
                 if (WreckingBall.Instance.Configuration.Instance.PrintToChat)
                     UnturnedChat.Say(caller, msg, Color.yellow);
             }
