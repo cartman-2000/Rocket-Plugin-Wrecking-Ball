@@ -1,4 +1,6 @@
-﻿using Rocket.Core.Logging;
+﻿using Rocket.Core;
+using Rocket.Core.Logging;
+using Rocket.Core.RCON;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using System;
@@ -280,7 +282,8 @@ namespace ApokPT.RocketPlugins
                     Console.ForegroundColor = cat.Color;
                     Console.WriteLine(msg);
                     Console.ResetColor();
-                    WreckingBall.RconPrint(msg);
+                    if (R.Settings.Instance.RCON.Enabled)
+                        RCONServer.Broadcast(msg);
                 }
                 if (WreckingBall.Instance.Configuration.Instance.PrintToChat)
                     UnturnedChat.Say(caller, msg, Color.yellow);

@@ -1,10 +1,8 @@
 ﻿using Rocket.API;
 using Rocket.API.Collections;
-using Rocket.Core;
 using Rocket.Core.Commands;
 using Rocket.Core.Logging;
 using Rocket.Core.Plugins;
-using Rocket.Core.RCON;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using SDG.Unturned;
@@ -31,8 +29,6 @@ namespace ApokPT.RocketPlugins
         public InteractableVehicle Vehicle { get; private set; }
         public Transform Transform { get; private set; }
         public string Type { get; private set; }
-
-
     }
 
     class WreckingBall : RocketPlugin<WreckingBallConfiguration>
@@ -48,7 +44,7 @@ namespace ApokPT.RocketPlugins
             if (Instance.Configuration.Instance.DestructionInterval == 0)
             {
                 Instance.Configuration.Instance.DestructionInterval = 1;
-                Logger.LogWarning("Error: NumberPerSecond config value must be above 0.");
+                Logger.LogWarning("Error: DestructionInterval config value must be above 0.");
             }
             Instance.Configuration.Save();
         }
@@ -71,19 +67,6 @@ namespace ApokPT.RocketPlugins
         private static int dIdx = 0;
         private static Timer aTimer;
         private bool processing = false;
-
-        internal static void RconPrint(CSteamID caller, string msg)
-        {
-            if (caller == CSteamID.Nil)
-                RconPrint(msg);
-            UnturnedChat.Say(caller, msg);
-        }
-
-        internal static void RconPrint(string msg)
-        {
-            if (R.Settings.Instance.RCON.Enabled && Instance.Configuration.Instance.PrintToRCON)
-                RCONServer.Broadcast(msg);
-        }
 
         internal void Wreck(UnturnedPlayer player, string filter, uint radius, bool scan = false)
         {
@@ -247,7 +230,7 @@ namespace ApokPT.RocketPlugins
                 if (Instance.Configuration.Instance.LogScans)
                     Logger.Log(Translate("wreckingball_scan", totalCount, radius, report));
                 else
-                    RconPrint(CSteamID.Nil, Translate("wreckingball_scan", totalCount, radius, report));
+                    UnturnedChat.Say(CSteamID.Nil, Translate("wreckingball_scan", totalCount, radius, report));
             }
             else
             {

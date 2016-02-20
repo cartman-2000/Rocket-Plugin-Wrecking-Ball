@@ -6,7 +6,6 @@ namespace ApokPT.RocketPlugins
     {
         public bool Enabled = true;
         public uint DestructionInterval = 10;
-        public bool PrintToRCON = false;
         public bool LogScans = false;
         public bool PrintToChat = false;
 
