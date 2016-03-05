@@ -31,7 +31,7 @@ namespace ApokPT.RocketPlugins
         public string Type { get; private set; }
     }
 
-    class WreckingBall : RocketPlugin<WreckingBallConfiguration>
+     class WreckingBall : RocketPlugin<WreckingBallConfiguration>
     {
 
         // Singleton
@@ -371,13 +371,13 @@ namespace ApokPT.RocketPlugins
             {
                 if (destroyList[dIdx].Type == "s")
                 {
-                    try { StructureManager.damage(destroyList[dIdx].Transform, destroyList[dIdx].Transform.position, 65535, 1); }
+                    try { StructureManager.damage(destroyList[dIdx].Transform, destroyList[dIdx].Transform.position, 65535, 1, false); }
                     catch { }
                 }
 
                 else if (destroyList[dIdx].Type == "b")
                 {
-                    try { BarricadeManager.damage(destroyList[dIdx].Transform, 65535, 1); }
+                    try { BarricadeManager.damage(destroyList[dIdx].Transform, 65535, 1, false); }
                     catch { }
                 }
 
