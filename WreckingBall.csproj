@@ -65,7 +65,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Category.cs" />
-    <Compile Include="WreckCategories.cs" />
+    <Compile Include="Element.cs" />
+    <Compile Include="ElementDataManager.cs" />
     <Compile Include="WreckingBall.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WreckingBallCommand.cs" />

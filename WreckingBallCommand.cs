@@ -20,8 +20,13 @@ namespace ApokPT.RocketPlugins
 
             if (String.IsNullOrEmpty(command.Trim()))
             {
-                UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help"));
-                return;
+                if (WreckingBall.processing)
+                    WreckingBall.Instance.Wreck(player, "", 0);
+                else
+                {
+                    UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help"));
+                    return;
+                }
             }
             else
             {
