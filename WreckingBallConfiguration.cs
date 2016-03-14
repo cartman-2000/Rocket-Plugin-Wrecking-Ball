@@ -38,6 +38,7 @@ namespace ApokPT.RocketPlugins
                     new Category('m', "Freeform", ConsoleColor.DarkMagenta),
                     new Category('n', "Sign", ConsoleColor.DarkBlue),
                     new Category('g', "Guard", ConsoleColor.DarkBlue),
+                    new Category('o', "Protections", ConsoleColor.DarkBlue),
                     new Category('i', "Illumination", ConsoleColor.Yellow),
                     new Category('a', "Agriculture", ConsoleColor.Green),
                     new Category('v', "Vehicles", ConsoleColor.DarkRed),
@@ -216,7 +217,9 @@ namespace ApokPT.RocketPlugins
                     new Element(48, 'g'),
                     new Element(287, 'g'),
                     new Element(365, 'g'),
-                    new Element(1050, 'g'),
+                    // Protections
+                    new Element(1050, 'o'),
+                    new Element(1158, 'o'),
                     // Light
                     new Element(359, 'i'),
                     new Element(360, 'i'),
