@@ -29,6 +29,7 @@ namespace ApokPT.RocketPlugins
                     new Category('t', "Trap", ConsoleColor.DarkYellow),
                     new Category('d', "Door", ConsoleColor.DarkMagenta),
                     new Category('c', "Container", ConsoleColor.Blue),
+                    new Category('y', "Trophy Container", ConsoleColor.Blue),
                     new Category('l', "Ladder", ConsoleColor.Magenta),
                     new Category('w', "Wall", ConsoleColor.DarkMagenta),
                     new Category('f', "Floor", ConsoleColor.DarkMagenta),
@@ -95,6 +96,13 @@ namespace ApokPT.RocketPlugins
                     new Element(366, 'c'),
                     new Element(367, 'c'),
                     new Element(368, 'c'),
+                    // Trophy/Weapon rack Containers.
+                    new Element(1202, 'y'),
+                    new Element(1203, 'y'),
+                    new Element(1204, 'y'),
+                    new Element(1205, 'y'),
+                    new Element(1206, 'y'),
+                    new Element(1207, 'y'),
                     // Ladder
                     new Element(325, 'l'),
                     new Element(326, 'l'),
@@ -217,6 +225,7 @@ namespace ApokPT.RocketPlugins
                     new Element(48, 'g'),
                     new Element(287, 'g'),
                     new Element(365, 'g'),
+                    new Element(1208, 'g'),
                     // Protections
                     new Element(1050, 'o'),
                     new Element(1158, 'o'),
