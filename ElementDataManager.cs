@@ -14,11 +14,13 @@ namespace ApokPT.RocketPlugins
         internal Dictionary<char, Category> categorys = new Dictionary<char, Category>();
         internal Dictionary<ushort, Element> elements = new Dictionary<ushort, Element>();
 
-        internal Dictionary<char, uint> reportList = new Dictionary<char, uint>();
+        internal Dictionary<BuildableType, Dictionary<char, uint>> reportLists = new Dictionary<BuildableType, Dictionary<char, uint>>();
 
         public ElementDataManager()
         {
             Load();
+            reportLists.Add(BuildableType.Element, new Dictionary<char, uint>());
+            reportLists.Add(BuildableType.VehicleElement, new Dictionary<char, uint>());
         }
 
         private void Load()
@@ -61,32 +63,57 @@ namespace ApokPT.RocketPlugins
             return ((elements.ContainsKey(itemId) && userRequest.Contains(elements[itemId].CategoryId)) || (!elements.ContainsKey(itemId) && userRequest.Contains('!')));
         }
 
-        internal void report(UnturnedPlayer caller, ushort itemId, float range, bool printConsole, ulong owner = 0)
+        internal void report(UnturnedPlayer caller, ushort itemId, float range, bool printConsole, BuildableType type = BuildableType.Element, ulong owner = 0)
         {
             Category cat;
             if (!elements.ContainsKey(itemId))
             {
-                if (reportList.ContainsKey('!'))
-                    reportList['!'] += 1;
+                if (type == BuildableType.VehicleElement)
+                {
+                    if (reportLists[BuildableType.VehicleElement].ContainsKey('!'))
+                        reportLists[BuildableType.VehicleElement]['!'] += 1;
+                    else
+                        reportLists[BuildableType.VehicleElement].Add('!', 1);
+                    cat = categorys['!'];
+                }
                 else
-                    reportList.Add('!', 1);
-                cat = categorys['!'];
+                {
+                    if (reportLists[BuildableType.Element].ContainsKey('!'))
+                        reportLists[BuildableType.Element]['!'] += 1;
+                    else
+                        reportLists[BuildableType.Element].Add('!', 1);
+                    cat = categorys['!'];
+                }
             }
             else
             {
-                if (reportList.ContainsKey(elements[itemId].CategoryId))
-                    reportList[elements[itemId].CategoryId] += 1;
+                if (type == BuildableType.VehicleElement)
+                {
+                    if (reportLists[BuildableType.VehicleElement].ContainsKey(elements[itemId].CategoryId))
+                        reportLists[BuildableType.VehicleElement][elements[itemId].CategoryId] += 1;
+                    else
+                        reportLists[BuildableType.VehicleElement].Add(elements[itemId].CategoryId, 1);
+                    cat = categorys[elements[itemId].CategoryId];
+                }
                 else
-                    reportList.Add(elements[itemId].CategoryId, 1);
-                cat = categorys[elements[itemId].CategoryId];
+                {
+                    if (reportLists[BuildableType.Element].ContainsKey(elements[itemId].CategoryId))
+                        reportLists[BuildableType.Element][elements[itemId].CategoryId] += 1;
+                    else
+                        reportLists[BuildableType.Element].Add(elements[itemId].CategoryId, 1);
+                    cat = categorys[elements[itemId].CategoryId];
+                }
             }
             if (printConsole || !elements.ContainsKey(itemId))
             {
                 string msg = string.Empty;
-                if (owner == 0)
-                    msg = cat.Name + " (Id: " + itemId + ") @ " + Math.Round(range, 2) + "m";
+                string stype = type == BuildableType.VehicleElement ? "Vehicle Element: " : "Element: ";
+                if (owner == 0 && type != BuildableType.Vehicle)
+                    msg = string.Format("{0}{1} (Id: {2}) @ {3}m", stype, cat.Name, itemId, Math.Round(range, 2));
+                else if (type == BuildableType.Vehicle)
+                    msg = string.Format("{0}{1} (Id: {2}) @ {3}m, Barricade Count: {4}", stype, cat.Name, itemId, Math.Round(range, 2), owner);
                 else
-                    msg = cat.Name + " (Id: " + itemId + ") @ " + Math.Round(range, 2) + "m, Owner: " + owner;
+                    msg = string.Format("{0}{1} (Id: {2}) @ {3}m, Owner: {4}", stype, cat.Name, itemId, Math.Round(range, 2), owner);
 
                 if (WreckingBall.Instance.Configuration.Instance.LogScans)
                     Logger.Log(msg, cat.Color);
@@ -102,5 +129,12 @@ namespace ApokPT.RocketPlugins
                     UnturnedChat.Say(caller, msg, Color.yellow);
             }
         }
+    }
+
+    public enum BuildableType
+    {
+        Element,
+        Vehicle,
+        VehicleElement
     }
 }

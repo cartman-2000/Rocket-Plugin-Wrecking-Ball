@@ -4,6 +4,7 @@ using Rocket.Core.Commands;
 using Rocket.Core.Logging;
 using Rocket.Core.Plugins;
 using Rocket.Unturned.Chat;
+using Rocket.Unturned.Commands;
 using Rocket.Unturned.Player;
 using SDG.Unturned;
 using Steamworks;
@@ -82,6 +83,44 @@ namespace ApokPT.RocketPlugins
             WreckingBallCommand.Execute(caller, cmd);
         }
 
+        [RocketCommand("listvehicles", "lists positions and barricade counts on cars on a map.", ".", AllowedCaller.Both)]
+        [RocketCommandPermission("WreckingBall.listvehicles")]
+        public void LVExecute(IRocketPlayer caller, string[] cmd)
+        {
+            foreach (InteractableVehicle vehicle in VehicleManager.Vehicles)
+            {
+                byte x = 0;
+                byte y = 0;
+                ushort plant = 0;
+                BarricadeRegion barricadeRegion;
+                UnturnedPlayer player = null;
+                float radius = 0;
+                if (!(caller is ConsolePlayer))
+                {
+                    if (cmd.GetFloatParameter(0) == null)
+                    {
+                        UnturnedChat.Say(caller, "<radius> - distance to scan cars.");
+                        return;
+                    }
+                    player = (UnturnedPlayer)caller;
+                    radius = (float)cmd.GetFloatParameter(0);
+                }
+                if (caller is ConsolePlayer || Vector3.Distance(vehicle.transform.position, player.Position) < radius)
+                    if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
+                    {
+                        if (!(caller is ConsolePlayer))
+                            UnturnedChat.Say(caller, "Vehicle position: " + vehicle.transform.position.ToString() + ", Barricade count on car: " + barricadeRegion.Barricades.Count + ".", Color.yellow);
+                        Logger.Log("Vehicle position: " + vehicle.transform.position.ToString() + ", Barricade count on car: " + barricadeRegion.Barricades.Count + ".", ConsoleColor.Yellow);
+                    }
+                    else
+                    {
+                        if (!(caller is ConsolePlayer))
+                            UnturnedChat.Say(caller, "Vehicle position: " + vehicle.transform.position.ToString() + ", Barricade count on car: 0.", Color.yellow);
+                        Logger.Log("Vehicle position: " + vehicle.transform.position.ToString() + ", Barricade count on car: 0.", ConsoleColor.Yellow);
+                    }
+            }
+        }
+
         private static List<Destructible> destroyList = new List<Destructible>();
         private static int dIdx = 0;
         private int dIdxCount = 0;
@@ -102,7 +141,8 @@ namespace ApokPT.RocketPlugins
             }
             else
             {
-                ElementData.reportList.Clear();
+                ElementData.reportLists[BuildableType.Element].Clear();
+                ElementData.reportLists[BuildableType.VehicleElement].Clear();
             }
 
 
@@ -135,7 +175,7 @@ namespace ApokPT.RocketPlugins
                                     if (distance <= 10)
                                         try
                                         {
-                                            ElementData.report(player, item, distance, true, StructureManager.tryGetInfo(current, out x, out y, out index, out structureRegion) ? structureRegion.structures[(int)index].owner : 0);
+                                            ElementData.report(player, item, distance, true, BuildableType.Element, StructureManager.tryGetInfo(current, out x, out y, out index, out structureRegion) ? structureRegion.structures[(int)index].owner : 0);
                                         }
                                         catch
                                         {
@@ -171,7 +211,7 @@ namespace ApokPT.RocketPlugins
                                     if (distance <= 10)
                                         try
                                         {
-                                            ElementData.report(player, item, distance, true, BarricadeManager.tryGetInfo(current, out x, out y, out plant, out index, out barricadeRegion) ? barricadeRegion.barricades[(int)index].owner : 0);
+                                            ElementData.report(player, item, distance, true, BuildableType.Element, BarricadeManager.tryGetInfo(current, out x, out y, out plant, out index, out barricadeRegion) ? barricadeRegion.barricades[(int)index].owner : 0);
                                         }
                                         catch
                                         {
@@ -190,17 +230,58 @@ namespace ApokPT.RocketPlugins
                 }
             }
 
-            if (Filter.Contains('v') || Filter.Contains('*'))
+
+            foreach (InteractableVehicle vehicle in VehicleManager.Vehicles)
             {
-                foreach (InteractableVehicle vehicle in VehicleManager.Vehicles)
+                distance = Vector3.Distance(vehicle.transform.position, player.Position);
+                if (distance < radius)
                 {
-                    distance = Vector3.Distance(vehicle.transform.position, player.Position);
-                    if (distance < radius)
+                    if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
+                    {
+                        foreach(Transform current in barricadeRegion.Barricades)
+                        {
+                            item = Convert.ToUInt16(current.name);
+                            if (ElementData.filterItem(item, Filter) || Filter.Contains('*'))
+                            {
+                                if (scan)
+                                {
+                                    if (distance <= 10)
+                                    {
+                                        try
+                                        {
+                                            ElementData.report(player, item, distance, true, BuildableType.VehicleElement, BarricadeManager.tryGetInfo(current, out x, out y, out plant, out index, out barricadeRegion) ? barricadeRegion.barricades[(int)index].owner : 0);
+                                        }
+                                        catch
+                                        {
+                                            UnturnedChat.Say(player, Translate("wreckingball_barricade_array_sync_error"), Color.yellow);
+                                            Logger.LogWarning(Translate("wreckingball_barricade_array_sync_error"));
+                                            ElementData.report(player, item, distance, false, BuildableType.VehicleElement);
+                                        }
+                                    }
+                                    else
+                                        ElementData.report(player, item, distance, false, BuildableType.VehicleElement);
+                                }
+                                else if (!Filter.Contains('*') && !Filter.Contains('v'))
+                                    destroyList.Add(new Destructible(current, 'b'));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        barricadeRegion = null;
+                    }
+                    if (Filter.Contains('v') || Filter.Contains('*'))
                     {
                         if (scan)
-                            ElementData.report(player, 9999, (int)distance, false);
+                        {
+                            if (distance <= 10)
+                                ElementData.report(player, 9999, distance, true, BuildableType.Vehicle, (ulong)(barricadeRegion == null ? 0 : barricadeRegion.Barricades.Count));
+                            else
+                                ElementData.report(player, 9999, distance, false, BuildableType.Vehicle);
+                        }
                         else
                             destroyList.Add(new Destructible(vehicle.transform, 'v', vehicle));
+
                     }
                 }
             }
@@ -239,22 +320,27 @@ namespace ApokPT.RocketPlugins
         internal void Scan(UnturnedPlayer caller, string filter, uint radius)
         {
             Wreck(caller, filter, radius, true);
-            string report = "";
-            uint totalCount = 0;
-            if (ElementData.reportList.Count > 0)
+            if (ElementData.reportLists[BuildableType.Element].Count > 0 || ElementData.reportLists[BuildableType.VehicleElement].Count > 0)
             {
-
-                foreach (KeyValuePair<char, uint> reportFilter in ElementData.reportList)
+                foreach (KeyValuePair<BuildableType, Dictionary<char, uint>> reportDictionary in ElementData.reportLists)
                 {
-                    report += " " + ElementData.categorys[reportFilter.Key].Name + ": " + reportFilter.Value + ",";
-                    totalCount += reportFilter.Value;
+                    if (reportDictionary.Value.Count == 0)
+                        continue;
+                    string report = "";
+                    uint totalCount = 0;
+                    foreach (KeyValuePair<char, uint> reportFilter in reportDictionary.Value)
+                    {
+                        report += " " + ElementData.categorys[reportFilter.Key].Name + ": " + reportFilter.Value + ",";
+                        totalCount += reportFilter.Value;
+                    }
+                    if (report != "") report = report.Remove(report.Length - 1);
+                    string type = reportDictionary.Key == BuildableType.VehicleElement ? "Vehicle Element" : "Element";
+                    UnturnedChat.Say(caller, Translate("wreckingball_scan", totalCount, type, radius, report));
+                    if (Instance.Configuration.Instance.LogScans)
+                        Logger.Log(Translate("wreckingball_scan", totalCount, type, radius, report));
+                    else
+                        UnturnedChat.Say(CSteamID.Nil, Translate("wreckingball_scan", totalCount, type, radius, report));
                 }
-                if (report != "") report = report.Remove(report.Length - 1);
-                UnturnedChat.Say(caller, Translate("wreckingball_scan", totalCount, radius, report));
-                if (Instance.Configuration.Instance.LogScans)
-                    Logger.Log(Translate("wreckingball_scan", totalCount, radius, report));
-                else
-                    UnturnedChat.Say(CSteamID.Nil, Translate("wreckingball_scan", totalCount, radius, report));
             }
             else
             {
@@ -458,7 +544,7 @@ namespace ApokPT.RocketPlugins
             {
                 return new TranslationList
                 {
-                    { "wreckingball_scan", "Found {0} elements @ {1}m:{2}" },
+                    { "wreckingball_scan", "Found {0} elements of type: {1}, @ {2}m:{3}" },
                     { "wreckingball_map_clear", "Map has no elements!" },
                     { "wreckingball_not_found", "No elements found in a {0} radius!" },
                     { "wreckingball_complete", "Wrecking Ball complete! {0} elements(s) Destroyed!" },
