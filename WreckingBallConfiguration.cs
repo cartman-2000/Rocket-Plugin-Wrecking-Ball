@@ -41,6 +41,7 @@ namespace ApokPT.RocketPlugins
                     new Category('g', "Guard", ConsoleColor.DarkBlue),
                     new Category('o', "Protections", ConsoleColor.DarkBlue),
                     new Category('i', "Illumination", ConsoleColor.Yellow),
+                    new Category('u', "Industrial", ConsoleColor.DarkYellow),
                     new Category('a', "Agriculture", ConsoleColor.Green),
                     new Category('v', "Vehicles", ConsoleColor.DarkRed),
                     new Category('z', "Zombies", ConsoleColor.DarkGreen),
@@ -103,6 +104,8 @@ namespace ApokPT.RocketPlugins
                     new Element(1205, 'y'),
                     new Element(1206, 'y'),
                     new Element(1207, 'y'),
+                    new Element(1220, 'y'),
+                    new Element(1221, 'y'),
                     // Ladder
                     new Element(325, 'l'),
                     new Element(326, 'l'),
@@ -113,26 +116,31 @@ namespace ApokPT.RocketPlugins
                     new Element(57, 'w'),
                     new Element(58, 'w'),
                     new Element(371, 'w'),
+                    new Element(1215, 'w'),
                     // Wall - doorway
                     new Element(32, 'w'),
                     new Element(49, 'w'),
                     new Element(50, 'w'),
                     new Element(370, 'w'),
+                    new Element(1210, 'w'),
                     // Wall - window
                     new Element(34, 'w'),
                     new Element(59, 'w'),
                     new Element(60, 'w'),
                     new Element(372, 'w'),
+                    new Element(1216, 'w'),
                     // Wall - garage
                     new Element(450, 'w'),
                     new Element(452, 'w'),
                     new Element(453, 'w'),
                     new Element(454, 'w'),
+                    new Element(1211, 'w'),
                     // Wall - rampart
                     new Element(442, 'w'),
                     new Element(444, 'w'),
                     new Element(445, 'w'),
                     new Element(446, 'w'),
+                    new Element(1214, 'w'),
                     // Floor
                     new Element(31, 'f'),
                     new Element(51, 'f'),
@@ -143,11 +151,13 @@ namespace ApokPT.RocketPlugins
                     new Element(53, 'p'),
                     new Element(54, 'p'),
                     new Element(374, 'p'),
+                    new Element(1212, 'p'),
                     // Pillar - post
                     new Element(443, 'p'),
                     new Element(447, 'p'),
                     new Element(448, 'p'),
                     new Element(449, 'p'),
+                    new Element(1213, 'p'),
                     // Roof - roof
                     new Element(35, 'r'),
                     new Element(55, 'r'),
@@ -211,6 +221,8 @@ namespace ApokPT.RocketPlugins
                     new Element(1153, 'm'),
                     new Element(1154, 'm'),
                     new Element(1155, 'm'),
+                    new Element(1217, 'm'),
+                    new Element(1218, 'm'),
                     // Signs
                     new Element(1095, 'n'),
                     new Element(1096, 'n'),
@@ -226,6 +238,10 @@ namespace ApokPT.RocketPlugins
                     new Element(287, 'g'),
                     new Element(365, 'g'),
                     new Element(1208, 'g'),
+                    new Element(1223, 'g'),
+                    new Element(1224, 'g'),
+                    new Element(1225, 'g'),
+                    new Element(1226, 'g'),
                     // Protections
                     new Element(1050, 'o'),
                     new Element(1158, 'o'),
@@ -234,9 +250,12 @@ namespace ApokPT.RocketPlugins
                     new Element(360, 'i'),
                     new Element(361, 'i'),
                     new Element(362, 'i'),
-                    new Element(458, 'i'),
                     new Element(459, 'i'),
                     new Element(1049, 'i'),
+                    new Element(1222, 'i'),
+                    // Industrial
+                    new Element(458, 'u'),
+                    new Element(1219, 'u'),
                     // Agriculture
                     new Element(330, 'a'),
                     new Element(331, 'a'),
