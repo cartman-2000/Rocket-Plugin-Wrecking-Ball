@@ -109,8 +109,20 @@ namespace ApokPT.RocketPlugins
             if (printConsole || !elements.ContainsKey(itemId))
             {
                 string stype = type == BuildableType.VehicleElement ? "Vehicle Element: " : "Element: ";
-                // Split the message generation to two methods, as the Player info one requires special data types that have to be loaded before executing a method.
-                string msg = getPinfo ? PInfoGenerateMessage(stype, type, cat, itemId, range, owner) : GenerateMessage(stype, type, cat, itemId, range, owner);
+                string msg = string.Empty;
+                if (owner == 0 && type != BuildableType.Vehicle)
+                    msg = string.Format("{0}{1} (Id: {2}) @ {3}m", stype, cat.Name, itemId, Math.Round(range, 2));
+                else if (type == BuildableType.Vehicle)
+                    msg = string.Format("{0}{1} (Id: {2}) @ {3}m, Barricade Count: {4}", stype, cat.Name, itemId, Math.Round(range, 2), owner);
+                else
+                {
+                    if (getPinfo)
+                        // Generate the message in another method, as the Player info one requires special data types that have to be loaded before executing a method.
+                        msg = PInfoGenerateMessage(stype, type, cat, itemId, range, owner);
+                    else
+                        msg = string.Format("{0}{1} (Id: {2}) @ {3}m, Owner: {4}", stype, cat.Name, itemId, Math.Round(range, 2), owner);
+                }
+
 
                 if (WreckingBall.Instance.Configuration.Instance.LogScans)
                     Logger.Log(msg, cat.Color);
@@ -127,34 +139,14 @@ namespace ApokPT.RocketPlugins
             }
         }
 
-        private string GenerateMessage(string stype, BuildableType type, Category cat, ushort itemId, float range, ulong owner)
-        {
-            string msg = string.Empty;
-            if (owner == 0 && type != BuildableType.Vehicle)
-                msg = string.Format("{0}{1} (Id: {2}) @ {3}m", stype, cat.Name, itemId, Math.Round(range, 2));
-            else if (type == BuildableType.Vehicle)
-                msg = string.Format("{0}{1} (Id: {2}) @ {3}m, Barricade Count: {4}", stype, cat.Name, itemId, Math.Round(range, 2), owner);
-            else
-                msg = string.Format("{0}{1} (Id: {2}) @ {3}m, Owner: {4}", stype, cat.Name, itemId, Math.Round(range, 2), owner);
-            return msg;
-        }
-
         private string PInfoGenerateMessage(string stype, BuildableType type, Category cat, ushort itemId, float range, ulong owner)
         {
+            PlayerData pData = PlayerInfoLib.Database.QueryById((CSteamID)owner);
             string msg = string.Empty;
-            if (owner == 0 && type != BuildableType.Vehicle)
-                msg = string.Format("{0}{1} (Id: {2}) @ {3}m", stype, cat.Name, itemId, Math.Round(range, 2));
-            else if (type == BuildableType.Vehicle)
-                msg = string.Format("{0}{1} (Id: {2}) @ {3}m, Barricade Count: {4}", stype, cat.Name, itemId, Math.Round(range, 2), owner);
+            if (pData.IsValid())
+                msg = string.Format("{0}{1} (Id: {2}) @ {3}m, Owner: {4} {5} [{6}], Seen: {7}:{8}", stype, cat.Name, itemId, Math.Round(range, 2), owner, pData.CharacterName, pData.SteamName, pData.IsLocal() ? "L" : "G", pData.IsLocal() ? pData.LastLoginLocal : pData.LastLoginGlobal);
             else
-            {
-                PlayerData pData = PlayerInfoLib.Database.QueryById((CSteamID)owner);
-                if (pData.IsValid())
-                    msg = string.Format("{0}{1} (Id: {2}) @ {3}m, Owner: {4} {5} [{6}], Seen: {7}:{8}", stype, cat.Name, itemId, Math.Round(range, 2), owner, pData.CharacterName, pData.SteamName, pData.IsLocal() ? "L" : "G", pData.IsLocal() ? pData.LastLoginLocal : pData.LastLoginGlobal);
-                else
-                    msg = string.Format("{0}{1} (Id: {2}) @ {3}m, Owner: {4}, {5}", stype, cat.Name, itemId, Math.Round(range, 2), owner, "No Player Info.");
-
-            }
+                msg = string.Format("{0}{1} (Id: {2}) @ {3}m, Owner: {4}, {5}", stype, cat.Name, itemId, Math.Round(range, 2), owner, "No Player Info.");
             return msg;
         }
     }
