@@ -1,4 +1,5 @@
-﻿using Rocket.API;
+﻿using PlayerInfoLibrary;
+using Rocket.API;
 using Rocket.API.Collections;
 using Rocket.API.Extensions;
 using Rocket.Core.Commands;
@@ -14,28 +15,9 @@ using UnityEngine;
 
 namespace ApokPT.RocketPlugins
 {
-
-    class Destructible
+    public class WreckingBall : RocketPlugin<WreckingBallConfiguration>
     {
-        public Destructible(Transform transform, char type, InteractableVehicle vehicle = null, Zombie zombie = null)
-        {
-            Transform = transform;
-            Type = type;
-            Vehicle = vehicle;
-            Zombie = zombie;
-        }
-
-        public Zombie Zombie { get; private set; }
-        public InteractableVehicle Vehicle { get; private set; }
-        public Transform Transform { get; private set; }
-        public char Type { get; private set; }
-    }
-
-     class WreckingBall : RocketPlugin<WreckingBallConfiguration>
-    {
-
         // Singleton
-
         public static WreckingBall Instance;
         public static ElementDataManager ElementData;
 
@@ -54,6 +36,15 @@ namespace ApokPT.RocketPlugins
                 Instance.Configuration.Instance.DestructionsPerInterval = 1;
                 Logger.LogWarning("Error: DestructionsPerInterval config value must be at or above 1.");
             }
+            if (Instance.Configuration.Instance.EnablePlayerInfo)
+            {
+                // Check to see whether the PlayerInfoLib plugin is present on this server.
+                if (!CheckPlayerInfoLib())
+                {
+                    Logger.LogWarning("The player info library plugin isn't on this server, setting option to false.");
+                    Instance.Configuration.Instance.EnablePlayerInfo = false;
+                }
+            }
             Instance.Configuration.Save();
         }
 
@@ -69,22 +60,32 @@ namespace ApokPT.RocketPlugins
             ElementData = null;
         }
 
+        internal static bool CheckPlayerInfoLib()
+        {
+            return Type.GetType("PlayerInfoLibrary.DatabaseManager,PlayerInfoLib") != null;
+        }
+
+        internal static bool IsPInfoLibLoaded()
+        {
+            return (PlayerInfoLib.Instance.State == PluginState.Loaded && PlayerInfoLib.Database.Initialized);
+        }
+
         [RocketCommand("wreck", "Destroy everything in a specific radius!", ".",AllowedCaller.Player)]
-        [RocketCommandPermission("WreckingBall.wreck")]
+        [RocketCommandPermission("wreck")]
         public void WreckExecute(IRocketPlayer caller, string[] cmd)
         {
             WreckingBallCommand.Execute(caller, cmd);
         }
 
         [RocketCommand("w", "Destroy everything in a specific radius!", ".", AllowedCaller.Player)]
-        [RocketCommandPermission("WreckingBall.wreck")]
+        [RocketCommandPermission("wreck")]
         public void WExecute(IRocketPlayer caller, string[] cmd)
         {
             WreckingBallCommand.Execute(caller, cmd);
         }
 
         [RocketCommand("listvehicles", "lists positions and barricade counts on cars on a map.", ".", AllowedCaller.Both)]
-        [RocketCommandPermission("WreckingBall.listvehicles")]
+        [RocketCommandPermission("listvehicles")]
         public void LVExecute(IRocketPlayer caller, string[] cmd)
         {
             foreach (InteractableVehicle vehicle in VehicleManager.Vehicles)
@@ -130,6 +131,7 @@ namespace ApokPT.RocketPlugins
 
         internal void Wreck(UnturnedPlayer player, string filter, uint radius, bool scan = false)
         {
+            bool pInfoLibLoaded = false;
             if (!scan)
             {
                 if (processing)
@@ -143,8 +145,11 @@ namespace ApokPT.RocketPlugins
             {
                 ElementData.reportLists[BuildableType.Element].Clear();
                 ElementData.reportLists[BuildableType.VehicleElement].Clear();
+                if (Instance.Configuration.Instance.EnablePlayerInfo)
+                {
+                    pInfoLibLoaded = IsPInfoLibLoaded();
+                }
             }
-
 
             List<char> Filter = new List<char>();
             Filter.AddRange(filter.ToCharArray());
@@ -175,16 +180,16 @@ namespace ApokPT.RocketPlugins
                                     if (distance <= 10)
                                         try
                                         {
-                                            ElementData.report(player, item, distance, true, BuildableType.Element, StructureManager.tryGetInfo(current, out x, out y, out index, out structureRegion) ? structureRegion.structures[(int)index].owner : 0);
+                                            ElementData.report(player, item, distance, true, pInfoLibLoaded, BuildableType.Element, StructureManager.tryGetInfo(current, out x, out y, out index, out structureRegion) ? structureRegion.structures[(int)index].owner : 0);
                                         }
                                         catch
                                         {
                                             UnturnedChat.Say(player, Translate("wreckingball_structure_array_sync_error"), Color.yellow);
                                             Logger.LogWarning(Translate("wreckingball_structure_array_sync_error"));
-                                            ElementData.report(player, item, distance, false);
+                                            ElementData.report(player, item, distance, false, pInfoLibLoaded);
                                         }
                                     else
-                                        ElementData.report(player, item, distance, false);
+                                        ElementData.report(player, item, distance, false, pInfoLibLoaded);
                                 }
                                 else
                                     destroyList.Add(new Destructible(current, 's'));
@@ -211,16 +216,16 @@ namespace ApokPT.RocketPlugins
                                     if (distance <= 10)
                                         try
                                         {
-                                            ElementData.report(player, item, distance, true, BuildableType.Element, BarricadeManager.tryGetInfo(current, out x, out y, out plant, out index, out barricadeRegion) ? barricadeRegion.barricades[(int)index].owner : 0);
+                                            ElementData.report(player, item, distance, true, pInfoLibLoaded, BuildableType.Element, BarricadeManager.tryGetInfo(current, out x, out y, out plant, out index, out barricadeRegion) ? barricadeRegion.barricades[(int)index].owner : 0);
                                         }
                                         catch
                                         {
                                             UnturnedChat.Say(player, Translate("wreckingball_barricade_array_sync_error"), Color.yellow);
                                             Logger.LogWarning(Translate("wreckingball_barricade_array_sync_error"));
-                                            ElementData.report(player, item, distance, false);
+                                            ElementData.report(player, item, distance, false, pInfoLibLoaded);
                                         }
                                     else
-                                        ElementData.report(player, item, distance, false);
+                                        ElementData.report(player, item, distance, false, pInfoLibLoaded);
                                 }
                                 else
                                     destroyList.Add(new Destructible(current, 'b'));
@@ -249,17 +254,17 @@ namespace ApokPT.RocketPlugins
                                     {
                                         try
                                         {
-                                            ElementData.report(player, item, distance, true, BuildableType.VehicleElement, BarricadeManager.tryGetInfo(current, out x, out y, out plant, out index, out barricadeRegion) ? barricadeRegion.barricades[(int)index].owner : 0);
+                                            ElementData.report(player, item, distance, true, pInfoLibLoaded, BuildableType.VehicleElement, BarricadeManager.tryGetInfo(current, out x, out y, out plant, out index, out barricadeRegion) ? barricadeRegion.barricades[(int)index].owner : 0);
                                         }
                                         catch
                                         {
                                             UnturnedChat.Say(player, Translate("wreckingball_barricade_array_sync_error"), Color.yellow);
                                             Logger.LogWarning(Translate("wreckingball_barricade_array_sync_error"));
-                                            ElementData.report(player, item, distance, false, BuildableType.VehicleElement);
+                                            ElementData.report(player, item, distance, false, pInfoLibLoaded, BuildableType.VehicleElement);
                                         }
                                     }
                                     else
-                                        ElementData.report(player, item, distance, false, BuildableType.VehicleElement);
+                                        ElementData.report(player, item, distance, false, pInfoLibLoaded, BuildableType.VehicleElement);
                                 }
                                 else if (!Filter.Contains('*') && !Filter.Contains('v'))
                                     destroyList.Add(new Destructible(current, 'b'));
@@ -275,9 +280,9 @@ namespace ApokPT.RocketPlugins
                         if (scan)
                         {
                             if (distance <= 10)
-                                ElementData.report(player, 9999, distance, true, BuildableType.Vehicle, (ulong)(barricadeRegion == null ? 0 : barricadeRegion.Barricades.Count));
+                                ElementData.report(player, 9999, distance, true, pInfoLibLoaded, BuildableType.Vehicle, (ulong)(barricadeRegion == null ? 0 : barricadeRegion.Barricades.Count));
                             else
-                                ElementData.report(player, 9999, distance, false, BuildableType.Vehicle);
+                                ElementData.report(player, 9999, distance, false, pInfoLibLoaded, BuildableType.Vehicle);
                         }
                         else
                             destroyList.Add(new Destructible(vehicle.transform, 'v', vehicle));
@@ -297,7 +302,7 @@ namespace ApokPT.RocketPlugins
                         if (distance < radius)
                         {
                             if (scan)
-                                ElementData.report(player, 9998, (int)distance, false);
+                                ElementData.report(player, 9998, (int)distance, false, pInfoLibLoaded);
                             else
                                 destroyList.Add(new Destructible(zombie.transform, 'z', null, zombie));
                         }

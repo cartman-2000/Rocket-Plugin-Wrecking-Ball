@@ -12,6 +12,7 @@ namespace ApokPT.RocketPlugins
         public uint DestructionsPerInterval = 10;
         public bool LogScans = false;
         public bool PrintToChat = false;
+        public bool EnablePlayerInfo = false;
 
         [XmlArray("Categories"), XmlArrayItem(ElementName = "Category")]
         public List<Category> Categories = new List<Category>();

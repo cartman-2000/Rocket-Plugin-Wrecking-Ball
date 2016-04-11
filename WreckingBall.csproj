@@ -39,6 +39,10 @@
       <HintPath>..\Rocket_Ref\Assembly-CSharp-firstpass.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="PlayerInfoLib">
+      <HintPath>..\Rocket_Ref\PlayerInfoLib.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Rocket.API">
       <HintPath>..\Rocket_Ref\Rocket.API.dll</HintPath>
       <Private>False</Private>
@@ -64,7 +68,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BuildableType.cs" />
     <Compile Include="Category.cs" />
+    <Compile Include="Destructable.cs" />
     <Compile Include="Element.cs" />
     <Compile Include="ElementDataManager.cs" />
     <Compile Include="WreckingBall.cs" />
