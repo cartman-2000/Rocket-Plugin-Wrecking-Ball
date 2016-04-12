@@ -1,7 +1,9 @@
 ﻿using Rocket.API;
+using Rocket.API.Extensions;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using System;
+using UnityEngine;
 
 namespace ApokPT.RocketPlugins
 {
@@ -16,12 +18,19 @@ namespace ApokPT.RocketPlugins
 
             if (!caller.IsAdmin && !caller.HasPermission("wreck")) return;
 
-            UnturnedPlayer player = (UnturnedPlayer)caller;
+            UnturnedPlayer player = null;
+            Vector3 position = Vector3.zero;
+            if (!(caller is ConsolePlayer))
+            {
+                player = (UnturnedPlayer)caller;
+                position = player.Position;
+            }
+
 
             if (String.IsNullOrEmpty(command.Trim()))
             {
                 if (WreckingBall.processing)
-                    WreckingBall.Instance.Wreck(player, "", 0);
+                    WreckingBall.Instance.Wreck(caller, "", 0, position);
                 else
                 {
                     UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help"));
@@ -37,16 +46,24 @@ namespace ApokPT.RocketPlugins
                     switch (oper[0])
                     {
                         case "confirm":
-                            WreckingBall.Instance.Confirm(player);
+                            WreckingBall.Instance.Confirm(caller);
                             break;
                         case "abort":
                             UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_aborted"));
                             WreckingBall.Instance.Abort();
                             break;
                         case "scan":
-                            if (oper.Length == 3)
+                            if ((oper.Length == 3 && !(caller is ConsolePlayer)) || (oper.Length == 6 && caller is ConsolePlayer))
                             {
-                                WreckingBall.Instance.Scan(player, oper[1], Convert.ToUInt32(oper[2]));
+                                if (caller is ConsolePlayer)
+                                {
+                                    if (!cmd.GetVectorFromCmd(3, out position))
+                                    {
+                                        UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_scan_console"));
+                                        break;
+                                    }
+                                }
+                                WreckingBall.Instance.Scan(caller, oper[1], Convert.ToUInt32(oper[2]), position);
                             }
                             else
                             {
@@ -57,6 +74,11 @@ namespace ApokPT.RocketPlugins
 
                             if (oper.Length > 1)
                             {
+                                if (caller is ConsolePlayer)
+                                {
+                                    UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_teleport_not_allowed"));
+                                    break;
+                                }
                                 switch (oper[1])
                                 {
                                     case "b":
@@ -77,8 +99,24 @@ namespace ApokPT.RocketPlugins
                             }
                             break;
                         default:
-                            try { WreckingBall.Instance.Wreck(player, oper[0], Convert.ToUInt32(oper[1])); }
-                            catch { WreckingBall.Instance.Wreck(player, oper[0], 20); }
+                            if (((oper.Length == 2 || oper.Length == 3) && !(caller is ConsolePlayer)) || (oper.Length == 5 && caller is ConsolePlayer))
+                            {
+                                if (caller is ConsolePlayer)
+                                {
+                                    if (!cmd.GetVectorFromCmd(2, out position))
+                                    {
+                                        UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_console"));
+                                        break;
+                                    }
+                                }
+                                uint? radius = cmd.GetUInt32Parameter(1);
+                                WreckingBall.Instance.Wreck(caller, oper[0], radius.HasValue ? (uint)radius : 20, position);
+                            }
+                            else
+                            {
+                                UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help"));
+                                break;
+                            }
                             break;
                     }
                     return;

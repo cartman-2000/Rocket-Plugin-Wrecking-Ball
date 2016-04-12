@@ -1,9 +1,9 @@
 ﻿using PlayerInfoLibrary;
+using Rocket.API;
 using Rocket.Core;
 using Rocket.Core.Logging;
 using Rocket.Core.RCON;
 using Rocket.Unturned.Chat;
-using Rocket.Unturned.Player;
 using Steamworks;
 using System;
 using System.Collections.Generic;
@@ -65,7 +65,7 @@ namespace ApokPT.RocketPlugins
             return ((elements.ContainsKey(itemId) && userRequest.Contains(elements[itemId].CategoryId)) || (!elements.ContainsKey(itemId) && userRequest.Contains('!')));
         }
 
-        internal void report(UnturnedPlayer caller, ushort itemId, float range, bool printConsole, bool getPinfo, BuildableType type = BuildableType.Element, ulong owner = 0)
+        internal void report(IRocketPlayer caller, ushort itemId, float range, bool printConsole, bool getPinfo, BuildableType type = BuildableType.Element, ulong owner = 0)
         {
             Category cat;
             if (!elements.ContainsKey(itemId))
@@ -134,7 +134,7 @@ namespace ApokPT.RocketPlugins
                     if (R.Settings.Instance.RCON.Enabled)
                         RCONServer.Broadcast(msg);
                 }
-                if (WreckingBall.Instance.Configuration.Instance.PrintToChat)
+                if (WreckingBall.Instance.Configuration.Instance.PrintToChat && !(caller is ConsolePlayer))
                     UnturnedChat.Say(caller, msg, Color.yellow);
             }
         }

@@ -73,10 +73,12 @@
     <Compile Include="Destructable.cs" />
     <Compile Include="Element.cs" />
     <Compile Include="ElementDataManager.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="WreckingBall.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WreckingBallCommand.cs" />
     <Compile Include="WreckingBallConfiguration.cs" />
+    <Compile Include="WreckType.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
