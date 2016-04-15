@@ -80,6 +80,7 @@ namespace ApokPT.RocketPlugins
                     new Element(1119, 't'),
                     new Element(1130, 't'),
                     new Element(1131, 't'),
+                    new Element(1227, 't'),
                     // Door - door
                     new Element(281, 'd'),
                     new Element(282, 'd'),
