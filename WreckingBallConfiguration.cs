@@ -239,7 +239,6 @@ namespace ApokPT.RocketPlugins
                     new Element(48, 'g'),
                     new Element(287, 'g'),
                     new Element(365, 'g'),
-                    new Element(1208, 'g'),
                     new Element(1223, 'g'),
                     new Element(1224, 'g'),
                     new Element(1225, 'g'),
@@ -258,6 +257,9 @@ namespace ApokPT.RocketPlugins
                     // Industrial
                     new Element(458, 'u'),
                     new Element(1219, 'u'),
+                    new Element(1208, 'u'),
+                    new Element(1228, 'u'),
+                    new Element(1229, 'u'),
                     // Agriculture
                     new Element(330, 'a'),
                     new Element(331, 'a'),
