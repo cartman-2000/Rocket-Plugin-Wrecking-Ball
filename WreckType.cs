@@ -3,6 +3,7 @@
     public enum WreckType
     {
         Wreck,
+        Cleanup,
         Scan,
     }
 }

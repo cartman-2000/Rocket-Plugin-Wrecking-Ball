@@ -1,5 +1,4 @@
 ﻿using Rocket.API;
-using Rocket.API.Extensions;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using System;
@@ -29,8 +28,8 @@ namespace ApokPT.RocketPlugins
 
             if (String.IsNullOrEmpty(command.Trim()))
             {
-                if (WreckingBall.processing)
-                    WreckingBall.Instance.Wreck(caller, "", 0, position);
+                if (DestructionProcessing.processing)
+                    DestructionProcessing.Wreck(caller, "", 0, position, WreckType.Wreck, FlagType.Normal, 0, 0);
                 else
                 {
                     UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help"));
@@ -50,7 +49,7 @@ namespace ApokPT.RocketPlugins
                             break;
                         case "abort":
                             UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_aborted"));
-                            WreckingBall.Instance.Abort();
+                            DestructionProcessing.Abort(WreckType.Wreck);
                             break;
                         case "scan":
                             if ((oper.Length == 3 && !(caller is ConsolePlayer)) || (oper.Length == 6 && caller is ConsolePlayer))
@@ -63,12 +62,33 @@ namespace ApokPT.RocketPlugins
                                         break;
                                     }
                                 }
-                                WreckingBall.Instance.Scan(caller, oper[1], Convert.ToUInt32(oper[2]), position);
+                                ushort itemID = 0;
+                                if (ushort.TryParse(oper[1], out itemID))
+                                    WreckingBall.Instance.Scan(caller, oper[1], Convert.ToUInt32(oper[2]), position, FlagType.ItemID, 0, itemID);
+                                else
+                                    WreckingBall.Instance.Scan(caller, oper[1], Convert.ToUInt32(oper[2]), position, FlagType.Normal, 0, 0);
+                            }
+                            else if ((oper.Length == 4 && !(caller is ConsolePlayer)) || (oper.Length == 7 && caller is ConsolePlayer))
+                            {
+                                ulong steamID = 0;
+                                if (caller is ConsolePlayer)
+                                {
+                                    if (!cmd.GetVectorFromCmd(4, out position))
+                                    {
+                                        UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_scan_console"));
+                                        break;
+                                    }
+                                }
+                                if (oper[1].isCSteamID(out steamID))
+                                    WreckingBall.Instance.Scan(caller, oper[2], Convert.ToUInt32(oper[3]), position, FlagType.SteamID, (ulong)steamID, 0);
+                                else
+                                    UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_scan"));
                             }
                             else
                             {
                                 UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_scan"));
                             }
+
                             break;
                         case "teleport":
 
@@ -99,7 +119,7 @@ namespace ApokPT.RocketPlugins
                             }
                             break;
                         default:
-                            if (((oper.Length == 2 || oper.Length == 3) && !(caller is ConsolePlayer)) || (oper.Length == 5 && caller is ConsolePlayer))
+                            if ((oper.Length == 2 && !(caller is ConsolePlayer)) || (oper.Length == 5 && caller is ConsolePlayer))
                             {
                                 if (caller is ConsolePlayer)
                                 {
@@ -109,8 +129,27 @@ namespace ApokPT.RocketPlugins
                                         break;
                                     }
                                 }
-                                uint? radius = cmd.GetUInt32Parameter(1);
-                                WreckingBall.Instance.Wreck(caller, oper[0], radius.HasValue ? (uint)radius : 20, position);
+                                ushort itemID = 0;
+                                if (ushort.TryParse(oper[0], out itemID))
+                                    DestructionProcessing.Wreck(caller, oper[0], Convert.ToUInt32(oper[1]), position, WreckType.Wreck, FlagType.ItemID, 0, itemID);
+                                else
+                                    DestructionProcessing.Wreck(caller, oper[0], Convert.ToUInt32(oper[1]), position, WreckType.Wreck, FlagType.Normal, 0, 0);
+                            }
+                            else if ((oper.Length == 3 && !(caller is ConsolePlayer)) || (oper.Length == 6 && caller is ConsolePlayer))
+                            {
+                                if (caller is ConsolePlayer)
+                                {
+                                    if (!cmd.GetVectorFromCmd(3, out position))
+                                    {
+                                        UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_console"));
+                                        break;
+                                    }
+                                }
+                                ulong steamID = 0;
+                                if (oper[0].isCSteamID(out steamID))
+                                    DestructionProcessing.Wreck(caller, oper[1], Convert.ToUInt32(oper[2]), position, WreckType.Wreck, FlagType.SteamID, steamID, 0);
+                                else
+                                    UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help"));
                             }
                             else
                             {

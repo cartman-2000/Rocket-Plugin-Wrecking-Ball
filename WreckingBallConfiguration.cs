@@ -13,6 +13,13 @@ namespace ApokPT.RocketPlugins
         public bool LogScans = false;
         public bool PrintToChat = false;
         public bool EnablePlayerInfo = false;
+        public bool EnableCleanup = false;
+        public bool BuildableCleanup = true;
+        public float BuildableWaitTime = 30;
+        public bool PlayerDataCleanup = true;
+        public float PlayerDataWaitTime = 45;
+        public float CleanupIntervalTime = 5;
+        public byte CleanupPerInterval = 10;
 
         [XmlArray("Categories"), XmlArrayItem(ElementName = "Category")]
         public List<Category> Categories = new List<Category>();

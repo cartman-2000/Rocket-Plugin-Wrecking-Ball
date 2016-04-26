@@ -1,5 +1,6 @@
 ﻿using Rocket.API.Extensions;
 using SDG.Unturned;
+using Steamworks;
 using System;
 using UnityEngine;
 
@@ -31,5 +32,20 @@ namespace ApokPT.RocketPlugins
             }
             return false;
         }
+
+        // Returns a ulong from a string on out, and returns true if it is a valid SteamID.
+        public static bool isCSteamID(this string sCSteamID, out ulong ulCSteamID)
+        {
+            ulCSteamID = 0;
+            if (ulong.TryParse(sCSteamID, out ulCSteamID))
+            {
+                if ((ulCSteamID >= 0x0110000100000000 && ulCSteamID <= 0x0170000000000000) || ulCSteamID == 0)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
     }
 }

@@ -35,13 +35,18 @@ namespace ApokPT.RocketPlugins
                 Instance.Configuration.Instance.DestructionsPerInterval = 1;
                 Logger.LogWarning("Error: DestructionsPerInterval config value must be at or above 1.");
             }
-            if (Instance.Configuration.Instance.EnablePlayerInfo)
+            if (Instance.Configuration.Instance.EnablePlayerInfo || Instance.Configuration.Instance.EnableCleanup)
             {
                 // Check to see whether the PlayerInfoLib plugin is present on this server.
                 if (!CheckPlayerInfoLib())
                 {
-                    Logger.LogWarning("The Player Info Library plugin isn't on this server, setting option to false.");
+                    Logger.LogWarning("The Player Info Library plugin isn't loaded on this server, setting related options to false.");
                     Instance.Configuration.Instance.EnablePlayerInfo = false;
+                    Instance.Configuration.Instance.EnableCleanup = false;
+                }
+                else
+                {
+                    CheckCleanup();
                 }
             }
             Instance.Configuration.Save();
@@ -49,17 +54,49 @@ namespace ApokPT.RocketPlugins
 
         protected override void Unload()
         {
-            if (processing)
+            if (DestructionProcessing.processing)
             {
-                if (originalCaller != null)
-                    UnturnedChat.Say(originalCaller, Translate("wreckingball_reload_abort"), Color.yellow);
+                if (DestructionProcessing.originalCaller != null)
+                    UnturnedChat.Say(DestructionProcessing.originalCaller, Translate("wreckingball_reload_abort"), Color.yellow);
                 Logger.LogWarning(Translate("wreckingball_reload_abort"));
-                Abort();
+                DestructionProcessing.Abort(WreckType.Wreck);
+            }
+            if (DestructionProcessing.cleanupProcessingBuildables || DestructionProcessing.cleanupProcessingFiles)
+            {
+                DestructionProcessing.Abort(WreckType.Cleanup);
             }
             ElementData = null;
         }
 
-        internal static bool CheckPlayerInfoLib()
+        private static void CheckCleanup()
+        {
+            if (Instance.Configuration.Instance.EnableCleanup && DatabaseManager.DatabaseInterfaceVersion < 2)
+            {
+                Logger.LogWarning("The Player Info Library is outdated, the WreckingBall cleanup feature in this plugin will be disabled.");
+                Instance.Configuration.Instance.EnableCleanup = false;
+            }
+            else if (Instance.Configuration.Instance.EnableCleanup)
+            {
+                if (Instance.Configuration.Instance.BuildableWaitTime < 1)
+                {
+                    Instance.Configuration.Instance.BuildableWaitTime = 30;
+                }
+                if (Instance.Configuration.Instance.PlayerDataWaitTime < 1)
+                {
+                    Instance.Configuration.Instance.PlayerDataWaitTime = 45;
+                }
+                if (Instance.Configuration.Instance.CleanupIntervalTime < 1)
+                {
+                    Instance.Configuration.Instance.CleanupIntervalTime = 5;
+                }
+                if (Instance.Configuration.Instance.CleanupPerInterval < 1)
+                {
+                    Instance.Configuration.Instance.CleanupPerInterval = 10;
+                }
+            }
+        }
+
+        private static bool CheckPlayerInfoLib()
         {
             return Type.GetType("PlayerInfoLibrary.DatabaseManager,PlayerInfoLib") != null;
         }
@@ -121,247 +158,9 @@ namespace ApokPT.RocketPlugins
             }
         }
 
-        private static List<Destructible> destroyList = new List<Destructible>();
-        private static int dIdx = 0;
-        private int dIdxCount = 0;
-        internal static bool processing = false;
-        private static UnturnedPlayer originalCaller = null;
-        private DateTime lastRunTime;
-
-        internal void Wreck(IRocketPlayer caller, string filter, uint radius, Vector3 position, WreckType type = WreckType.Wreck)
+        internal void Scan(IRocketPlayer caller, string filter, uint radius, Vector3 position, FlagType flagType, ulong steamID, ushort itemID)
         {
-            bool pInfoLibLoaded = false;
-            if (type == WreckType.Wreck)
-            {
-                if (processing)
-                {
-                    UnturnedChat.Say(caller, Translate("wreckingball_processing", originalCaller != null ? originalCaller.CharacterName : "???", (dIdxCount - dIdx), CalcProcessTime()));
-                    return;
-                }
-                Abort();
-            }
-            else
-            {
-                ElementData.reportLists[BuildableType.Element].Clear();
-                ElementData.reportLists[BuildableType.VehicleElement].Clear();
-                if (Instance.Configuration.Instance.EnablePlayerInfo)
-                {
-                    pInfoLibLoaded = IsPInfoLibLoaded();
-                }
-            }
-            UnturnedPlayer Player = null;
-            if (!(caller is ConsolePlayer))
-            {
-                Player = (UnturnedPlayer)caller;
-                if (Player.IsInVehicle)
-                    position = Player.CurrentVehicle.transform.position;
-                else
-                    position = Player.Position;
-            }
-
-            List<char> Filter = new List<char>();
-            Filter.AddRange(filter.ToCharArray());
-
-            ushort item = 0;
-            float distance = 0;
-            byte x;
-            byte y;
-            ushort plant;
-
-            Transform transform;
-            int transformCount = 0;
-
-            StructureRegion structureRegion;
-            BarricadeRegion barricadeRegion;
-            StructureData sData;
-            BarricadeData bData;
-            int DataCount = 0;
-
-            for (int k = 0; k < StructureManager.StructureRegions.GetLength(0); k++)
-            {
-                for (int l = 0; l < StructureManager.StructureRegions.GetLength(1); l++)
-                {
-                    // check to see if the region is out of range, skip if it is.
-                    if (position.RegionOutOfRange(k, l, radius))
-                        continue;
-
-                    structureRegion = StructureManager.StructureRegions[k, l];
-                    transformCount = structureRegion.Structures.Count;
-                    DataCount = structureRegion.StructureDatas.Count;
-                    for (int i = 0; i < transformCount; i++)
-                    {
-                        transform = structureRegion.Structures[i];
-                        if (i < DataCount)
-                            sData = structureRegion.StructureDatas[i];
-                        else
-                        {
-                            Logger.LogWarning(Translate("wreckingball_structure_array_sync_error"));
-                            break;
-                        }
-                        distance = Vector3.Distance(transform.position, position);
-                        if (distance < radius)
-                        {
-                            item = sData.structure.id;
-                            if (ElementData.filterItem(item, Filter) || Filter.Contains('*'))
-                            {
-                                if (type == WreckType.Scan)
-                                {
-                                    if (distance <= 10)
-                                    {
-                                        ElementData.report(caller, item, distance, true, pInfoLibLoaded, BuildableType.Element, sData.owner);
-                                    }
-                                    else
-                                        ElementData.report(caller, item, distance, false, pInfoLibLoaded, BuildableType.Element, sData.owner);
-                                }
-                                else
-                                    destroyList.Add(new Destructible(transform, 's'));
-                            }
-                        }
-                    } //
-                }
-            }
-            
-            for (int k = 0; k < BarricadeManager.BarricadeRegions.GetLength(0); k++)
-            {
-                for (int l = 0; l < BarricadeManager.BarricadeRegions.GetLength(1); l++)
-                {
-                    // check to see if the region is out of range, skip if it is.
-                    if (position.RegionOutOfRange(k, l, radius))
-                        continue;
-
-                    barricadeRegion = BarricadeManager.BarricadeRegions[k, l];
-                    transformCount = barricadeRegion.Barricades.Count;
-                    DataCount = barricadeRegion.BarricadeDatas.Count;
-                    for (int i = 0; i < transformCount; i++)
-                    {
-                        transform = barricadeRegion.Barricades[i];
-                        if (i < DataCount)
-                            bData = barricadeRegion.BarricadeDatas[i];
-                        else
-                        {
-                            Logger.LogWarning(Translate("wreckingball_barricade_array_sync_error"));
-                            break;
-                        }
-                        distance = Vector3.Distance(transform.position, position);
-                        if (distance < radius)
-                        {
-                            item = bData.barricade.id;
-                            if (ElementData.filterItem(item, Filter) || Filter.Contains('*'))
-                            {
-                                if (type == WreckType.Scan)
-                                {
-                                    if (distance <= 10)
-                                    {
-                                        ElementData.report(caller, item, distance, true, pInfoLibLoaded, BuildableType.Element, bData.owner);
-                                    }
-                                    else
-                                        ElementData.report(caller, item, distance, false, pInfoLibLoaded, BuildableType.Element, bData.owner);
-                                }
-                                else
-                                    destroyList.Add(new Destructible(transform, 'b'));
-                            }
-                        }
-                    } //
-
-                }
-            }
-
-
-            foreach (InteractableVehicle vehicle in VehicleManager.Vehicles)
-            {
-                distance = Vector3.Distance(vehicle.transform.position, position);
-                if (distance < radius)
-                {
-                    if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
-                    {
-                        transformCount = barricadeRegion.Barricades.Count;
-                        DataCount = barricadeRegion.BarricadeDatas.Count;
-                        for (int i = 0; i < transformCount; i++)
-                        {
-                            transform = barricadeRegion.Barricades[i];
-                            if (i < DataCount)
-                                bData = barricadeRegion.BarricadeDatas[i];
-                            else
-                            {
-                                Logger.LogWarning(Translate("wreckingball_barricade_array_sync_error"));
-                                break;
-                            }
-                            distance = Vector3.Distance(transform.position, position);
-                            if (distance < radius)
-                            {
-                                item = bData.barricade.id;
-                                if (ElementData.filterItem(item, Filter) || Filter.Contains('*'))
-                                {
-                                    if (type == WreckType.Scan)
-                                    {
-                                        if (distance <= 10)
-                                        {
-                                            ElementData.report(caller, item, distance, true, pInfoLibLoaded, BuildableType.VehicleElement, bData.owner);
-                                        }
-                                        else
-                                            ElementData.report(caller, item, distance, false, pInfoLibLoaded, BuildableType.VehicleElement, bData.owner);
-                                    }
-                                    else
-                                        destroyList.Add(new Destructible(transform, 'b'));
-                                }
-                            }
-                        } //
-
-                    }
-                    else
-                    {
-                        barricadeRegion = null;
-                    }
-                    if (Filter.Contains('v') || Filter.Contains('*'))
-                    {
-                        if (type == WreckType.Scan)
-                        {
-                            if (distance <= 10)
-                                ElementData.report(caller, 9999, distance, true, pInfoLibLoaded, BuildableType.Vehicle, (ulong)(barricadeRegion == null ? 0 : barricadeRegion.Barricades.Count));
-                            else
-                                ElementData.report(caller, 9999, distance, false, pInfoLibLoaded, BuildableType.Vehicle);
-                        }
-                        else
-                            destroyList.Add(new Destructible(vehicle.transform, 'v', vehicle));
-
-                    }
-                }
-            }
-
-            if (Filter.Contains('z'))
-            {
-                for (int v = 0; v < ZombieManager.ZombieRegions.Length; v++)
-                {
-
-                    foreach (Zombie zombie in ZombieManager.ZombieRegions[v].Zombies)
-                    {
-                        distance = Vector3.Distance(zombie.transform.position, position);
-                        if (distance < radius)
-                        {
-                            if (type == WreckType.Scan)
-                                ElementData.report(caller, 9998, (int)distance, false, pInfoLibLoaded);
-                            else
-                                destroyList.Add(new Destructible(zombie.transform, 'z', null, zombie));
-                        }
-                    }
-                }
-            }
-
-
-            if (type == WreckType.Scan) return;
-
-            if (destroyList.Count >= 1)
-            {
-                dIdxCount = destroyList.Count;
-                Instruct(caller);
-            }
-            else
-                UnturnedChat.Say(caller, Translate("wreckingball_not_found", radius));
-        }
-
-        internal void Scan(IRocketPlayer caller, string filter, uint radius, Vector3 position)
-        {
-            Wreck(caller, filter, radius, position, WreckType.Scan);
+            DestructionProcessing.Wreck(caller, filter, radius, position, WreckType.Scan, flagType, steamID, itemID);
             if (ElementData.reportLists[BuildableType.Element].Count > 0 || ElementData.reportLists[BuildableType.VehicleElement].Count > 0)
             {
                 foreach (KeyValuePair<BuildableType, Dictionary<char, uint>> reportDictionary in ElementData.reportLists)
@@ -481,108 +280,46 @@ namespace ApokPT.RocketPlugins
             UnturnedChat.Say(caller, Translate("wreckingball_teleport_not_found"));
         }
 
-        private void Instruct(IRocketPlayer caller)
+        internal void Instruct(IRocketPlayer caller)
         {
-            UnturnedChat.Say(caller, Translate("wreckingball_queued", dIdxCount, CalcProcessTime()));
+            UnturnedChat.Say(caller, Translate("wreckingball_queued", DestructionProcessing.dIdxCount, DestructionProcessing.CalcProcessTime()));
+            if (DestructionProcessing.syncError)
+                UnturnedChat.Say(caller, Translate("wreckingball_sync_error"));
             UnturnedChat.Say(caller, Translate("wreckingball_prompt"));
         }
 
         internal void Confirm(IRocketPlayer caller)
         {
-            if (destroyList.Count <= 0)
+            if (DestructionProcessing.destroyList.Count <= 0)
             {
                 UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help"));
             }
             else
             {
-                processing = true;
+                DestructionProcessing.processing = true;
                 if (!(caller is ConsolePlayer))
-                    originalCaller = (UnturnedPlayer)caller;
-                UnturnedChat.Say(caller, Translate("wreckingball_initiated", CalcProcessTime()));
-                dIdxCount = destroyList.Count;
-                dIdx = 0;
+                    DestructionProcessing.originalCaller = (UnturnedPlayer)caller;
+                UnturnedChat.Say(caller, Translate("wreckingball_initiated", DestructionProcessing.CalcProcessTime()));
+                DestructionProcessing.dIdxCount = DestructionProcessing.destroyList.Count;
+                DestructionProcessing.dIdx = 0;
             }
-        }
-
-        private double CalcProcessTime()
-        {
-            return Math.Round(((dIdxCount - dIdx) * (1 / (Instance.Configuration.Instance.DestructionRate * Instance.Configuration.Instance.DestructionsPerInterval))), 2);
-        }
-
-        internal void Abort()
-        {
-            processing = false;
-            destroyList.Clear();
-            dIdx = 0;
-            dIdxCount = 0;
-            originalCaller = null;
         }
 
         // Changed timer to Update(), to attempt to fix ghost objects bug by syncing the destructions to the game frame/tic.
         public void Update()
         {
-            if (processing)
+            if (Instance.State == PluginState.Loaded)
             {
-                if ((DateTime.Now - lastRunTime).TotalSeconds > (1 / Instance.Configuration.Instance.DestructionRate))
+                DestructionProcessing.DestructionLoop(WreckType.Wreck);
+                DestructionProcessing.DestructionLoop(WreckType.Cleanup);
+                if (Instance.Configuration.Instance.EnableCleanup)
                 {
-                    lastRunTime = DateTime.Now;
-                    try
-                    {
-                        int i = 0;
-                        while (dIdx < dIdxCount && i < Instance.Configuration.Instance.DestructionsPerInterval)
-                        {
-
-                            if (destroyList[dIdx].Type == 's')
-                            {
-                                try { StructureManager.damage(destroyList[dIdx].Transform, destroyList[dIdx].Transform.position, 65535, 1, false); }
-                                catch { }
-                            }
-
-                            else if (destroyList[dIdx].Type == 'b')
-                            {
-                                try { BarricadeManager.damage(destroyList[dIdx].Transform, 65535, 1, false); }
-                                catch { }
-                            }
-
-                            else if (destroyList[dIdx].Type == 'v')
-                            {
-                                try { destroyList[dIdx].Vehicle.askDamage(65535, true); }
-                                catch { }
-                            }
-                            else if (destroyList[dIdx].Type == 'z')
-                            {
-                                EPlayerKill pKill;
-                                try
-                                {
-                                    for (int j = 0; j < 100 && !destroyList[dIdx].Zombie.isDead; j++)
-                                        destroyList[dIdx].Zombie.askDamage(255, destroyList[dIdx].Zombie.transform.up, out pKill);
-                                }
-                                catch { }
-                            }
-                            dIdx++;
-                            i++;
-                        }
-                        if (destroyList.Count == dIdx)
-                        {
-                            if (originalCaller != null)
-                                UnturnedChat.Say(originalCaller, Translate("wreckingball_complete", dIdx));
-                            else
-                                Logger.Log(Translate("wreckingball_complete", dIdx));
-                            StructureManager.save();
-                            BarricadeManager.save();
-                            Abort();
-                        }
-                    }
-                    catch
-                    {
-                        throw;
-                    }
+                    DestructionProcessing.HandleCleanup();
                 }
             }
         }
 
         // Translations
-
         public override TranslationList DefaultTranslations
         {
             get
@@ -605,6 +342,7 @@ namespace ApokPT.RocketPlugins
                     { "wreckingball_prompt", "Type '/wreck confirm' or '/wreck abort'" },
                     { "wreckingball_structure_array_sync_error", "Warning: Structure arrays out of sync, need to restart server." },
                     { "wreckingball_barricade_array_sync_error", "Warning: Barricade arrays out of sync, need to restart server." },
+                    { "wreckingball_sync_error", "Warning: Element array sync error, not all elements will be cleaned up in range, server should be restarted." },
                     { "wreckingball_teleport_not_found", "Couldn't find any elements to teleport to, try to run the command again." },
                     { "wreckingball_teleport_not_allowed", "Not allowed to use wreck teleport from the console." },
                     { "wreckingball_reload_abort", "Warning: Current wreck job in progress has been aborted from a plugin reload." }

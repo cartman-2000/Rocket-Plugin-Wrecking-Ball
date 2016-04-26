@@ -39,9 +39,9 @@
       <HintPath>..\Rocket_Ref\Assembly-CSharp-firstpass.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="PlayerInfoLib">
-      <HintPath>..\Rocket_Ref\PlayerInfoLib.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="PlayerInfoLib, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Rocket_Ref\PlayerInfoLibrary\PlayerInfoLib.dll</HintPath>
     </Reference>
     <Reference Include="Rocket.API">
       <HintPath>..\Rocket_Ref\Rocket.API.dll</HintPath>
@@ -71,6 +71,7 @@
     <Compile Include="BuildableType.cs" />
     <Compile Include="Category.cs" />
     <Compile Include="Destructable.cs" />
+    <Compile Include="DestructionProcessing.cs" />
     <Compile Include="Element.cs" />
     <Compile Include="ElementDataManager.cs" />
     <Compile Include="Extensions.cs" />
@@ -78,6 +79,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WreckingBallCommand.cs" />
     <Compile Include="WreckingBallConfiguration.cs" />
+    <Compile Include="FlagType.cs" />
     <Compile Include="WreckType.cs" />
   </ItemGroup>
   <ItemGroup>
