@@ -8,6 +8,7 @@ using Rocket.Core.Plugins;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using SDG.Unturned;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -120,7 +121,7 @@ namespace ApokPT.RocketPlugins
             WreckingBallCommand.Execute(caller, cmd);
         }
 
-        [RocketCommand("listvehicles", "lists positions and barricade counts on cars on a map.", ".", AllowedCaller.Both)]
+        [RocketCommand("listvehicles", "lists positions and barricade counts on cars on a map.", "<radius>", AllowedCaller.Both)]
         [RocketCommandPermission("listvehicles")]
         public void LVExecute(IRocketPlayer caller, string[] cmd)
         {
@@ -136,7 +137,7 @@ namespace ApokPT.RocketPlugins
                 {
                     if (cmd.GetFloatParameter(0) == null)
                     {
-                        UnturnedChat.Say(caller, "<radius> - distance to scan cars.");
+                        UnturnedChat.Say(caller, Translate("wreckingball_lv_help"));
                         return;
                     }
                     player = (UnturnedPlayer)caller;
@@ -146,15 +147,80 @@ namespace ApokPT.RocketPlugins
                     if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
                     {
                         if (!(caller is ConsolePlayer))
-                            UnturnedChat.Say(caller, "Vehicle position: " + vehicle.transform.position.ToString() + ", Barricade count on car: " + barricadeRegion.Barricades.Count + ".", Color.yellow);
-                        Logger.Log("Vehicle position: " + vehicle.transform.position.ToString() + ", Barricade count on car: " + barricadeRegion.Barricades.Count + ".", ConsoleColor.Yellow);
+                            UnturnedChat.Say(caller, Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), barricadeRegion.Barricades.Count), Color.yellow);
+                        Logger.Log(Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), barricadeRegion.Barricades.Count), ConsoleColor.Yellow);
                     }
                     else
                     {
                         if (!(caller is ConsolePlayer))
-                            UnturnedChat.Say(caller, "Vehicle position: " + vehicle.transform.position.ToString() + ", Barricade count on car: 0.", Color.yellow);
-                        Logger.Log("Vehicle position: " + vehicle.transform.position.ToString() + ", Barricade count on car: 0.", ConsoleColor.Yellow);
+                            UnturnedChat.Say(caller, Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), 0), Color.yellow);
+                        Logger.Log(Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), 0), ConsoleColor.Yellow);
                     }
+            }
+        }
+
+        [RocketCommand("disablecleanup", "disables cleanup on a player", "<\"playername\" | SteamID>", AllowedCaller.Both)]
+        [RocketCommandPermission("disablecleanup")]
+        public void DCUExecute(IRocketPlayer caller, string[] cmd)
+        {
+            if (!Instance.Configuration.Instance.EnableCleanup)
+            {
+                UnturnedChat.Say(caller, Translate("werckingball_dcu_not_enabled"), Color.red);
+                return;
+            }
+            else
+            {
+                DCUSet(caller, cmd);
+            }
+        }
+
+        private void DCUSet(IRocketPlayer caller, string[] cmd)
+        {
+            if (cmd.Length == 0 || cmd.Length > 1)
+            {
+                UnturnedChat.Say(caller, Translate("werckingball_dcu_help"));
+                return;
+            }
+            else
+            {
+                ulong steamID = 0;
+                UnturnedPlayer player = null;
+                if (!cmd[0].isCSteamID(out steamID))
+                {
+                    player = UnturnedPlayer.FromName(cmd[0]);
+                    if (player == null)
+                    {
+                        UnturnedChat.Say(caller, Translate("wreckingball_dcu_player_not_found"), Color.red);
+                        return;
+                    }
+                    steamID = (ulong)player.CSteamID;
+                }
+                if (IsPInfoLibLoaded())
+                {
+                    PlayerData pData = PlayerInfoLib.Database.QueryById((CSteamID)steamID, false);
+                    if (!pData.IsLocal())
+                    {
+                        UnturnedChat.Say(caller, Translate("wreckingball_dcu_hasnt_played"), Color.red);
+                        return;
+                    }
+                    if (pData.CleanedBuildables && pData.CleanedPlayerData)
+                    {
+                        PlayerInfoLib.Database.SetOption(pData.SteamID, OptionType.Buildables, false);
+                        PlayerInfoLib.Database.SetOption(pData.SteamID, OptionType.PlayerFiles, false);
+                        UnturnedChat.Say(caller, Translate("wreckingball_dcu_cleanup_enabled", pData.CharacterName, pData.SteamName, pData.SteamID));
+
+                    }
+                    else
+                    {
+                        PlayerInfoLib.Database.SetOption(pData.SteamID, OptionType.Buildables, true);
+                        PlayerInfoLib.Database.SetOption(pData.SteamID, OptionType.PlayerFiles, true);
+                        UnturnedChat.Say(caller, Translate("wreckingball_dcu_cleanup_disabled", pData.CharacterName, pData.SteamName, pData.SteamID));
+                    }
+                }
+                else
+                {
+                    UnturnedChat.Say(caller, Translate("werckingball_dcu_not_enabled"), Color.red);
+                }
             }
         }
 
@@ -326,6 +392,14 @@ namespace ApokPT.RocketPlugins
             {
                 return new TranslationList
                 {
+                    { "wreckingball_lv_help", "<radius> - distance to scan cars." },
+                    { "wreckingball_lv_vehicle", "Vehicle position: {0}, Barricade count on car: {1}." },
+                    { "werckingball_dcu_help", "<\"playername\" | SteamID> - disables cleanup on a player." },
+                    { "werckingball_dcu_not_enabled", "This command can only be used if the cleanup feature is enabled on the server." },
+                    { "wreckingball_dcu_player_not_found", "Couldn't find a player by that name on the server." },
+                    { "wreckingball_dcu_hasnt_played", "Player hasn't played on this server yet." },
+                    { "wreckingball_dcu_cleanup_disabled", "Auto Cleanup has been disabled for player {0} [{1}] ({2})" },
+                    { "wreckingball_dcu_cleanup_enabled", "Auto Cleanup has been enabled for player {0} [{1}] ({2})" },
                     { "wreckingball_scan", "Found {0} elements of type: {1}, @ {2}m:{3}" },
                     { "wreckingball_map_clear", "Map has no elements!" },
                     { "wreckingball_not_found", "No elements found in a {0} radius!" },

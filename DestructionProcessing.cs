@@ -161,7 +161,7 @@ namespace ApokPT.RocketPlugins
                             {
                                 if (flagtype == FlagType.Normal)
                                     WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.Element, type, sData, bData, transform, 'b');
-                                else if (flagtype == FlagType.SteamID && sData.owner == steamID)
+                                else if (flagtype == FlagType.SteamID && bData.owner == steamID)
                                     WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.Element, type, sData, bData, transform, 'b');
                                 else if (flagtype == FlagType.ItemID && itemID == item)
                                     WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.Element, type, sData, bData, transform, 'b');
@@ -206,7 +206,7 @@ namespace ApokPT.RocketPlugins
                                 {
                                     if (flagtype == FlagType.Normal)
                                         WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.VehicleElement, type, sData, bData, transform, 'b');
-                                    else if (flagtype == FlagType.SteamID && sData.owner == steamID)
+                                    else if (flagtype == FlagType.SteamID && bData.owner == steamID)
                                         WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.VehicleElement, type, sData, bData, transform, 'b');
                                     else if (flagtype == FlagType.ItemID && itemID == item)
                                         WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.VehicleElement, type, sData, bData, transform, 'b');
@@ -224,7 +224,7 @@ namespace ApokPT.RocketPlugins
                     {
                         barricadeRegion = null;
                     }
-                    if ((Filter.Contains('v') || Filter.Contains('*')) && type != WreckType.Cleanup)
+                    if ((Filter.Contains('v') || Filter.Contains('*')) && type != WreckType.Cleanup && flagtype == FlagType.Normal)
                     {
                         if (type == WreckType.Scan)
                         {
