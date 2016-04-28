@@ -358,7 +358,7 @@ namespace ApokPT.RocketPlugins
         {
             if (DestructionProcessing.destroyList.Count <= 0)
             {
-                UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help"));
+                UnturnedChat.Say(caller, Instance.Translate("wreckingball_help"));
             }
             else
             {
@@ -376,8 +376,14 @@ namespace ApokPT.RocketPlugins
         {
             if (Instance.State == PluginState.Loaded)
             {
-                DestructionProcessing.DestructionLoop(WreckType.Wreck);
-                DestructionProcessing.DestructionLoop(WreckType.Cleanup);
+                if ((DateTime.Now - DestructionProcessing.lastRunTimeWreck).TotalSeconds > (1 / Instance.Configuration.Instance.DestructionRate))
+                {
+                    DestructionProcessing.lastRunTimeWreck = DateTime.Now;
+                    if (DestructionProcessing.processing)
+                        DestructionProcessing.DestructionLoop(WreckType.Wreck);
+                    if (DestructionProcessing.cleanupProcessingBuildables)
+                        DestructionProcessing.DestructionLoop(WreckType.Cleanup);
+                }
                 if (Instance.Configuration.Instance.EnableCleanup)
                 {
                     DestructionProcessing.HandleCleanup();

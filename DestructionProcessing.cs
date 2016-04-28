@@ -31,9 +31,7 @@ namespace ApokPT.RocketPlugins
         internal static bool cleanupProcessingFiles = false;
         internal static UnturnedPlayer originalCaller = null;
         internal static DateTime lastRunTimeWreck = DateTime.Now;
-        internal static DateTime lastRunTimeCleanup = DateTime.Now;
-        internal static DateTime lastGetPBuildables = DateTime.Now;
-        internal static DateTime lastGetPFiles = DateTime.Now;
+        internal static DateTime lastGetCleanupInfo = DateTime.Now;
 
         internal static bool syncError;
         internal static void Wreck(IRocketPlayer caller, string filter, uint radius, Vector3 position, WreckType type, FlagType flagtype, ulong steamID, ushort itemID)
@@ -388,21 +386,14 @@ namespace ApokPT.RocketPlugins
                 }
             }
 
-            if (WreckingBall.Instance.Configuration.Instance.BuildableCleanup)
+            if ((DateTime.Now - lastGetCleanupInfo).TotalSeconds > WreckingBall.Instance.Configuration.Instance.CleanupIntervalTime * 60)
             {
-                if ((DateTime.Now - lastGetPBuildables).TotalSeconds > WreckingBall.Instance.Configuration.Instance.CleanupIntervalTime * 60)
+                lastGetCleanupInfo = DateTime.Now;
+                if (WreckingBall.Instance.Configuration.Instance.BuildableCleanup)
                 {
-                    lastGetPBuildables = DateTime.Now;
                     if (playersListBuildables.Count == 0 && WreckingBall.IsPInfoLibLoaded())
                     {
-                        try
-                        {
-                            GetCleanupList(OptionType.Buildables, WreckingBall.Instance.Configuration.Instance.BuildableWaitTime, WreckingBall.Instance.Configuration.Instance.CleanupPerInterval);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.LogException(ex);
-                        }
+                        GetCleanupList(OptionType.Buildables, WreckingBall.Instance.Configuration.Instance.BuildableWaitTime, WreckingBall.Instance.Configuration.Instance.CleanupPerInterval);
                         if (playersListBuildables.Count != 0)
                         {
                             // Start cleanup sequence for the players elements.
@@ -412,22 +403,11 @@ namespace ApokPT.RocketPlugins
                         }
                     }
                 }
-            }
-            if (WreckingBall.Instance.Configuration.Instance.PlayerDataCleanup)
-            {
-                if ((DateTime.Now - lastGetPFiles).TotalSeconds > WreckingBall.Instance.Configuration.Instance.CleanupIntervalTime * 60)
+                if (WreckingBall.Instance.Configuration.Instance.PlayerDataCleanup)
                 {
-                    lastGetPFiles = DateTime.Now;
                     if (playersListFiles.Count == 0 && WreckingBall.IsPInfoLibLoaded())
                     {
-                        try
-                        {
-                            GetCleanupList(OptionType.PlayerFiles, WreckingBall.Instance.Configuration.Instance.PlayerDataWaitTime, WreckingBall.Instance.Configuration.Instance.CleanupPerInterval);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.LogException(ex);
-                        }
+                        GetCleanupList(OptionType.PlayerFiles, WreckingBall.Instance.Configuration.Instance.PlayerDataWaitTime, WreckingBall.Instance.Configuration.Instance.CleanupPerInterval);
                         if (playersListFiles.Count != 0)
                         {
                             // Start cleanup sequence for the players files.
@@ -440,12 +420,16 @@ namespace ApokPT.RocketPlugins
 
         private static void GetCleanupList(OptionType option, float waitTime, byte numberToProcess)
         {
-            if (option == OptionType.Buildables)
-                lastGetPBuildables = DateTime.Now;
-            else
-                lastGetPFiles = DateTime.Now;
             Logger.Log(string.Format("Getting list of {0} to cleanup.", option == OptionType.Buildables ? "player buildables" : "player files"));
-            List<object[]> tmp = PlayerInfoLib.Database.GetCleanupList(option, (DateTime.Now.AddSeconds(-(waitTime * 86400)).ToTimeStamp()));
+            List<object[]> tmp = new List<object[]>();
+            try
+            {
+                tmp = PlayerInfoLib.Database.GetCleanupList(option, (DateTime.Now.AddSeconds(-(waitTime * 86400)).ToTimeStamp()));
+            }
+            catch (Exception ex)
+            {
+                Logger.LogException(ex);
+            }
             if (tmp.Count == 0)
             {
                 Logger.Log("No records found.");
@@ -463,72 +447,61 @@ namespace ApokPT.RocketPlugins
 
         internal static void DestructionLoop(WreckType type)
         {
-            if ((processing && type == WreckType.Wreck) || (cleanupProcessingBuildables && type == WreckType.Cleanup))
+            try
             {
-                if (((DateTime.Now - lastRunTimeWreck).TotalSeconds > (1 / WreckingBall.Instance.Configuration.Instance.DestructionRate) && type == WreckType.Wreck) || ((DateTime.Now - lastRunTimeCleanup).TotalSeconds > (1 / WreckingBall.Instance.Configuration.Instance.DestructionRate) && type == WreckType.Cleanup))
+                int i = 0;
+                while (((dIdx < dIdxCount && type == WreckType.Wreck) || (cdIdx < cdIdxCount && type == WreckType.Cleanup)) && i < WreckingBall.Instance.Configuration.Instance.DestructionsPerInterval)
                 {
+                    Destructible element = type == WreckType.Wreck ? destroyList[dIdx] : cleanupList[cdIdx];
+
+                    if (element.Type == 's')
+                    {
+                        try { StructureManager.damage(element.Transform, element.Transform.position, 65535, 1, false); }
+                        catch { }
+                    }
+
+                    else if (element.Type == 'b')
+                    {
+                        try { BarricadeManager.damage(element.Transform, 65535, 1, false); }
+                        catch { }
+                    }
+
+                    else if (element.Type == 'v')
+                    {
+                        try { element.Vehicle.askDamage(65535, true); }
+                        catch { }
+                    }
+                    else if (element.Type == 'z')
+                    {
+                        EPlayerKill pKill;
+                        try
+                        {
+                            for (int j = 0; j < 100 && !element.Zombie.isDead; j++)
+                                element.Zombie.askDamage(255, element.Zombie.transform.up, out pKill);
+                        }
+                        catch { }
+                    }
                     if (type == WreckType.Wreck)
-                        lastRunTimeWreck = DateTime.Now;
+                        dIdx++;
                     else
-                        lastRunTimeCleanup = DateTime.Now;
-                    try
-                    {
-                        int i = 0;
-                        while (((dIdx < dIdxCount && type == WreckType.Wreck) || (cdIdx < cdIdxCount && type == WreckType.Cleanup)) && i < WreckingBall.Instance.Configuration.Instance.DestructionsPerInterval)
-                        {
-                            Destructible element = type == WreckType.Wreck ? destroyList[dIdx] : cleanupList[cdIdx];
-
-                            if (element.Type == 's')
-                            {
-                                try { StructureManager.damage(element.Transform, element.Transform.position, 65535, 1, false); }
-                                catch { }
-                            }
-
-                            else if (element.Type == 'b')
-                            {
-                                try { BarricadeManager.damage(element.Transform, 65535, 1, false); }
-                                catch { }
-                            }
-
-                            else if (element.Type == 'v')
-                            {
-                                try { element.Vehicle.askDamage(65535, true); }
-                                catch { }
-                            }
-                            else if (element.Type == 'z')
-                            {
-                                EPlayerKill pKill;
-                                try
-                                {
-                                    for (int j = 0; j < 100 && !element.Zombie.isDead; j++)
-                                        element.Zombie.askDamage(255, element.Zombie.transform.up, out pKill);
-                                }
-                                catch { }
-                            }
-                            if (type == WreckType.Wreck)
-                                dIdx++;
-                            else
-                                cdIdx++;
-                            i++;
-                        }
-                        if (destroyList.Count == dIdx && type == WreckType.Wreck)
-                        {
-                            if (originalCaller != null)
-                                UnturnedChat.Say(originalCaller, WreckingBall.Instance.Translate("wreckingball_complete", dIdx));
-                            else
-                                Logger.Log(WreckingBall.Instance.Translate("wreckingball_complete", dIdx));
-                            StructureManager.save();
-                            BarricadeManager.save();
-                            Abort(WreckType.Wreck);
-                        }
-                    }
-                    catch
-                    {
-                        throw;
-                    }
+                        cdIdx++;
+                    i++;
+                }
+                if (destroyList.Count == dIdx && type == WreckType.Wreck)
+                {
+                    if (originalCaller != null)
+                        UnturnedChat.Say(originalCaller, WreckingBall.Instance.Translate("wreckingball_complete", dIdx));
+                    else
+                        Logger.Log(WreckingBall.Instance.Translate("wreckingball_complete", dIdx));
+                    StructureManager.save();
+                    BarricadeManager.save();
+                    Abort(WreckType.Wreck);
                 }
             }
+            catch
+            {
+                throw;
+            }
         }
-
     }
 }
