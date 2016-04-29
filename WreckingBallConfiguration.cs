@@ -101,6 +101,10 @@ namespace ApokPT.RocketPlugins
                     new Element(455, 'd'),
                     new Element(456, 'd'),
                     new Element(457, 'd'),
+                    new Element(1235, 'd'),
+                    new Element(1236, 'd'),
+                    new Element(1237, 'd'),
+                    new Element(1238, 'd'),
                     // Storage
                     new Element(328, 'c'),
                     new Element(366, 'c'),
@@ -237,6 +241,10 @@ namespace ApokPT.RocketPlugins
                     new Element(1096, 'n'),
                     new Element(1097, 'n'),
                     new Element(1098, 'n'),
+                    new Element(1231, 'n'),
+                    new Element(1232, 'n'),
+                    new Element(1233, 'n'),
+                    new Element(1234, 'n'),
                     // Guard
                     new Element(29, 'g'),
                     new Element(30, 'g'),
@@ -267,6 +275,7 @@ namespace ApokPT.RocketPlugins
                     new Element(1208, 'u'),
                     new Element(1228, 'u'),
                     new Element(1229, 'u'),
+                    new Element(1230, 'u'),
                     // Agriculture
                     new Element(330, 'a'),
                     new Element(331, 'a'),
