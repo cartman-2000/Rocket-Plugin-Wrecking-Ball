@@ -326,7 +326,8 @@ namespace ApokPT.RocketPlugins
             {
                 if (cleanupList.Count <= cdIdx)
                 {
-                    Logger.Log(WreckingBall.Instance.Translate("wreckingball_complete", cdIdx));
+                    if (cdIdxCount != 0)
+                        Logger.Log(WreckingBall.Instance.Translate("wreckingball_complete", cdIdx));
                     cleanupList.Clear();
                     cdIdx = 0;
                     cdIdxCount = 0;
@@ -352,14 +353,17 @@ namespace ApokPT.RocketPlugins
                     else
                     {
                         Wreck(new RocketPlayer("0"), "*", 100000, new Vector3(0, 0, 0), WreckType.Cleanup, FlagType.SteamID, (ulong)playersListBuildables[plbIdx][0], 0);
-                        Logger.Log(string.Format("Cleaning up {0} elements for player: {1} [{2}] ({3}).", cdIdxCount, playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
+                        if (cdIdxCount == 0)
+                            Logger.Log(string.Format("No elements found for player: {0} [{1}] ({2}).", playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
+                        else
+                            Logger.Log(string.Format("Cleaning up {0} elements for player: {1} [{2}] ({3}).", cdIdxCount, playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
                     }
                 }
             }
             if (cleanupProcessingFiles)
             {
                 object[] pf = playersListFiles[plfIdx];
-                Logger.Log(string.Format("Cleaning up player data folders for player: {0} [{1}] ({2}).", pf[1].ToString(), pf[2].ToString(), (ulong)pf[0]));
+                bool found = false;
                 for (byte i = 0; i < Customization.FREE_CHARACTERS + Customization.PRO_CHARACTERS; i++)
                 {
                     try
@@ -367,6 +371,7 @@ namespace ApokPT.RocketPlugins
                         if (ServerSavedata.folderExists("/Players/" + (ulong)pf[0] + "_" + i))
                         {
                             ServerSavedata.deleteFolder("/Players/" + (ulong)pf[0] + "_" + i);
+                            found = true;
                         }
                         if (WreckingBall.IsPInfoLibLoaded())
                             PlayerInfoLib.Database.SetOption((CSteamID)((ulong)playersListFiles[plfIdx][0]), OptionType.PlayerFiles, true);
@@ -376,6 +381,10 @@ namespace ApokPT.RocketPlugins
                         Logger.LogException(ex);
                     }
                 }
+                if (found)
+                    Logger.Log(string.Format("Cleaning up player data folders for player: {0} [{1}] ({2}).", pf[1].ToString(), pf[2].ToString(), (ulong)pf[0]));
+                else
+                    Logger.Log(string.Format("Player data folders for player: {0} [{1}] ({2}) not found.", pf[1].ToString(), pf[2].ToString(), (ulong)pf[0]));
                 plfIdx++;
                 if (plfIdx >= WreckingBall.Instance.Configuration.Instance.CleanupPerInterval || plfIdx >= playersListFiles.Count)
                 {
@@ -399,7 +408,10 @@ namespace ApokPT.RocketPlugins
                             // Start cleanup sequence for the players elements.
                             cleanupProcessingBuildables = true;
                             Wreck(new RocketPlayer("0"), "*", 100000, new Vector3(0, 0, 0), WreckType.Cleanup, FlagType.SteamID, (ulong)playersListBuildables[plbIdx][0], 0);
-                            Logger.Log(string.Format("Cleaning up {0} elements for player: {1} [{2}] ({3}).", cdIdxCount, playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
+                            if (cdIdxCount == 0)
+                                Logger.Log(string.Format("No elements found for player: {0} [{1}] ({2}).", playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
+                            else
+                                Logger.Log(string.Format("Cleaning up {0} elements for player: {1} [{2}] ({3}).", cdIdxCount, playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
                         }
                     }
                 }
