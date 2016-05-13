@@ -138,11 +138,11 @@ namespace ApokPT.RocketPlugins
                         continue;
 
                     barricadeRegion = BarricadeManager.BarricadeRegions[k, l];
-                    transformCount = barricadeRegion.Barricades.Count;
+                    transformCount = barricadeRegion.drops.Count;
                     DataCount = barricadeRegion.BarricadeDatas.Count;
                     for (int i = 0; i < transformCount; i++)
                     {
-                        transform = barricadeRegion.Barricades[i];
+                        transform = barricadeRegion.drops[i].model;
                         if (i < DataCount)
                             bData = barricadeRegion.BarricadeDatas[i];
                         else
@@ -183,11 +183,11 @@ namespace ApokPT.RocketPlugins
                 {
                     if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
                     {
-                        transformCount = barricadeRegion.Barricades.Count;
+                        transformCount = barricadeRegion.drops.Count;
                         DataCount = barricadeRegion.BarricadeDatas.Count;
                         for (int i = 0; i < transformCount; i++)
                         {
-                            transform = barricadeRegion.Barricades[i];
+                            transform = barricadeRegion.drops[i].model;
                             if (i < DataCount)
                                 bData = barricadeRegion.BarricadeDatas[i];
                             else
@@ -227,7 +227,7 @@ namespace ApokPT.RocketPlugins
                         if (type == WreckType.Scan)
                         {
                             if (distance <= 10)
-                                WreckingBall.ElementData.report(caller, 9999, distance, true, pInfoLibLoaded, BuildableType.Vehicle, (ulong)(barricadeRegion == null ? 0 : barricadeRegion.Barricades.Count));
+                                WreckingBall.ElementData.report(caller, 9999, distance, true, pInfoLibLoaded, BuildableType.Vehicle, (ulong)(barricadeRegion == null ? 0 : barricadeRegion.drops.Count));
                             else
                                 WreckingBall.ElementData.report(caller, 9999, distance, false, pInfoLibLoaded, BuildableType.Vehicle);
                         }

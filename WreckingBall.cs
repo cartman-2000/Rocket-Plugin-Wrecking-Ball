@@ -147,8 +147,8 @@ namespace ApokPT.RocketPlugins
                     if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
                     {
                         if (!(caller is ConsolePlayer))
-                            UnturnedChat.Say(caller, Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), barricadeRegion.Barricades.Count), Color.yellow);
-                        Logger.Log(Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), barricadeRegion.Barricades.Count), ConsoleColor.Yellow);
+                            UnturnedChat.Say(caller, Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), barricadeRegion.drops.Count), Color.yellow);
+                        Logger.Log(Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), barricadeRegion.drops.Count), ConsoleColor.Yellow);
                     }
                     else
                     {
@@ -319,14 +319,14 @@ namespace ApokPT.RocketPlugins
                     if (zCount == 0)
                         continue;
                     z = UnityEngine.Random.Range(0, zCount - 1);
-                    idxCount = BarricadeManager.BarricadeRegions[x, z].Barricades.Count;
+                    idxCount = BarricadeManager.BarricadeRegions[x, z].drops.Count;
                     if (idxCount == 0)
                         continue;
                     idx = UnityEngine.Random.Range(0, idxCount - 1);
 
                     try
                     {
-                        current = BarricadeManager.BarricadeRegions[x, z].Barricades[idx];
+                        current = BarricadeManager.BarricadeRegions[x, z].drops[idx].model;
                     }
                     catch
                     {
