@@ -385,9 +385,9 @@ namespace ApokPT.RocketPlugins
                         DestructionProcessing.DestructionLoop(WreckType.Cleanup);
                 }
                 if (Instance.Configuration.Instance.EnableCleanup)
-                {
                     DestructionProcessing.HandleCleanup();
-                }
+                if (Instance.Configuration.Instance.EnableVehicleCap)
+                    DestructionProcessing.HandleVehicleCap();
             }
         }
 

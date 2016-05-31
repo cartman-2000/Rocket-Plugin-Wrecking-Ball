@@ -31,9 +31,12 @@ namespace ApokPT.RocketPlugins
         internal static bool cleanupProcessingFiles = false;
         internal static UnturnedPlayer originalCaller = null;
         internal static DateTime lastRunTimeWreck = DateTime.Now;
-        internal static DateTime lastGetCleanupInfo = DateTime.Now;
+        private static DateTime lastGetCleanupInfo = DateTime.Now;
+        private static DateTime lastVehiclesCapCheck = DateTime.Now;
+
 
         internal static bool syncError;
+
         internal static void Wreck(IRocketPlayer caller, string filter, uint radius, Vector3 position, WreckType type, FlagType flagtype, ulong steamID, ushort itemID)
         {
             bool pInfoLibLoaded = false;
@@ -426,6 +429,48 @@ namespace ApokPT.RocketPlugins
                             cleanupProcessingFiles = true;
                         }
                     }
+                }
+            }
+        }
+
+        internal static void HandleVehicleCap()
+        {
+            if ((DateTime.Now - lastVehiclesCapCheck).TotalSeconds > WreckingBall.Instance.Configuration.Instance.VCapCheckInterval)
+            {
+                lastVehiclesCapCheck = DateTime.Now;
+                Dictionary<InteractableVehicle, int> vList = new Dictionary<InteractableVehicle, int>();
+                byte x = 0;
+                byte y = 0;
+                ushort plant = 0;
+                BarricadeRegion barricadeRegion;
+                foreach (InteractableVehicle vehicle in VehicleManager.vehicles)
+                {
+                    if (vehicle.isDead)
+                        continue;
+                    if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
+                        vList.Add(vehicle, barricadeRegion.drops.Count);
+                    else
+                        vList.Add(vehicle, 0);
+                }
+                if (vList.Count > WreckingBall.Instance.Configuration.Instance.MaxVehiclesAllowed)
+                {
+                    int numToDestroy = vList.Count - WreckingBall.Instance.Configuration.Instance.MaxVehiclesAllowed;
+                    int i = 0;
+                    Logger.Log(string.Format("Vehicle Cap Check: Count over max by: {0} vehicles, starting cleanup process.", numToDestroy), ConsoleColor.Yellow);
+                    if (WreckingBall.Instance.Configuration.Instance.VCapDestroyByElementCount)
+                    {
+                        var sort = vList.OrderBy(c => c.Value);
+                        vList = sort.ToDictionary(d => d.Key, d => d.Value);
+                    }
+                    foreach (KeyValuePair<InteractableVehicle, int> vehicle in vList)
+                    {
+                        i++;
+                        if (i > numToDestroy)
+                            break;
+                        vehicle.Key.askDamage(ushort.MaxValue, false);
+                        Logger.Log(string.Format("Vehicle at position: {0} destroyed, Element count: {1}.", vehicle.Key.transform.position.ToString(), vehicle.Value));
+                    }
+                    Logger.Log("Vehicle cleanup finished.", ConsoleColor.Yellow);
                 }
             }
         }

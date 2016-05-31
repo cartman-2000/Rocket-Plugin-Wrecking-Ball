@@ -20,6 +20,11 @@ namespace ApokPT.RocketPlugins
         public float PlayerDataWaitTime = 45;
         public float CleanupIntervalTime = 5;
         public byte CleanupPerInterval = 10;
+        public bool EnableVehicleCap = false;
+        public bool VCapDestroyByElementCount = false;
+        public ushort MaxVehiclesAllowed = 70;
+        public uint VCapCheckInterval = 600;
+
 
         [XmlArray("Categories"), XmlArrayItem(ElementName = "Category")]
         public List<Category> Categories = new List<Category>();
