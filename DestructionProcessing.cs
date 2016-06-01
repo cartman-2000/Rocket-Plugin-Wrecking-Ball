@@ -464,6 +464,35 @@ namespace ApokPT.RocketPlugins
                     }
                     foreach (KeyValuePair<InteractableVehicle, int> vehicle in vList)
                     {
+                        if (WreckingBall.Instance.Configuration.Instance.LowElementCountOnly && WreckingBall.Instance.Configuration.Instance.MinElementCount <= vehicle.Value)
+                            continue;
+                        if (WreckingBall.Instance.Configuration.Instance.KeepVehiclesWithSigns)
+                        {
+                            if(BarricadeManager.tryGetPlant(vehicle.Key.transform, out x, out y, out plant, out barricadeRegion))
+                            {
+                                int transformCount = barricadeRegion.drops.Count;
+                                int DataCount = barricadeRegion.BarricadeDatas.Count;
+                                BarricadeData bData;
+                                bool match = false;
+                                if (transformCount == DataCount)
+                                {
+                                    for (int e = 0; e < DataCount; e++)
+                                    {
+                                        bData = barricadeRegion.BarricadeDatas[e];
+                                        if (WreckingBall.ElementData.filterItem(bData.barricade.id, new List<char> { 'n' }))
+                                        {
+                                            match = true;
+                                            break;
+                                        }
+                                    }
+                                    if (match)
+                                        continue;
+                                }
+                            }
+                        }
+                        // Current vehicle in check is the last vehicle added to the server, newest, skip.
+                        if (vehicle.Key.transform == VehicleManager.vehicles.Last().transform)
+                            continue;
                         i++;
                         if (i > numToDestroy)
                             break;

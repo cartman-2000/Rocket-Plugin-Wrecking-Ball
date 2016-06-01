@@ -24,7 +24,9 @@ namespace ApokPT.RocketPlugins
         public bool VCapDestroyByElementCount = false;
         public ushort MaxVehiclesAllowed = 70;
         public uint VCapCheckInterval = 600;
-
+        public bool LowElementCountOnly = false;
+        public ushort MinElementCount = 6;
+        public bool KeepVehiclesWithSigns = true;
 
         [XmlArray("Categories"), XmlArrayItem(ElementName = "Category")]
         public List<Category> Categories = new List<Category>();
