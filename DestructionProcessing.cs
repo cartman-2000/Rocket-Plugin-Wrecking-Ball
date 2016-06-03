@@ -74,6 +74,7 @@ namespace ApokPT.RocketPlugins
 
             ushort item = 0;
             float distance = 0;
+            float vdistance = 0;
             byte x;
             byte y;
             ushort plant;
@@ -92,7 +93,7 @@ namespace ApokPT.RocketPlugins
                 for (int l = 0; l < StructureManager.StructureRegions.GetLength(1); l++)
                 {
                     // check to see if the region is out of range, skip if it is.
-                    if (position.RegionOutOfRange(k, l, radius))
+                    if (position.RegionOutOfRange(k, l, radius) && type != WreckType.Cleanup)
                         continue;
 
                     structureRegion = StructureManager.StructureRegions[k, l];
@@ -110,7 +111,7 @@ namespace ApokPT.RocketPlugins
                             continue;
                         }
                         distance = Vector3.Distance(transform.position, position);
-                        if (distance < radius && type != WreckType.Cleanup)
+                        if (distance <= radius && type != WreckType.Cleanup)
                         {
                             item = sData.structure.id;
                             if (WreckingBall.ElementData.filterItem(item, Filter) || Filter.Contains('*') || flagtype == FlagType.ItemID)
@@ -137,7 +138,7 @@ namespace ApokPT.RocketPlugins
                 for (int l = 0; l < BarricadeManager.BarricadeRegions.GetLength(1); l++)
                 {
                     // check to see if the region is out of range, skip if it is.
-                    if (position.RegionOutOfRange(k, l, radius))
+                    if (position.RegionOutOfRange(k, l, radius) && type != WreckType.Cleanup)
                         continue;
 
                     barricadeRegion = BarricadeManager.BarricadeRegions[k, l];
@@ -155,7 +156,7 @@ namespace ApokPT.RocketPlugins
                             continue;
                         }
                         distance = Vector3.Distance(transform.position, position);
-                        if (distance < radius && type != WreckType.Cleanup)
+                        if (distance <= radius && type != WreckType.Cleanup)
                         {
                             item = bData.barricade.id;
                             if (WreckingBall.ElementData.filterItem(item, Filter) || Filter.Contains('*') || flagtype == FlagType.ItemID)
@@ -181,8 +182,8 @@ namespace ApokPT.RocketPlugins
 
             foreach (InteractableVehicle vehicle in VehicleManager.Vehicles)
             {
-                distance = Vector3.Distance(vehicle.transform.position, position);
-                if (distance < radius)
+                vdistance = Vector3.Distance(vehicle.transform.position, position);
+                if (vdistance <= radius + 92)
                 {
                     if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
                     {
@@ -225,14 +226,14 @@ namespace ApokPT.RocketPlugins
                     {
                         barricadeRegion = null;
                     }
-                    if ((Filter.Contains('v') || Filter.Contains('*')) && type != WreckType.Cleanup && flagtype == FlagType.Normal)
+                    if ((Filter.Contains('v') || Filter.Contains('*')) && type != WreckType.Cleanup && flagtype == FlagType.Normal && vdistance <= radius)
                     {
                         if (type == WreckType.Scan)
                         {
-                            if (distance <= 10)
-                                WreckingBall.ElementData.report(caller, 9999, distance, true, pInfoLibLoaded, BuildableType.Vehicle, (ulong)(barricadeRegion == null ? 0 : barricadeRegion.drops.Count));
+                            if (vdistance <= 10)
+                                WreckingBall.ElementData.report(caller, 9999, vdistance, true, pInfoLibLoaded, BuildableType.Vehicle, (ulong)(barricadeRegion == null ? 0 : barricadeRegion.drops.Count));
                             else
-                                WreckingBall.ElementData.report(caller, 9999, distance, false, pInfoLibLoaded, BuildableType.Vehicle);
+                                WreckingBall.ElementData.report(caller, 9999, vdistance, false, pInfoLibLoaded, BuildableType.Vehicle);
                         }
                         else
                             DestructionProcessing.destroyList.Add(new Destructible(vehicle.transform, 'v', vehicle));
