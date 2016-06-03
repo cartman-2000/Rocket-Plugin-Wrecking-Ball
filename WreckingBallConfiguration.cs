@@ -58,6 +58,7 @@ namespace ApokPT.RocketPlugins
                     new Category('i', "Illumination", ConsoleColor.Yellow),
                     new Category('u', "Industrial", ConsoleColor.DarkYellow),
                     new Category('a', "Agriculture", ConsoleColor.Green),
+                    new Category('D', "Decorations", ConsoleColor.Yellow),
                     new Category('v', "Vehicles", ConsoleColor.DarkRed),
                     new Category('z', "Zombies", ConsoleColor.DarkGreen),
                     new Category('!', "Uncategorized", ConsoleColor.White)
@@ -82,6 +83,7 @@ namespace ApokPT.RocketPlugins
                     new Element(293, 'b'),
                     new Element(294, 'b'),
                     new Element(295, 'b'),
+                    new Element(1243, 'b'),
                     // Trap
                     new Element(382, 't'),
                     new Element(383, 't'),
@@ -96,6 +98,7 @@ namespace ApokPT.RocketPlugins
                     new Element(1131, 't'),
                     new Element(1227, 't'),
                     new Element(1241, 't'),
+                    new Element(1244, 't'),
                     // Door - door
                     new Element(281, 'd'),
                     new Element(282, 'd'),
@@ -270,6 +273,7 @@ namespace ApokPT.RocketPlugins
                     // Protections
                     new Element(1050, 'o'),
                     new Element(1158, 'o'),
+                    new Element(1261, 'o'),
                     // Light
                     new Element(359, 'i'),
                     new Element(360, 'i'),
@@ -278,6 +282,7 @@ namespace ApokPT.RocketPlugins
                     new Element(459, 'i'),
                     new Element(1049, 'i'),
                     new Element(1222, 'i'),
+                    new Element(1255, 'i'),
                     // Industrial
                     new Element(458, 'u'),
                     new Element(1219, 'u'),
@@ -300,7 +305,23 @@ namespace ApokPT.RocketPlugins
                     new Element(1107, 'a'),
                     new Element(1108, 'a'),
                     new Element(1109, 'a'),
-                    new Element(1110, 'a')
+                    new Element(1110, 'a'),
+                    // Decorations
+                    new Element(1245, 'D'),
+                    new Element(1246, 'D'),
+                    new Element(1247, 'D'),
+                    new Element(1248, 'D'),
+                    new Element(1249, 'D'),
+                    new Element(1250, 'D'),
+                    new Element(1251, 'D'),
+                    new Element(1252, 'D'),
+                    new Element(1253, 'D'),
+                    new Element(1254, 'D'),
+                    new Element(1256, 'D'),
+                    new Element(1257, 'D'),
+                    new Element(1258, 'D'),
+                    new Element(1259, 'D'),
+                    new Element(1260, 'D'),
                 };
             }
         }
