@@ -99,7 +99,14 @@ namespace ApokPT.RocketPlugins
 
         private static bool CheckPlayerInfoLib()
         {
-            return Type.GetType("PlayerInfoLibrary.DatabaseManager,PlayerInfoLib") != null;
+            try
+            {
+                return Type.GetType("PlayerInfoLibrary.DatabaseManager,PlayerInfoLib") != null;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         internal static bool IsPInfoLibLoaded()

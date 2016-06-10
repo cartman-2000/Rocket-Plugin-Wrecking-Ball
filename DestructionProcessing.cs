@@ -561,10 +561,11 @@ namespace ApokPT.RocketPlugins
                     else if (element.Type == 'z')
                     {
                         EPlayerKill pKill;
+                        uint xp;
                         try
                         {
                             for (int j = 0; j < 100 && !element.Zombie.isDead; j++)
-                                element.Zombie.askDamage(255, element.Zombie.transform.up, out pKill);
+                                element.Zombie.askDamage(255, element.Zombie.transform.up, out pKill, out xp);
                         }
                         catch { }
                     }

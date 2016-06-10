@@ -170,6 +170,10 @@ namespace ApokPT.RocketPlugins
                     new Element(51, 'f'),
                     new Element(52, 'f'),
                     new Element(369, 'f'),
+                    new Element(1262, 'f'),
+                    new Element(1263, 'f'),
+                    new Element(1264, 'f'),
+                    new Element(1265, 'f'),
                     // Pillar - pillar
                     new Element(36, 'p'),
                     new Element(53, 'p'),
@@ -187,6 +191,10 @@ namespace ApokPT.RocketPlugins
                     new Element(55, 'r'),
                     new Element(56, 'r'),
                     new Element(373, 'r'),
+                    new Element(1266, 'r'),
+                    new Element(1267, 'r'),
+                    new Element(1268, 'r'),
+                    new Element(1269, 'r'),
                     // Roof - hole
                     new Element(319, 'r'),
                     new Element(321, 'r'),
