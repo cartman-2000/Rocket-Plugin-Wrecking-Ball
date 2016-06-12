@@ -27,6 +27,8 @@ namespace ApokPT.RocketPlugins
         public bool LowElementCountOnly = false;
         public ushort MinElementCount = 6;
         public bool KeepVehiclesWithSigns = true;
+        public bool LimitSafeGuards = false;
+        public float LimitSafeGuardsRatio = .6f;
 
         [XmlArray("Categories"), XmlArrayItem(ElementName = "Category")]
         public List<Category> Categories = new List<Category>();

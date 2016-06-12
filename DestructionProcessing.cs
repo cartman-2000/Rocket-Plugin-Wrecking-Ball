@@ -463,31 +463,45 @@ namespace ApokPT.RocketPlugins
                         var sort = vList.OrderBy(c => c.Value);
                         vList = sort.ToDictionary(d => d.Key, d => d.Value);
                     }
+                    bool useSafeGuards = true;
+                    restart:
+                    int v = 0;
                     foreach (KeyValuePair<InteractableVehicle, int> vehicle in vList)
                     {
-                        if (WreckingBall.Instance.Configuration.Instance.LowElementCountOnly && WreckingBall.Instance.Configuration.Instance.MinElementCount <= vehicle.Value)
+                        v++;
+                        if (vehicle.Key.isDead)
                             continue;
-                        if (WreckingBall.Instance.Configuration.Instance.KeepVehiclesWithSigns)
+                        if (useSafeGuards && (WreckingBall.Instance.Configuration.Instance.LowElementCountOnly || WreckingBall.Instance.Configuration.Instance.KeepVehiclesWithSigns))
                         {
-                            if(BarricadeManager.tryGetPlant(vehicle.Key.transform, out x, out y, out plant, out barricadeRegion))
+                            if (WreckingBall.Instance.Configuration.Instance.LimitSafeGuards && v > Math.Round(WreckingBall.Instance.Configuration.Instance.MaxVehiclesAllowed * WreckingBall.Instance.Configuration.Instance.LimitSafeGuardsRatio + numToDestroy, 0))
                             {
-                                int transformCount = barricadeRegion.drops.Count;
-                                int DataCount = barricadeRegion.BarricadeDatas.Count;
-                                BarricadeData bData;
-                                bool match = false;
-                                if (transformCount == DataCount)
+                                useSafeGuards = false;
+                                goto restart;
+                            }
+                            if (WreckingBall.Instance.Configuration.Instance.LowElementCountOnly && WreckingBall.Instance.Configuration.Instance.MinElementCount <= vehicle.Value)
+                                continue;
+                            if (WreckingBall.Instance.Configuration.Instance.KeepVehiclesWithSigns)
+                            {
+                                if (BarricadeManager.tryGetPlant(vehicle.Key.transform, out x, out y, out plant, out barricadeRegion))
                                 {
-                                    for (int e = 0; e < DataCount; e++)
+                                    int transformCount = barricadeRegion.drops.Count;
+                                    int DataCount = barricadeRegion.BarricadeDatas.Count;
+                                    BarricadeData bData;
+                                    bool match = false;
+                                    if (transformCount == DataCount)
                                     {
-                                        bData = barricadeRegion.BarricadeDatas[e];
-                                        if (WreckingBall.ElementData.filterItem(bData.barricade.id, new List<char> { 'n' }))
+                                        for (int e = 0; e < DataCount; e++)
                                         {
-                                            match = true;
-                                            break;
+                                            bData = barricadeRegion.BarricadeDatas[e];
+                                            if (WreckingBall.ElementData.filterItem(bData.barricade.id, new List<char> { 'n' }))
+                                            {
+                                                match = true;
+                                                break;
+                                            }
                                         }
+                                        if (match)
+                                            continue;
                                     }
-                                    if (match)
-                                        continue;
                                 }
                             }
                         }
@@ -498,7 +512,7 @@ namespace ApokPT.RocketPlugins
                         if (i > numToDestroy)
                             break;
                         vehicle.Key.askDamage(ushort.MaxValue, false);
-                        Logger.Log(string.Format("Vehicle at position: {0} destroyed, Element count: {1}.", vehicle.Key.transform.position.ToString(), vehicle.Value));
+                        Logger.Log(string.Format("Vehicle #{0} at position: {1} destroyed, Element count: {2}.", v, vehicle.Key.transform.position.ToString(), vehicle.Value));
                     }
                     Logger.Log("Vehicle cleanup finished.", ConsoleColor.Yellow);
                 }
