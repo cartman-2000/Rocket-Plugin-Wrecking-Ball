@@ -32,27 +32,27 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\Rocket_Ref\Assembly-CSharp.dll</HintPath>
+      <HintPath>BaseLib\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>..\Rocket_Ref\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>BaseLib\Assembly-CSharp-firstpass.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="PlayerInfoLib, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Rocket_Ref\PlayerInfoLibrary\PlayerInfoLib.dll</HintPath>
+      <HintPath>PInfoLib\PlayerInfoLib.dll</HintPath>
     </Reference>
     <Reference Include="Rocket.API">
-      <HintPath>..\Rocket_Ref\Rocket.API.dll</HintPath>
+      <HintPath>BaseLib\Rocket.API.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Rocket.Core">
-      <HintPath>..\Rocket_Ref\Rocket.Core.dll</HintPath>
+      <HintPath>BaseLib\Rocket.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Rocket.Unturned">
-      <HintPath>..\Rocket_Ref\Rocket.Unturned.dll</HintPath>
+      <HintPath>BaseLib\Rocket.Unturned.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -63,7 +63,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
-      <HintPath>..\Rocket_Ref\UnityEngine.dll</HintPath>
+      <HintPath>BaseLib\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
@@ -84,6 +84,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="BaseLib\Assembly-CSharp-firstpass.dll" />
+    <Content Include="BaseLib\Assembly-CSharp.dll" />
+    <Content Include="BaseLib\Rocket.API.dll" />
+    <Content Include="BaseLib\Rocket.Core.dll" />
+    <Content Include="BaseLib\Rocket.Unturned.dll" />
+    <Content Include="BaseLib\UnityEngine.dll" />
+    <Content Include="PInfoLib\PlayerInfoLib.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
