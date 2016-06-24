@@ -389,6 +389,8 @@ namespace ApokPT.RocketPlugins
                     new Element(1324, 'D'),
                     new Element(1325, 'D'),
                     new Element(1326, 'D'),
+                    new Element(1327, 'D'),
+                    new Element(1328, 'D'),
                 };
             }
         }
