@@ -154,14 +154,14 @@ namespace ApokPT.RocketPlugins
                     if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
                     {
                         if (!(caller is ConsolePlayer))
-                            UnturnedChat.Say(caller, Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), barricadeRegion.drops.Count), Color.yellow);
-                        Logger.Log(Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), barricadeRegion.drops.Count), ConsoleColor.Yellow);
+                            UnturnedChat.Say(caller, Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), vehicle.instanceID, barricadeRegion.drops.Count), Color.yellow);
+                        Logger.Log(Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), vehicle.instanceID, barricadeRegion.drops.Count), ConsoleColor.Yellow);
                     }
                     else
                     {
                         if (!(caller is ConsolePlayer))
-                            UnturnedChat.Say(caller, Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), 0), Color.yellow);
-                        Logger.Log(Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), 0), ConsoleColor.Yellow);
+                            UnturnedChat.Say(caller, Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), vehicle.instanceID, 0), Color.yellow);
+                        Logger.Log(Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), vehicle.instanceID, 0), ConsoleColor.Yellow);
                     }
             }
         }
@@ -406,7 +406,7 @@ namespace ApokPT.RocketPlugins
                 return new TranslationList
                 {
                     { "wreckingball_lv_help", "<radius> - distance to scan cars." },
-                    { "wreckingball_lv_vehicle", "Vehicle position: {0}, Barricade count on car: {1}." },
+                    { "wreckingball_lv_vehicle", "Vehicle position: {0}, with InstanceID: {1}, Barricade count on car: {2}." },
                     { "werckingball_dcu_help", "<\"playername\" | SteamID> - disables cleanup on a player." },
                     { "werckingball_dcu_not_enabled", "This command can only be used if the cleanup feature is enabled on the server." },
                     { "wreckingball_dcu_player_not_found", "Couldn't find a player by that name on the server." },

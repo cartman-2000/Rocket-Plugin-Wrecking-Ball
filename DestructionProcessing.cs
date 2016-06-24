@@ -512,7 +512,7 @@ namespace ApokPT.RocketPlugins
                         if (i > numToDestroy)
                             break;
                         vehicle.Key.askDamage(ushort.MaxValue, false);
-                        Logger.Log(string.Format("Vehicle #{0} at position: {1} destroyed, Element count: {2}.", v, vehicle.Key.transform.position.ToString(), vehicle.Value));
+                        Logger.Log(string.Format("Vehicle #{0}, with InstanceID: {1}, at position: {2} destroyed, Element count: {3}.", v, vehicle.Key.instanceID, vehicle.Key.transform.position.ToString(), vehicle.Value));
                     }
                     Logger.Log("Vehicle cleanup finished.", ConsoleColor.Yellow);
                 }
