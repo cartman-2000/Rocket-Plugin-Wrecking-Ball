@@ -336,6 +336,7 @@ namespace ApokPT.RocketPlugins
                     new Element(1108, 'a'),
                     new Element(1109, 'a'),
                     new Element(1110, 'a'),
+                    new Element(1345, 'a'),
                     // Decorations
                     new Element(1245, 'D'),
                     new Element(1246, 'D'),
