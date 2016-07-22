@@ -107,6 +107,8 @@ namespace ApokPT.RocketPlugins
                     new Element(1227, 't'),
                     new Element(1241, 't'),
                     new Element(1244, 't'),
+                    new Element(1372, 't'),
+                    new Element(1373, 't'),
                     // Door - door
                     new Element(281, 'd'),
                     new Element(282, 'd'),
@@ -134,6 +136,7 @@ namespace ApokPT.RocketPlugins
                     new Element(366, 'c'),
                     new Element(367, 'c'),
                     new Element(368, 'c'),
+                    new Element(1374, 'c'),
                     // Trophy/Weapon rack Containers.
                     new Element(1202, 'y'),
                     new Element(1203, 'y'),
