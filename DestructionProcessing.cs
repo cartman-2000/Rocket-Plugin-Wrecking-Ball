@@ -34,6 +34,7 @@ namespace ApokPT.RocketPlugins
         private static DateTime lastGetCleanupInfo = DateTime.Now;
         private static DateTime lastVehiclesCapCheck = DateTime.Now;
 
+        internal static Dictionary<ulong, int> pElementCounts = new Dictionary<ulong, int>();
 
         internal static bool syncError;
 
@@ -93,7 +94,7 @@ namespace ApokPT.RocketPlugins
                 for (int l = 0; l < StructureManager.StructureRegions.GetLength(1); l++)
                 {
                     // check to see if the region is out of range, skip if it is.
-                    if (position.RegionOutOfRange(k, l, radius) && type != WreckType.Cleanup)
+                    if (position.RegionOutOfRange(k, l, radius) && type != WreckType.Cleanup && type != WreckType.Counts)
                         continue;
 
                     structureRegion = StructureManager.StructureRegions[k, l];
@@ -111,7 +112,7 @@ namespace ApokPT.RocketPlugins
                             continue;
                         }
                         distance = Vector3.Distance(transform.position, position);
-                        if (distance <= radius && type != WreckType.Cleanup)
+                        if (distance <= radius && type != WreckType.Cleanup && type != WreckType.Counts)
                         {
                             item = sData.structure.id;
                             if (WreckingBall.ElementData.filterItem(item, Filter) || Filter.Contains('*') || flagtype == FlagType.ItemID)
@@ -129,6 +130,13 @@ namespace ApokPT.RocketPlugins
                             if (sData.owner == steamID)
                                 DestructionProcessing.cleanupList.Add(new Destructible(transform, 's'));
                         }
+                        else if (type == WreckType.Counts)
+                        {
+                            if (pElementCounts.ContainsKey(sData.owner))
+                                pElementCounts[sData.owner]++;
+                            else
+                                pElementCounts.Add(sData.owner, 1);
+                        }
                     } //
                 }
             }
@@ -138,7 +146,7 @@ namespace ApokPT.RocketPlugins
                 for (int l = 0; l < BarricadeManager.BarricadeRegions.GetLength(1); l++)
                 {
                     // check to see if the region is out of range, skip if it is.
-                    if (position.RegionOutOfRange(k, l, radius) && type != WreckType.Cleanup)
+                    if (position.RegionOutOfRange(k, l, radius) && type != WreckType.Cleanup && type != WreckType.Counts)
                         continue;
 
                     barricadeRegion = BarricadeManager.BarricadeRegions[k, l];
@@ -156,7 +164,7 @@ namespace ApokPT.RocketPlugins
                             continue;
                         }
                         distance = Vector3.Distance(transform.position, position);
-                        if (distance <= radius && type != WreckType.Cleanup)
+                        if (distance <= radius && type != WreckType.Cleanup && type != WreckType.Counts)
                         {
                             item = bData.barricade.id;
                             if (WreckingBall.ElementData.filterItem(item, Filter) || Filter.Contains('*') || flagtype == FlagType.ItemID)
@@ -174,6 +182,13 @@ namespace ApokPT.RocketPlugins
                             if (bData.owner == steamID)
                                 DestructionProcessing.cleanupList.Add(new Destructible(transform, 'b'));
                         }
+                        else if (type == WreckType.Counts)
+                        {
+                            if (pElementCounts.ContainsKey(bData.owner))
+                                pElementCounts[bData.owner]++;
+                            else
+                                pElementCounts.Add(bData.owner, 1);
+                        }
                     } //
 
                 }
@@ -183,7 +198,7 @@ namespace ApokPT.RocketPlugins
             foreach (InteractableVehicle vehicle in VehicleManager.Vehicles)
             {
                 vdistance = Vector3.Distance(vehicle.transform.position, position);
-                if (vdistance <= radius + 92)
+                if (vdistance <= radius + 92 || type == WreckType.Counts || type == WreckType.Cleanup)
                 {
                     if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
                     {
@@ -201,7 +216,7 @@ namespace ApokPT.RocketPlugins
                                 continue;
                             }
                             distance = Vector3.Distance(transform.position, position);
-                            if (distance < radius && type != WreckType.Cleanup)
+                            if (distance < radius && type != WreckType.Cleanup && type != WreckType.Counts)
                             {
                                 item = bData.barricade.id;
                                 if (WreckingBall.ElementData.filterItem(item, Filter) || Filter.Contains('*') || flagtype == FlagType.ItemID)
@@ -219,6 +234,13 @@ namespace ApokPT.RocketPlugins
                                 if (bData.owner == steamID)
                                     DestructionProcessing.cleanupList.Add(new Destructible(transform, 'b'));
                             }
+                            else if (type == WreckType.Counts)
+                            {
+                                if (pElementCounts.ContainsKey(bData.owner))
+                                    pElementCounts[bData.owner]++;
+                                else
+                                    pElementCounts.Add(bData.owner, 1);
+                            }
                         } //
 
                     }
@@ -226,7 +248,7 @@ namespace ApokPT.RocketPlugins
                     {
                         barricadeRegion = null;
                     }
-                    if ((Filter.Contains('v') || Filter.Contains('*')) && type != WreckType.Cleanup && flagtype == FlagType.Normal && vdistance <= radius)
+                    if ((Filter.Contains('v') || Filter.Contains('*')) && type != WreckType.Cleanup && type != WreckType.Counts && flagtype == FlagType.Normal && vdistance <= radius)
                     {
                         if (type == WreckType.Scan)
                         {
@@ -272,7 +294,7 @@ namespace ApokPT.RocketPlugins
             {
                 DestructionProcessing.cdIdxCount = DestructionProcessing.cleanupList.Count;
             }
-            else
+            else if (type != WreckType.Counts)
                 UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_not_found", radius));
         }
 

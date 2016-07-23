@@ -29,6 +29,7 @@ namespace ApokPT.RocketPlugins
         public bool KeepVehiclesWithSigns = true;
         public bool LimitSafeGuards = false;
         public float LimitSafeGuardsRatio = .6f;
+        public int PlayerElementListCutoff = 100;
 
         [XmlArray("Categories"), XmlArrayItem(ElementName = "Category")]
         public List<Category> Categories = new List<Category>();

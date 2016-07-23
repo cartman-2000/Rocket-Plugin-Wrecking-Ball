@@ -5,5 +5,6 @@
         Wreck,
         Cleanup,
         Scan,
+        Counts,
     }
 }

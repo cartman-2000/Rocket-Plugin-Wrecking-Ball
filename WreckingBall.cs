@@ -11,6 +11,7 @@ using SDG.Unturned;
 using Steamworks;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace ApokPT.RocketPlugins
@@ -164,6 +165,42 @@ namespace ApokPT.RocketPlugins
                         Logger.Log(Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), vehicle.instanceID, 0), ConsoleColor.Yellow);
                     }
             }
+        }
+
+
+        [RocketCommand("listtopplayers", "Gets the elements counts for players on the server, displays the top counts.", "", AllowedCaller.Both)]
+        [RocketCommandPermission("listtopplayers")]
+        public void LTPExecute(IRocketPlayer caller, string[] cmd)
+        {
+            // Get player elements list.
+            DestructionProcessing.Wreck(caller, "", 0, Vector3.zero, WreckType.Counts, FlagType.SteamID, 0, 0);
+            // Grab what we need from the list.
+            Dictionary<ulong, int> shortenedList = DestructionProcessing.pElementCounts.Where(r => r.Value >= WreckingBall.Instance.Configuration.Instance.PlayerElementListCutoff).OrderBy(v => v.Value).ToDictionary(k => k.Key, v => v.Value);
+            DestructionProcessing.pElementCounts.Clear();
+
+            bool getPInfo = false;
+            if (Instance.Configuration.Instance.EnablePlayerInfo)
+                getPInfo = IsPInfoLibLoaded();
+
+            foreach (KeyValuePair<ulong, int> value in shortenedList)
+            {
+                string msg = string.Format("Element count: {0}, Player: {1}", value.Value, !getPInfo || value.Key == 0 ? value.Key.ToString() : PInfoMessageTopPlayers(value.Key));
+                if (caller is ConsolePlayer)
+                    Logger.Log(msg, ConsoleColor.Yellow);
+                else
+                    UnturnedChat.Say(caller, msg, Color.yellow);
+            }
+        }
+
+        private string PInfoMessageTopPlayers(ulong steamID)
+        {
+            PlayerData pData = PlayerInfoLib.Database.QueryById((CSteamID)steamID);
+            string msg = string.Empty;
+            if (pData.IsValid())
+                msg = string.Format("{0} [{1}] ({2}), seen: {3}:{4}", pData.CharacterName, pData.SteamName, pData.SteamID, pData.IsLocal() ? "L" : "G", pData.IsLocal() ? pData.LastLoginLocal : pData.LastLoginGlobal);
+            else
+                msg = string.Format("{0}, No player info.", steamID);
+            return msg;
         }
 
         [RocketCommand("disablecleanup", "disables cleanup on a player", "<\"playername\" | SteamID>", AllowedCaller.Both)]
