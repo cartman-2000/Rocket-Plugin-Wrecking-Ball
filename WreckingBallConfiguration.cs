@@ -274,6 +274,8 @@ namespace ApokPT.RocketPlugins
                     new Element(1217, 'm'),
                     new Element(1218, 'm'),
                     new Element(1239, 'm'),
+                    new Element(1396, 'm'),
+                    new Element(1397, 'm'),
                     // Signs
                     new Element(1095, 'n'),
                     new Element(1096, 'n'),
