@@ -133,37 +133,43 @@ namespace ApokPT.RocketPlugins
         [RocketCommandPermission("listvehicles")]
         public void LVExecute(IRocketPlayer caller, string[] cmd)
         {
+            float radius = 0;
+            UnturnedPlayer player = null;
+            if (!(caller is ConsolePlayer))
+            {
+                if (cmd.GetFloatParameter(0) == null)
+                {
+                    UnturnedChat.Say(caller, Translate("wreckingball_lv_help"));
+                    return;
+                }
+                player = (UnturnedPlayer)caller;
+                radius = (float)cmd.GetFloatParameter(0);
+            }
             foreach (InteractableVehicle vehicle in VehicleManager.Vehicles)
             {
                 byte x = 0;
                 byte y = 0;
                 ushort plant = 0;
+                int count = 0;
                 BarricadeRegion barricadeRegion;
-                UnturnedPlayer player = null;
-                float radius = 0;
-                if (!(caller is ConsolePlayer))
-                {
-                    if (cmd.GetFloatParameter(0) == null)
-                    {
-                        UnturnedChat.Say(caller, Translate("wreckingball_lv_help"));
-                        return;
-                    }
-                    player = (UnturnedPlayer)caller;
-                    radius = (float)cmd.GetFloatParameter(0);
-                }
                 if (caller is ConsolePlayer || Vector3.Distance(vehicle.transform.position, player.Position) < radius)
+                {
+                    bool getPInfo = false;
+                    if (Instance.Configuration.Instance.EnablePlayerInfo)
+                        getPInfo = IsPInfoLibLoaded();
+                    string locked = getPInfo ? PInfoGenerateMessage((ulong)vehicle.lockedOwner) : vehicle.lockedOwner.ToString();
+                    string msg = string.Empty;
+                    if (vehicle)
                     if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
-                    {
-                        if (!(caller is ConsolePlayer))
-                            UnturnedChat.Say(caller, Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), vehicle.instanceID, barricadeRegion.drops.Count), Color.yellow);
-                        Logger.Log(Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), vehicle.instanceID, barricadeRegion.drops.Count), ConsoleColor.Yellow);
-                    }
+                        count = barricadeRegion.drops.Count;
+                    if (!vehicle.isLocked)
+                        msg = Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), vehicle.instanceID, count);
                     else
-                    {
-                        if (!(caller is ConsolePlayer))
-                            UnturnedChat.Say(caller, Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), vehicle.instanceID, 0), Color.yellow);
-                        Logger.Log(Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), vehicle.instanceID, 0), ConsoleColor.Yellow);
-                    }
+                        msg = Translate("wreckingball_lv_vehicle_locked", vehicle.transform.position.ToString(), vehicle.instanceID, count, locked);
+                    if (!(caller is ConsolePlayer))
+                        UnturnedChat.Say(caller, msg, Color.yellow);
+                    Logger.Log(msg, ConsoleColor.Yellow);
+                }
             }
         }
 
@@ -184,7 +190,7 @@ namespace ApokPT.RocketPlugins
 
             foreach (KeyValuePair<ulong, int> value in shortenedList)
             {
-                string msg = string.Format("Element count: {0}, Player: {1}", value.Value, !getPInfo || value.Key == 0 ? value.Key.ToString() : PInfoMessageTopPlayers(value.Key));
+                string msg = string.Format("Element count: {0}, Player: {1}", value.Value, !getPInfo || value.Key == 0 ? value.Key.ToString() : PInfoGenerateMessage(value.Key));
                 if (caller is ConsolePlayer)
                     Logger.Log(msg, ConsoleColor.Yellow);
                 else
@@ -192,14 +198,14 @@ namespace ApokPT.RocketPlugins
             }
         }
 
-        private string PInfoMessageTopPlayers(ulong steamID)
+        public string PInfoGenerateMessage(ulong owner)
         {
-            PlayerData pData = PlayerInfoLib.Database.QueryById((CSteamID)steamID);
+            PlayerData pData = PlayerInfoLib.Database.QueryById((CSteamID)owner);
             string msg = string.Empty;
             if (pData.IsValid())
-                msg = string.Format("{0} [{1}] ({2}), seen: {3}:{4}", pData.CharacterName, pData.SteamName, pData.SteamID, pData.IsLocal() ? "L" : "G", pData.IsLocal() ? pData.LastLoginLocal : pData.LastLoginGlobal);
+                msg = string.Format("{0} {1} [{2}], Seen: {3}:{4}", owner, pData.CharacterName, pData.SteamName, pData.IsLocal() ? "L" : "G", pData.IsLocal() ? pData.LastLoginLocal : pData.LastLoginGlobal);
             else
-                msg = string.Format("{0}, No player info.", steamID);
+                msg = string.Format("{0}, No Player Info.", owner);
             return msg;
         }
 
@@ -300,7 +306,7 @@ namespace ApokPT.RocketPlugins
 
         }
 
-        internal void Teleport(IRocketPlayer caller, bool toBarricades = false)
+        internal void Teleport(IRocketPlayer caller, TeleportType teleportType)
         {
 
             if (StructureManager.StructureRegions.LongLength == 0 && BarricadeManager.BarricadeRegions.LongLength == 0)
@@ -326,64 +332,81 @@ namespace ApokPT.RocketPlugins
                 int zCount = 0;
                 int idx = 0;
                 int idxCount = 0;
-                if (!toBarricades)
+                switch (teleportType)
                 {
-                    xCount = StructureManager.StructureRegions.GetLength(0);
-                    zCount = StructureManager.StructureRegions.GetLength(1);
-                    if (xCount == 0)
-                        continue;
-                    x = UnityEngine.Random.Range(0, xCount - 1);
-                    if (zCount == 0)
-                        continue;
-                    z = UnityEngine.Random.Range(0, zCount - 1);
-                    idxCount = StructureManager.StructureRegions[x, z].Structures.Count;
-                    if (idxCount == 0)
-                        continue;
-                    idx = UnityEngine.Random.Range(0, idxCount - 1);
+                    case TeleportType.Structures:
+                        xCount = StructureManager.StructureRegions.GetLength(0);
+                        zCount = StructureManager.StructureRegions.GetLength(1);
+                        if (xCount == 0)
+                            continue;
+                        x = UnityEngine.Random.Range(0, xCount - 1);
+                        if (zCount == 0)
+                            continue;
+                        z = UnityEngine.Random.Range(0, zCount - 1);
+                        idxCount = StructureManager.StructureRegions[x, z].Structures.Count;
+                        if (idxCount == 0)
+                            continue;
+                        idx = UnityEngine.Random.Range(0, idxCount - 1);
 
-                    try
-                    {
-                        current = StructureManager.StructureRegions[x, z].Structures[idx];
-                    }
-                    catch
-                    {
-                        continue;
-                    }
+                        try
+                        {
+                            current = StructureManager.StructureRegions[x, z].Structures[idx];
+                        }
+                        catch
+                        {
+                            continue;
+                        }
 
-                    if (Vector3.Distance(current.position, player.Position) > 20)
-                        match = true;
-                }
-                else
-                {
-                    xCount = BarricadeManager.BarricadeRegions.GetLength(0);
-                    zCount = BarricadeManager.BarricadeRegions.GetLength(1);
-                    if (xCount == 0)
-                        continue;
-                    x = UnityEngine.Random.Range(0, xCount - 1);
-                    if (zCount == 0)
-                        continue;
-                    z = UnityEngine.Random.Range(0, zCount - 1);
-                    idxCount = BarricadeManager.BarricadeRegions[x, z].drops.Count;
-                    if (idxCount == 0)
-                        continue;
-                    idx = UnityEngine.Random.Range(0, idxCount - 1);
+                        if (Vector3.Distance(current.position, player.Position) > 20)
+                            match = true;
+                        break;
+                    case TeleportType.Barricades:
+                        xCount = BarricadeManager.BarricadeRegions.GetLength(0);
+                        zCount = BarricadeManager.BarricadeRegions.GetLength(1);
+                        if (xCount == 0)
+                            continue;
+                        x = UnityEngine.Random.Range(0, xCount - 1);
+                        if (zCount == 0)
+                            continue;
+                        z = UnityEngine.Random.Range(0, zCount - 1);
+                        idxCount = BarricadeManager.BarricadeRegions[x, z].drops.Count;
+                        if (idxCount == 0)
+                            continue;
+                        idx = UnityEngine.Random.Range(0, idxCount - 1);
 
-                    try
-                    {
-                        current = BarricadeManager.BarricadeRegions[x, z].drops[idx].model;
-                    }
-                    catch
-                    {
-                        continue;
-                    }
+                        try
+                        {
+                            current = BarricadeManager.BarricadeRegions[x, z].drops[idx].model;
+                        }
+                        catch
+                        {
+                            continue;
+                        }
 
-                    if (Vector3.Distance(current.position, player.Position) > 20)
-                        match = true;
+                        if (Vector3.Distance(current.position, player.Position) > 20)
+                            match = true;
+                        break;
+                    case TeleportType.Vehicles:
+                        int vCount = VehicleManager.vehicles.Count;
+                        int vRand = UnityEngine.Random.Range(0, vCount - 1);
+                        try
+                        {
+                            current = VehicleManager.vehicles[vRand].transform;
+                        }
+                        catch
+                        {
+                            continue;
+                        }
+                        if (Vector3.Distance(current.position, player.Position) > 20)
+                            match = true;
+                        break;
+                    default:
+                        return;
                 }
             }
             if(match)
             {
-                tpVector = new Vector3(current.position.x, current.position.y + 2, current.position.z);
+                tpVector = new Vector3(current.position.x, teleportType == TeleportType.Vehicles ? current.position.y + 4 : current.position.y + 2, current.position.z);
                 player.Teleport(tpVector, player.Rotation);
                 return;
             }
@@ -444,6 +467,7 @@ namespace ApokPT.RocketPlugins
                 {
                     { "wreckingball_lv_help", "<radius> - distance to scan cars." },
                     { "wreckingball_lv_vehicle", "Vehicle position: {0}, with InstanceID: {1}, Barricade count on car: {2}." },
+                    { "wreckingball_lv_vehicle_locked", "Vehicle position: {0}, with InstanceID: {1}, Barricade count on car: {2}, Locked By: {3}." },
                     { "werckingball_dcu_help", "<\"playername\" | SteamID> - disables cleanup on a player." },
                     { "werckingball_dcu_not_enabled", "This command can only be used if the cleanup feature is enabled on the server." },
                     { "wreckingball_dcu_player_not_found", "Couldn't find a player by that name on the server." },
@@ -459,7 +483,7 @@ namespace ApokPT.RocketPlugins
                     { "wreckingball_aborted", "Wrecking Ball Aborted! Destruction queue cleared!" },
                     { "wreckingball_help", "Please define filter and radius: /wreck <filter> <radius> or /wreck teleport b|s" },
                     { "wreckingball_help_console", "Please define filter, radius and position: /wreck <filter> <radius> <x> <y> <z>" },
-                    { "wreckingball_help_teleport", "Please define type for teleport: /wreck teleport s|b" },
+                    { "wreckingball_help_teleport", "Please define type for teleport: /wreck teleport s|b|v" },
                     { "wreckingball_help_scan", "Please define a scan filter and radius: /wreck scan <filter> <radius>" },
                     { "wreckingball_help_scan_console", "Please define a scan filter, radius and position: /wreck scan <filter> <radius> <x> <y> <z>" },
                     { "wreckingball_queued", "{0} elements(s) found, ~{1} sec(s) to complete run." },

@@ -102,10 +102,13 @@ namespace ApokPT.RocketPlugins
                                 switch (oper[1])
                                 {
                                     case "b":
-                                        WreckingBall.Instance.Teleport(player, true);
+                                        WreckingBall.Instance.Teleport(player, TeleportType.Barricades);
                                         break;
                                     case "s":
-                                        WreckingBall.Instance.Teleport(player, false);
+                                        WreckingBall.Instance.Teleport(player, TeleportType.Structures);
+                                        break;
+                                    case "v":
+                                        WreckingBall.Instance.Teleport(player, TeleportType.Vehicles);
                                         break;
                                     default:
                                         UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_teleport"));

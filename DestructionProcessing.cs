@@ -118,11 +118,11 @@ namespace ApokPT.RocketPlugins
                             if (WreckingBall.ElementData.filterItem(item, Filter) || Filter.Contains('*') || flagtype == FlagType.ItemID)
                             {
                                 if (flagtype == FlagType.Normal)
-                                    WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.Element, type, sData, bData, transform, 's');
+                                    WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.Element, type, sData, transform);
                                 else if (flagtype == FlagType.SteamID && sData.owner == steamID)
-                                    WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.Element, type, sData, bData, transform, 's');
+                                    WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.Element, type, sData, transform);
                                 else if (flagtype == FlagType.ItemID && itemID == item)
-                                    WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.Element, type, sData, bData, transform, 's');
+                                    WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.Element, type, sData, transform);
                             }
                         }
                         else if (type == WreckType.Cleanup)
@@ -170,11 +170,11 @@ namespace ApokPT.RocketPlugins
                             if (WreckingBall.ElementData.filterItem(item, Filter) || Filter.Contains('*') || flagtype == FlagType.ItemID)
                             {
                                 if (flagtype == FlagType.Normal)
-                                    WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.Element, type, sData, bData, transform, 'b');
+                                    WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.Element, type, bData, transform);
                                 else if (flagtype == FlagType.SteamID && bData.owner == steamID)
-                                    WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.Element, type, sData, bData, transform, 'b');
+                                    WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.Element, type, bData, transform);
                                 else if (flagtype == FlagType.ItemID && itemID == item)
-                                    WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.Element, type, sData, bData, transform, 'b');
+                                    WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.Element, type, bData, transform);
                             }
                         }
                         else if (type == WreckType.Cleanup)
@@ -222,11 +222,11 @@ namespace ApokPT.RocketPlugins
                                 if (WreckingBall.ElementData.filterItem(item, Filter) || Filter.Contains('*') || flagtype == FlagType.ItemID)
                                 {
                                     if (flagtype == FlagType.Normal)
-                                        WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.VehicleElement, type, sData, bData, transform, 'b');
+                                        WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.VehicleElement, type, bData, transform);
                                     else if (flagtype == FlagType.SteamID && bData.owner == steamID)
-                                        WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.VehicleElement, type, sData, bData, transform, 'b');
+                                        WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.VehicleElement, type, bData, transform);
                                     else if (flagtype == FlagType.ItemID && itemID == item)
-                                        WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.VehicleElement, type, sData, bData, transform, 'b');
+                                        WreckProcess(caller, item, distance, pInfoLibLoaded, BuildableType.VehicleElement, type, bData, transform);
                                 }
                             }
                             else if (type == WreckType.Cleanup)
@@ -253,9 +253,9 @@ namespace ApokPT.RocketPlugins
                         if (type == WreckType.Scan)
                         {
                             if (vdistance <= 10)
-                                WreckingBall.ElementData.report(caller, 9999, vdistance, true, pInfoLibLoaded, BuildableType.Vehicle, (ulong)(barricadeRegion == null ? 0 : barricadeRegion.drops.Count));
+                                WreckingBall.ElementData.report(caller, 9999, vdistance, true, pInfoLibLoaded, vehicle, BuildableType.Vehicle, barricadeRegion == null ? 0 : barricadeRegion.drops.Count);
                             else
-                                WreckingBall.ElementData.report(caller, 9999, vdistance, false, pInfoLibLoaded, BuildableType.Vehicle);
+                                WreckingBall.ElementData.report(caller, 9999, vdistance, false, pInfoLibLoaded, vehicle, BuildableType.Vehicle);
                         }
                         else
                             DestructionProcessing.destroyList.Add(new Destructible(vehicle.transform, 'v', vehicle));
@@ -274,7 +274,7 @@ namespace ApokPT.RocketPlugins
                         if (distance < radius)
                         {
                             if (type == WreckType.Scan)
-                                WreckingBall.ElementData.report(caller, 9998, (int)distance, false, pInfoLibLoaded);
+                                WreckingBall.ElementData.report(caller, 9998, (int)distance, false, pInfoLibLoaded, zombie);
                             else
                                 DestructionProcessing.destroyList.Add(new Destructible(zombie.transform, 'z', null, zombie));
                         }
@@ -298,21 +298,22 @@ namespace ApokPT.RocketPlugins
                 UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_not_found", radius));
         }
 
-        private static void WreckProcess(IRocketPlayer caller, ushort itemID, float distance, bool pInfoLibLoaded, BuildableType buildType, WreckType type, StructureData sData, BarricadeData bData, Transform transform, char elementType)
+        private static void WreckProcess(IRocketPlayer caller, ushort itemID, float distance, bool pInfoLibLoaded, BuildableType buildType, WreckType type, object data, Transform transform)
         {
 
             if (type == WreckType.Scan)
             {
                 if (distance <= 10)
-                    WreckingBall.ElementData.report(caller, itemID, distance, true, pInfoLibLoaded, buildType, elementType == 's' ? sData.owner : bData.owner);
+                    WreckingBall.ElementData.report(caller, itemID, distance, true, pInfoLibLoaded, data, buildType, 0);
                 else
-                    WreckingBall.ElementData.report(caller, itemID, distance, false, pInfoLibLoaded, buildType, elementType == 's' ? sData.owner : bData.owner);
+                    WreckingBall.ElementData.report(caller, itemID, distance, false, pInfoLibLoaded, data, buildType, 0);
             }
             else
             {
-                if (elementType == 's')
+                Type t = data.GetType();
+                if (t.Equals(typeof(StructureData)))
                     destroyList.Add(new Destructible(transform, 's'));
-                else
+                else if (t.Equals(typeof(BarricadeData)))
                     destroyList.Add(new Destructible(transform, 'b'));
             }
         }
@@ -486,6 +487,9 @@ namespace ApokPT.RocketPlugins
                         vList = sort.ToDictionary(d => d.Key, d => d.Value);
                     }
                     bool useSafeGuards = true;
+                    bool getPInfo = false;
+                    if (WreckingBall.Instance.Configuration.Instance.EnablePlayerInfo)
+                        getPInfo = WreckingBall.IsPInfoLibLoaded();
                     restart:
                     int v = 0;
                     foreach (KeyValuePair<InteractableVehicle, int> vehicle in vList)
@@ -533,8 +537,15 @@ namespace ApokPT.RocketPlugins
                         i++;
                         if (i > numToDestroy)
                             break;
+
+                        string msg = string.Empty;
+                        if (vehicle.Key.isLocked)
+                            msg = string.Format("Vehicle #{0}, with InstanceID: {1}, at position: {2} destroyed, Element count: {3}, Locked By: {4}.", v, vehicle.Key.instanceID, vehicle.Key.transform.position.ToString(), vehicle.Value, getPInfo ? WreckingBall.Instance.PInfoGenerateMessage((ulong)vehicle.Key.lockedOwner) : vehicle.Key.lockedOwner.ToString());
+                        else
+                            msg = string.Format("Vehicle #{0}, with InstanceID: {1}, at position: {2} destroyed, Element count: {3}.", v, vehicle.Key.instanceID, vehicle.Key.transform.position.ToString(), vehicle.Value);
+
                         vehicle.Key.askDamage(ushort.MaxValue, false);
-                        Logger.Log(string.Format("Vehicle #{0}, with InstanceID: {1}, at position: {2} destroyed, Element count: {3}.", v, vehicle.Key.instanceID, vehicle.Key.transform.position.ToString(), vehicle.Value));
+                        Logger.Log(msg);
                     }
                     Logger.Log("Vehicle cleanup finished.", ConsoleColor.Yellow);
                 }
