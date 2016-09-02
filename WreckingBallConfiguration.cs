@@ -148,6 +148,12 @@ namespace ApokPT.RocketPlugins
                     new Element(1207, 'y'),
                     new Element(1220, 'y'),
                     new Element(1221, 'y'),
+                    new Element(1408, 'y'),
+                    new Element(1409, 'y'),
+                    new Element(1410, 'y'),
+                    new Element(1411, 'y'),
+                    new Element(1412, 'y'),
+                    new Element(1413, 'y'),
                     // Ladder
                     new Element(325, 'l'),
                     new Element(326, 'l'),
