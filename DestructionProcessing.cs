@@ -471,6 +471,8 @@ namespace ApokPT.RocketPlugins
                 {
                     if (vehicle.isDead)
                         continue;
+                    if (vehicle.passengers != null)
+                        continue;
                     if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
                         vList.Add(vehicle, barricadeRegion.drops.Count);
                     else
@@ -496,6 +498,8 @@ namespace ApokPT.RocketPlugins
                     {
                         v++;
                         if (vehicle.Key.isDead)
+                            continue;
+                        if (vehicle.Key.passengers != null)
                             continue;
                         if (useSafeGuards && (WreckingBall.Instance.Configuration.Instance.LowElementCountOnly || WreckingBall.Instance.Configuration.Instance.KeepVehiclesWithSigns))
                         {
