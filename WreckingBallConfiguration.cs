@@ -165,6 +165,11 @@ namespace ApokPT.RocketPlugins
                     new Element(58, 'w'),
                     new Element(371, 'w'),
                     new Element(1215, 'w'),
+                    new Element(1414, 'w'),
+                    new Element(1415, 'w'),
+                    new Element(1416, 'w'),
+                    new Element(1417, 'w'),
+                    new Element(1418, 'w'),
                     // Wall - doorway
                     new Element(32, 'w'),
                     new Element(49, 'w'),

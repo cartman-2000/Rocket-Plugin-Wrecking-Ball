@@ -3,7 +3,6 @@ using Rocket.API;
 using Rocket.API.Collections;
 using Rocket.API.Extensions;
 using Rocket.Core.Commands;
-using Rocket.Core.Logging;
 using Rocket.Core.Plugins;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
@@ -16,6 +15,7 @@ using UnityEngine;
 
 namespace ApokPT.RocketPlugins
 {
+    using Logger = Rocket.Core.Logging.Logger;
     public class WreckingBall : RocketPlugin<WreckingBallConfiguration>
     {
         // Singleton

@@ -1,6 +1,5 @@
 ﻿using PlayerInfoLibrary;
 using Rocket.API;
-using Rocket.Core.Logging;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using SDG.Unturned;
@@ -13,6 +12,7 @@ using UnityEngine;
 
 namespace ApokPT.RocketPlugins
 {
+    using Logger = Rocket.Core.Logging.Logger;
     internal class DestructionProcessing
     {
         internal static List<Destructible> destroyList = new List<Destructible>();
@@ -496,6 +496,8 @@ namespace ApokPT.RocketPlugins
                     {
                         v++;
                         if (vehicle.Key.isDead)
+                            continue;
+                        if (vehicle.Key.passengers != null)
                             continue;
                         if (useSafeGuards && (WreckingBall.Instance.Configuration.Instance.LowElementCountOnly || WreckingBall.Instance.Configuration.Instance.KeepVehiclesWithSigns))
                         {

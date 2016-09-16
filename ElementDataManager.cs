@@ -1,7 +1,5 @@
-﻿using PlayerInfoLibrary;
-using Rocket.API;
+﻿using Rocket.API;
 using Rocket.Core;
-using Rocket.Core.Logging;
 using Rocket.Core.RCON;
 using Rocket.Unturned.Chat;
 using SDG.Unturned;
@@ -11,6 +9,7 @@ using UnityEngine;
 
 namespace ApokPT.RocketPlugins
 {
+    using Logger = Rocket.Core.Logging.Logger;
     public class ElementDataManager
     {
         internal Dictionary<char, Category> categorys = new Dictionary<char, Category>();
