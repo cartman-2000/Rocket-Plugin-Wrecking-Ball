@@ -45,13 +45,28 @@ namespace ApokPT.RocketPlugins
                     switch (oper[0])
                     {
                         case "confirm":
+                            if (!(caller.HasPermission("wreck.wreck") || caller.HasPermission("wreck.*")) && !(caller is ConsolePlayer))
+                            {
+                                UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_wreck_permission"), Color.red);
+                                return;
+                            }
                             WreckingBall.Instance.Confirm(caller);
                             break;
                         case "abort":
+                            if (!(caller.HasPermission("wreck.wreck") || caller.HasPermission("wreck.*")) && !(caller is ConsolePlayer))
+                            {
+                                UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_wreck_permission"), Color.red);
+                                return;
+                            }
                             UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_aborted"));
                             DestructionProcessing.Abort(WreckType.Wreck);
                             break;
                         case "scan":
+                            if (!(caller.HasPermission("wreck.scan") || caller.HasPermission("wreck.*")) && !(caller is ConsolePlayer))
+                            {
+                                UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_scan_permission"), Color.red);
+                                return;
+                            }
                             if ((oper.Length == 3 && !(caller is ConsolePlayer)) || (oper.Length == 6 && caller is ConsolePlayer))
                             {
                                 if (caller is ConsolePlayer)
@@ -91,7 +106,11 @@ namespace ApokPT.RocketPlugins
 
                             break;
                         case "teleport":
-
+                            if (!(caller.HasPermission("wreck.teleport") || caller.HasPermission("wreck.*")) && !(caller is ConsolePlayer))
+                            {
+                                UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_teleport_permission"), Color.red);
+                                return;
+                            }
                             if (oper.Length > 1)
                             {
                                 if (caller is ConsolePlayer)
@@ -122,6 +141,11 @@ namespace ApokPT.RocketPlugins
                             }
                             break;
                         default:
+                            if (!(caller.HasPermission("wreck.wreck") || caller.HasPermission("wreck.*")) && !(caller is ConsolePlayer))
+                            {
+                                UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_wreck_permission"), Color.red);
+                                return;
+                            }
                             if ((oper.Length == 2 && !(caller is ConsolePlayer)) || (oper.Length == 5 && caller is ConsolePlayer))
                             {
                                 if (caller is ConsolePlayer)

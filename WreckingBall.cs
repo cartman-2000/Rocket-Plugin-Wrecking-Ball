@@ -13,9 +13,10 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+using Logger = Rocket.Core.Logging.Logger;
+
 namespace ApokPT.RocketPlugins
 {
-    using Logger = Rocket.Core.Logging.Logger;
     public class WreckingBall : RocketPlugin<WreckingBallConfiguration>
     {
         // Singleton
@@ -493,7 +494,10 @@ namespace ApokPT.RocketPlugins
                     { "wreckingball_sync_error", "Warning: Element array sync error, not all elements will be cleaned up in range, server should be restarted." },
                     { "wreckingball_teleport_not_found", "Couldn't find any elements to teleport to, try to run the command again." },
                     { "wreckingball_teleport_not_allowed", "Not allowed to use wreck teleport from the console." },
-                    { "wreckingball_reload_abort", "Warning: Current wreck job in progress has been aborted from a plugin reload." }
+                    { "wreckingball_reload_abort", "Warning: Current wreck job in progress has been aborted from a plugin reload." },
+                    { "wreckingball_wreck_permission", "You need to have the permissions wreck.wreck, or wreck.* to be able to run a wreck." },
+                    { "wreckingball_scan_permission", "You need to have the permissions wreck.scan, or wreck.* to be able to run a scan." },
+                    { "wreckingball_teleport_permission", "You need to have the permissions wreck.teleport, or wreck.* to be able to run a teleport." },
                 };
             }
         }

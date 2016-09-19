@@ -1,5 +1,6 @@
 ﻿using PlayerInfoLibrary;
 using Rocket.API;
+using Rocket.Core;
 using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using SDG.Unturned;
@@ -7,12 +8,12 @@ using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
+
+using Logger = Rocket.Core.Logging.Logger;
 
 namespace ApokPT.RocketPlugins
 {
-    using Logger = Rocket.Core.Logging.Logger;
     internal class DestructionProcessing
     {
         internal static List<Destructible> destroyList = new List<Destructible>();
@@ -379,11 +380,18 @@ namespace ApokPT.RocketPlugins
                     }
                     else
                     {
-                        Wreck(new RocketPlayer("0"), "*", 100000, new Vector3(0, 0, 0), WreckType.Cleanup, FlagType.SteamID, (ulong)playersListBuildables[plbIdx][0], 0);
-                        if (cdIdxCount == 0)
-                            Logger.Log(string.Format("No elements found for player: {0} [{1}] ({2}).", playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
+                        syncError = false;
+                        // Skip the player buildables cleanup if they have the right permission.
+                        if (R.Permissions.HasPermission(new RocketPlayer(playersListBuildables[plbIdx][0].ToString()), "wb.skipbuildables"))
+                            Logger.Log(string.Format("Skipping buildables cleanup for player: {0} [{1}] ({2}).", playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
                         else
-                            Logger.Log(string.Format("Cleaning up {0} elements for player: {1} [{2}] ({3}).", cdIdxCount, playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
+                        {
+                            Wreck(new RocketPlayer("0"), "*", 100000, new Vector3(0, 0, 0), WreckType.Cleanup, FlagType.SteamID, (ulong)playersListBuildables[plbIdx][0], 0);
+                            if (cdIdxCount == 0)
+                                Logger.Log(string.Format("No elements found for player: {0} [{1}] ({2}).", playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
+                            else
+                                Logger.Log(string.Format("Cleaning up {0} elements for player: {1} [{2}] ({3}).", cdIdxCount, playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
+                        }
                     }
                 }
             }
@@ -391,25 +399,36 @@ namespace ApokPT.RocketPlugins
             {
                 object[] pf = playersListFiles[plfIdx];
                 bool found = false;
-                for (byte i = 0; i < Customization.FREE_CHARACTERS + Customization.PRO_CHARACTERS; i++)
+                bool skipped = false;
+
+                try
                 {
-                    try
+                    for (byte i = 0; i < Customization.FREE_CHARACTERS + Customization.PRO_CHARACTERS; i++)
                     {
-                        if (ServerSavedata.folderExists("/Players/" + (ulong)pf[0] + "_" + i))
+                        // Skip the player data cleanup if they have the right permission.
+                        if (R.Permissions.HasPermission(new RocketPlayer(pf[0].ToString()), "wb.skipplayerdata"))
+                        {
+                            skipped = true;
+                            break;
+                        }
+                        else if (ServerSavedata.folderExists("/Players/" + (ulong)pf[0] + "_" + i))
                         {
                             ServerSavedata.deleteFolder("/Players/" + (ulong)pf[0] + "_" + i);
                             found = true;
                         }
-                        if (WreckingBall.IsPInfoLibLoaded())
-                            PlayerInfoLib.Database.SetOption((CSteamID)((ulong)playersListFiles[plfIdx][0]), OptionType.PlayerFiles, true);
                     }
-                    catch (Exception ex)
-                    {
-                        Logger.LogException(ex);
-                    }
+                    if (WreckingBall.IsPInfoLibLoaded())
+                        PlayerInfoLib.Database.SetOption((CSteamID)((ulong)pf[0]), OptionType.PlayerFiles, true);
                 }
+                catch (Exception ex)
+                {
+                    Logger.LogException(ex);
+                }
+
                 if (found)
                     Logger.Log(string.Format("Cleaning up player data folders for player: {0} [{1}] ({2}).", pf[1].ToString(), pf[2].ToString(), (ulong)pf[0]));
+                else if (skipped)
+                    Logger.Log(string.Format("Skipping player data cleanup for player: {0} [{1}] ({2}).", pf[1].ToString(), pf[2].ToString(), (ulong)pf[0]));
                 else
                     Logger.Log(string.Format("Player data folders for player: {0} [{1}] ({2}) not found.", pf[1].ToString(), pf[2].ToString(), (ulong)pf[0]));
                 plfIdx++;
@@ -434,11 +453,18 @@ namespace ApokPT.RocketPlugins
                         {
                             // Start cleanup sequence for the players elements.
                             cleanupProcessingBuildables = true;
-                            Wreck(new RocketPlayer("0"), "*", 100000, new Vector3(0, 0, 0), WreckType.Cleanup, FlagType.SteamID, (ulong)playersListBuildables[plbIdx][0], 0);
-                            if (cdIdxCount == 0)
-                                Logger.Log(string.Format("No elements found for player: {0} [{1}] ({2}).", playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
+                            syncError = false;
+                            // Skip the player buildables cleanup if they have the right permission.
+                            if (R.Permissions.HasPermission(new RocketPlayer(playersListBuildables[plbIdx][0].ToString()), "wb.skipbuildables"))
+                                Logger.Log(string.Format("Skipping buildables cleanup for player: {0} [{1}] ({2}).", playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
                             else
-                                Logger.Log(string.Format("Cleaning up {0} elements for player: {1} [{2}] ({3}).", cdIdxCount, playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
+                            {
+                                Wreck(new RocketPlayer("0"), "*", 100000, new Vector3(0, 0, 0), WreckType.Cleanup, FlagType.SteamID, (ulong)playersListBuildables[plbIdx][0], 0);
+                                if (cdIdxCount == 0)
+                                    Logger.Log(string.Format("No elements found for player: {0} [{1}] ({2}).", playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
+                                else
+                                    Logger.Log(string.Format("Cleaning up {0} elements for player: {1} [{2}] ({3}).", cdIdxCount, playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
+                            }
                         }
                     }
                 }
@@ -497,7 +523,7 @@ namespace ApokPT.RocketPlugins
                         v++;
                         if (vehicle.Key.isDead)
                             continue;
-                        if (vehicle.Key.passengers != null)
+                        if (!vehicle.Key.isEmpty)
                             continue;
                         if (useSafeGuards && (WreckingBall.Instance.Configuration.Instance.LowElementCountOnly || WreckingBall.Instance.Configuration.Instance.KeepVehiclesWithSigns))
                         {
@@ -536,10 +562,13 @@ namespace ApokPT.RocketPlugins
                         // Current vehicle in check is the last vehicle added to the server, newest, skip.
                         if (vehicle.Key.transform == VehicleManager.vehicles.Last().transform)
                             continue;
+                        if (vehicle.Key.isLocked && R.Permissions.HasPermission(new RocketPlayer(vehicle.Key.lockedOwner.ToString()), "wb.bypassvehiclecap"))
+                        {
+                            continue;
+                        }
                         i++;
                         if (i > numToDestroy)
                             break;
-
                         string msg = string.Empty;
                         if (vehicle.Key.isLocked)
                             msg = string.Format("Vehicle #{0}, with InstanceID: {1}, at position: {2} destroyed, Element count: {3}, Locked By: {4}.", v, vehicle.Key.instanceID, vehicle.Key.transform.position.ToString(), vehicle.Value, getPInfo ? WreckingBall.Instance.PInfoGenerateMessage((ulong)vehicle.Key.lockedOwner) : vehicle.Key.lockedOwner.ToString());

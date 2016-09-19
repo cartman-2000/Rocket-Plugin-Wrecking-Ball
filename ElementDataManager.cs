@@ -7,9 +7,10 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+using Logger = Rocket.Core.Logging.Logger;
+
 namespace ApokPT.RocketPlugins
 {
-    using Logger = Rocket.Core.Logging.Logger;
     public class ElementDataManager
     {
         internal Dictionary<char, Category> categorys = new Dictionary<char, Category>();
