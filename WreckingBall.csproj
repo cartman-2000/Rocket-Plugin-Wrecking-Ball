@@ -42,6 +42,7 @@
     <Reference Include="PlayerInfoLib, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>PInfoLib\PlayerInfoLib.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Rocket.API">
       <HintPath>lib\Rocket.API.dll</HintPath>
