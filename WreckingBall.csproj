@@ -32,11 +32,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
-      <HintPath>BaseLib\Assembly-CSharp.dll</HintPath>
+      <HintPath>lib\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>BaseLib\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>lib\Assembly-CSharp-firstpass.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="PlayerInfoLib, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -44,15 +44,15 @@
       <HintPath>PInfoLib\PlayerInfoLib.dll</HintPath>
     </Reference>
     <Reference Include="Rocket.API">
-      <HintPath>BaseLib\Rocket.API.dll</HintPath>
+      <HintPath>lib\Rocket.API.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Rocket.Core">
-      <HintPath>BaseLib\Rocket.Core.dll</HintPath>
+      <HintPath>lib\Rocket.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Rocket.Unturned">
-      <HintPath>BaseLib\Rocket.Unturned.dll</HintPath>
+      <HintPath>lib\Rocket.Unturned.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -63,7 +63,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
-      <HintPath>BaseLib\UnityEngine.dll</HintPath>
+      <HintPath>lib\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
@@ -87,12 +87,12 @@
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="BaseLib\Assembly-CSharp-firstpass.dll" />
-    <Content Include="BaseLib\Assembly-CSharp.dll" />
-    <Content Include="BaseLib\Rocket.API.dll" />
-    <Content Include="BaseLib\Rocket.Core.dll" />
-    <Content Include="BaseLib\Rocket.Unturned.dll" />
-    <Content Include="BaseLib\UnityEngine.dll" />
+    <Content Include="lib\Assembly-CSharp-firstpass.dll" />
+    <Content Include="lib\Assembly-CSharp.dll" />
+    <Content Include="lib\Rocket.API.dll" />
+    <Content Include="lib\Rocket.Core.dll" />
+    <Content Include="lib\Rocket.Unturned.dll" />
+    <Content Include="lib\UnityEngine.dll" />
     <Content Include="PInfoLib\PlayerInfoLib.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
