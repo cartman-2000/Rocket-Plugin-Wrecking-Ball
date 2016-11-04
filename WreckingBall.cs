@@ -146,7 +146,7 @@ namespace ApokPT.RocketPlugins
                 player = (UnturnedPlayer)caller;
                 radius = (float)cmd.GetFloatParameter(0);
             }
-            foreach (InteractableVehicle vehicle in VehicleManager.Vehicles)
+            foreach (InteractableVehicle vehicle in VehicleManager.vehicles)
             {
                 byte x = 0;
                 byte y = 0;
@@ -310,7 +310,7 @@ namespace ApokPT.RocketPlugins
         internal void Teleport(IRocketPlayer caller, TeleportType teleportType)
         {
 
-            if (StructureManager.StructureRegions.LongLength == 0 && BarricadeManager.BarricadeRegions.LongLength == 0)
+            if (StructureManager.regions.LongLength == 0 && BarricadeManager.BarricadeRegions.LongLength == 0)
             {
                 UnturnedChat.Say(caller, Translate("wreckingball_map_clear"));
                 return;
@@ -336,22 +336,22 @@ namespace ApokPT.RocketPlugins
                 switch (teleportType)
                 {
                     case TeleportType.Structures:
-                        xCount = StructureManager.StructureRegions.GetLength(0);
-                        zCount = StructureManager.StructureRegions.GetLength(1);
+                        xCount = StructureManager.regions.GetLength(0);
+                        zCount = StructureManager.regions.GetLength(1);
                         if (xCount == 0)
                             continue;
                         x = UnityEngine.Random.Range(0, xCount - 1);
                         if (zCount == 0)
                             continue;
                         z = UnityEngine.Random.Range(0, zCount - 1);
-                        idxCount = StructureManager.StructureRegions[x, z].Structures.Count;
+                        idxCount = StructureManager.regions[x, z].structures.Count;
                         if (idxCount == 0)
                             continue;
                         idx = UnityEngine.Random.Range(0, idxCount - 1);
 
                         try
                         {
-                            current = StructureManager.StructureRegions[x, z].Structures[idx];
+                            current = StructureManager.regions[x, z].models[idx];
                         }
                         catch
                         {

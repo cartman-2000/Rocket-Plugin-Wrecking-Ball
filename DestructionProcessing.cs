@@ -90,22 +90,22 @@ namespace ApokPT.RocketPlugins
             BarricadeData bData = null;
             int DataCount = 0;
 
-            for (int k = 0; k < StructureManager.StructureRegions.GetLength(0); k++)
+            for (int k = 0; k < StructureManager.regions.GetLength(0); k++)
             {
-                for (int l = 0; l < StructureManager.StructureRegions.GetLength(1); l++)
+                for (int l = 0; l < StructureManager.regions.GetLength(1); l++)
                 {
                     // check to see if the region is out of range, skip if it is.
                     if (position.RegionOutOfRange(k, l, radius) && type != WreckType.Cleanup && type != WreckType.Counts)
                         continue;
 
-                    structureRegion = StructureManager.StructureRegions[k, l];
-                    transformCount = structureRegion.Structures.Count;
-                    DataCount = structureRegion.StructureDatas.Count;
+                    structureRegion = StructureManager.regions[k, l];
+                    transformCount = structureRegion.structures.Count;
+                    DataCount = structureRegion.structures.Count;
                     for (int i = 0; i < transformCount; i++)
                     {
-                        transform = structureRegion.Structures[i];
+                        transform = structureRegion.models[i];
                         if (i < DataCount)
-                            sData = structureRegion.StructureDatas[i];
+                            sData = structureRegion.structures[i];
                         else
                         {
                             Logger.LogWarning(WreckingBall.Instance.Translate("wreckingball_structure_array_sync_error"));
@@ -152,12 +152,12 @@ namespace ApokPT.RocketPlugins
 
                     barricadeRegion = BarricadeManager.BarricadeRegions[k, l];
                     transformCount = barricadeRegion.drops.Count;
-                    DataCount = barricadeRegion.BarricadeDatas.Count;
+                    DataCount = barricadeRegion.barricades.Count;
                     for (int i = 0; i < transformCount; i++)
                     {
                         transform = barricadeRegion.drops[i].model;
                         if (i < DataCount)
-                            bData = barricadeRegion.BarricadeDatas[i];
+                            bData = barricadeRegion.barricades[i];
                         else
                         {
                             Logger.LogWarning(WreckingBall.Instance.Translate("wreckingball_barricade_array_sync_error"));
@@ -196,7 +196,7 @@ namespace ApokPT.RocketPlugins
             }
 
 
-            foreach (InteractableVehicle vehicle in VehicleManager.Vehicles)
+            foreach (InteractableVehicle vehicle in VehicleManager.vehicles)
             {
                 vdistance = Vector3.Distance(vehicle.transform.position, position);
                 if (vdistance <= radius + 92 || type == WreckType.Counts || type == WreckType.Cleanup)
@@ -204,12 +204,12 @@ namespace ApokPT.RocketPlugins
                     if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
                     {
                         transformCount = barricadeRegion.drops.Count;
-                        DataCount = barricadeRegion.BarricadeDatas.Count;
+                        DataCount = barricadeRegion.barricades.Count;
                         for (int i = 0; i < transformCount; i++)
                         {
                             transform = barricadeRegion.drops[i].model;
                             if (i < DataCount)
-                                bData = barricadeRegion.BarricadeDatas[i];
+                                bData = barricadeRegion.barricades[i];
                             else
                             {
                                 Logger.LogWarning(WreckingBall.Instance.Translate("wreckingball_barricade_array_sync_error"));
@@ -266,10 +266,10 @@ namespace ApokPT.RocketPlugins
 
             if (Filter.Contains('z'))
             {
-                for (int v = 0; v < ZombieManager.ZombieRegions.Length; v++)
+                for (int v = 0; v < ZombieManager.regions.Length; v++)
                 {
 
-                    foreach (Zombie zombie in ZombieManager.ZombieRegions[v].Zombies)
+                    foreach (Zombie zombie in ZombieManager.regions[v].zombies)
                     {
                         distance = Vector3.Distance(zombie.transform.position, position);
                         if (distance < radius)
@@ -539,14 +539,14 @@ namespace ApokPT.RocketPlugins
                                 if (BarricadeManager.tryGetPlant(vehicle.Key.transform, out x, out y, out plant, out barricadeRegion))
                                 {
                                     int transformCount = barricadeRegion.drops.Count;
-                                    int DataCount = barricadeRegion.BarricadeDatas.Count;
+                                    int DataCount = barricadeRegion.barricades.Count;
                                     BarricadeData bData;
                                     bool match = false;
                                     if (transformCount == DataCount)
                                     {
                                         for (int e = 0; e < DataCount; e++)
                                         {
-                                            bData = barricadeRegion.BarricadeDatas[e];
+                                            bData = barricadeRegion.barricades[e];
                                             if (WreckingBall.ElementData.filterItem(bData.barricade.id, new List<char> { 'n' }))
                                             {
                                                 match = true;
