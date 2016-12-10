@@ -483,6 +483,38 @@ namespace ApokPT.RocketPlugins
             }
         }
 
+        internal static bool HasFlaggedElement(Transform vehicleTransform, char flag, out ulong elementSteamID)
+        {
+            byte x = 0;
+            byte y = 0;
+            ushort plant = 0;
+            BarricadeRegion barricadeRegion;
+            elementSteamID = 0;
+            if (BarricadeManager.tryGetPlant(vehicleTransform, out x, out y, out plant, out barricadeRegion))
+            {
+                int transformCount = barricadeRegion.drops.Count;
+                int DataCount = barricadeRegion.barricades.Count;
+                BarricadeData bData;
+                bool match = false;
+                if (transformCount == DataCount)
+                {
+                    for (int e = 0; e < DataCount; e++)
+                    {
+                        bData = barricadeRegion.barricades[e];
+                        if (WreckingBall.ElementData.filterItem(bData.barricade.id, new List<char> { flag }))
+                        {
+                            match = true;
+                            elementSteamID = bData.owner;
+                            break;
+                        }
+                    }
+                    if (match)
+                        return true;
+                }
+            }
+            return false;
+        }
+
         internal static void HandleVehicleCap()
         {
             if ((DateTime.Now - lastVehiclesCapCheck).TotalSeconds > WreckingBall.Instance.Configuration.Instance.VCapCheckInterval)
@@ -525,6 +557,8 @@ namespace ApokPT.RocketPlugins
                             continue;
                         if (!vehicle.Key.isEmpty)
                             continue;
+                        ulong elementOwner;
+                        bool hasSign = HasFlaggedElement(vehicle.Key.transform, 'n', out elementOwner);
                         if (useSafeGuards && (WreckingBall.Instance.Configuration.Instance.LowElementCountOnly || WreckingBall.Instance.Configuration.Instance.KeepVehiclesWithSigns))
                         {
                             if (WreckingBall.Instance.Configuration.Instance.LimitSafeGuards && v > Math.Round(WreckingBall.Instance.Configuration.Instance.MaxVehiclesAllowed * WreckingBall.Instance.Configuration.Instance.LimitSafeGuardsRatio + numToDestroy, 0))
@@ -534,38 +568,15 @@ namespace ApokPT.RocketPlugins
                             }
                             if (WreckingBall.Instance.Configuration.Instance.LowElementCountOnly && WreckingBall.Instance.Configuration.Instance.MinElementCount <= vehicle.Value)
                                 continue;
-                            if (WreckingBall.Instance.Configuration.Instance.KeepVehiclesWithSigns)
-                            {
-                                if (BarricadeManager.tryGetPlant(vehicle.Key.transform, out x, out y, out plant, out barricadeRegion))
-                                {
-                                    int transformCount = barricadeRegion.drops.Count;
-                                    int DataCount = barricadeRegion.barricades.Count;
-                                    BarricadeData bData;
-                                    bool match = false;
-                                    if (transformCount == DataCount)
-                                    {
-                                        for (int e = 0; e < DataCount; e++)
-                                        {
-                                            bData = barricadeRegion.barricades[e];
-                                            if (WreckingBall.ElementData.filterItem(bData.barricade.id, new List<char> { 'n' }))
-                                            {
-                                                match = true;
-                                                break;
-                                            }
-                                        }
-                                        if (match)
-                                            continue;
-                                    }
-                                }
-                            }
+                            if (WreckingBall.Instance.Configuration.Instance.KeepVehiclesWithSigns && hasSign)
+                                continue;
+
                         }
                         // Current vehicle in check is the last vehicle added to the server, newest, skip.
                         if (vehicle.Key.transform == VehicleManager.vehicles.Last().transform)
                             continue;
-                        if (vehicle.Key.isLocked && R.Permissions.HasPermission(new RocketPlayer(vehicle.Key.lockedOwner.ToString()), "wb.bypassvehiclecap"))
-                        {
+                        if ((vehicle.Key.isLocked && R.Permissions.HasPermission(new RocketPlayer(vehicle.Key.lockedOwner.ToString()), "wb.bypassvehiclecap")) || (hasSign && R.Permissions.HasPermission(new RocketPlayer(elementOwner.ToString()), "wb.bypassvehiclecap")))
                             continue;
-                        }
                         i++;
                         if (i > numToDestroy)
                             break;
