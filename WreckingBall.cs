@@ -351,7 +351,7 @@ namespace ApokPT.RocketPlugins
 
                         try
                         {
-                            current = StructureManager.regions[x, z].models[idx];
+                            current = StructureManager.regions[x, z].drops[idx].model;
                         }
                         catch
                         {

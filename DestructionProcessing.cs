@@ -103,7 +103,7 @@ namespace ApokPT.RocketPlugins
                     DataCount = structureRegion.structures.Count;
                     for (int i = 0; i < transformCount; i++)
                     {
-                        transform = structureRegion.models[i];
+                        transform = structureRegion.drops[i].model;
                         if (i < DataCount)
                             sData = structureRegion.structures[i];
                         else
