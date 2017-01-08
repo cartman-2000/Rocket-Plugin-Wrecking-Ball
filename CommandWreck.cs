@@ -3,12 +3,43 @@ using Rocket.Unturned.Chat;
 using Rocket.Unturned.Player;
 using System;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace ApokPT.RocketPlugins
 {
-    public class WreckingBallCommand
+    public class CommandWreck : IRocketCommand
     {
-        public static void Execute(IRocketPlayer caller, string[] cmd)
+        public List<string> Aliases
+        {
+            get { return new List<string>() { "w" }; }
+        }
+
+        public AllowedCaller AllowedCaller
+        {
+            get { return AllowedCaller.Both; }
+        }
+
+        public string Help
+        {
+            get { return "Destroy everything in a specific radius!"; }
+        }
+
+        public string Name
+        {
+            get { return "wreck"; }
+        }
+
+        public List<string> Permissions
+        {
+            get { return new List<string>() { "wreckingball.wreck" }; }
+        }
+
+        public string Syntax
+        {
+            get { return "Scan: /w scan <Flag|ItemID> <Radius> | /w scan <SteamID> <Flag|ItemID> <Radius>, Destruct: /w <Flag|ItemID> <Radius> | /w <SteamID> <Flag|ItemID> <Radius>, Teleport: /w teleport <b|s|v>"; }
+        }
+
+        public void Execute(IRocketPlayer caller, string[] cmd)
         {
 
             string command = String.Join(" ", cmd);

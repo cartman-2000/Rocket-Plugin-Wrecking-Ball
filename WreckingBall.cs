@@ -116,89 +116,6 @@ namespace ApokPT.RocketPlugins
             return (PlayerInfoLib.Instance.State == PluginState.Loaded && PlayerInfoLib.Database.Initialized);
         }
 
-        [RocketCommand("wreck", "Destroy everything in a specific radius!", ".",AllowedCaller.Both)]
-        [RocketCommandPermission("wreck")]
-        public void WreckExecute(IRocketPlayer caller, string[] cmd)
-        {
-            WreckingBallCommand.Execute(caller, cmd);
-        }
-
-        [RocketCommand("w", "Destroy everything in a specific radius!", ".", AllowedCaller.Both)]
-        [RocketCommandPermission("wreck")]
-        public void WExecute(IRocketPlayer caller, string[] cmd)
-        {
-            WreckingBallCommand.Execute(caller, cmd);
-        }
-
-        [RocketCommand("listvehicles", "lists positions and barricade counts on cars on a map.", "<radius>", AllowedCaller.Both)]
-        [RocketCommandPermission("listvehicles")]
-        public void LVExecute(IRocketPlayer caller, string[] cmd)
-        {
-            float radius = 0;
-            UnturnedPlayer player = null;
-            if (!(caller is ConsolePlayer))
-            {
-                if (cmd.GetFloatParameter(0) == null)
-                {
-                    UnturnedChat.Say(caller, Translate("wreckingball_lv_help"));
-                    return;
-                }
-                player = (UnturnedPlayer)caller;
-                radius = (float)cmd.GetFloatParameter(0);
-            }
-            foreach (InteractableVehicle vehicle in VehicleManager.vehicles)
-            {
-                byte x = 0;
-                byte y = 0;
-                ushort plant = 0;
-                int count = 0;
-                BarricadeRegion barricadeRegion;
-                if (caller is ConsolePlayer || Vector3.Distance(vehicle.transform.position, player.Position) < radius)
-                {
-                    bool getPInfo = false;
-                    if (Instance.Configuration.Instance.EnablePlayerInfo)
-                        getPInfo = IsPInfoLibLoaded();
-                    string locked = getPInfo ? PInfoGenerateMessage((ulong)vehicle.lockedOwner) : vehicle.lockedOwner.ToString();
-                    string msg = string.Empty;
-                    if (vehicle)
-                    if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
-                        count = barricadeRegion.drops.Count;
-                    if (!vehicle.isLocked)
-                        msg = Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), vehicle.instanceID, count);
-                    else
-                        msg = Translate("wreckingball_lv_vehicle_locked", vehicle.transform.position.ToString(), vehicle.instanceID, count, locked);
-                    if (!(caller is ConsolePlayer))
-                        UnturnedChat.Say(caller, msg, Color.yellow);
-                    Logger.Log(msg, ConsoleColor.Yellow);
-                }
-            }
-        }
-
-
-        [RocketCommand("listtopplayers", "Gets the elements counts for players on the server, displays the top counts.", "", AllowedCaller.Both)]
-        [RocketCommandPermission("listtopplayers")]
-        public void LTPExecute(IRocketPlayer caller, string[] cmd)
-        {
-            // Get player elements list.
-            DestructionProcessing.Wreck(caller, "", 0, Vector3.zero, WreckType.Counts, FlagType.SteamID, 0, 0);
-            // Grab what we need from the list.
-            Dictionary<ulong, int> shortenedList = DestructionProcessing.pElementCounts.Where(r => r.Value >= WreckingBall.Instance.Configuration.Instance.PlayerElementListCutoff).OrderBy(v => v.Value).ToDictionary(k => k.Key, v => v.Value);
-            DestructionProcessing.pElementCounts.Clear();
-
-            bool getPInfo = false;
-            if (Instance.Configuration.Instance.EnablePlayerInfo)
-                getPInfo = IsPInfoLibLoaded();
-
-            foreach (KeyValuePair<ulong, int> value in shortenedList)
-            {
-                string msg = string.Format("Element count: {0}, Player: {1}", value.Value, !getPInfo || value.Key == 0 ? value.Key.ToString() : PInfoGenerateMessage(value.Key));
-                if (caller is ConsolePlayer)
-                    Logger.Log(msg, ConsoleColor.Yellow);
-                else
-                    UnturnedChat.Say(caller, msg, Color.yellow);
-            }
-        }
-
         public string PInfoGenerateMessage(ulong owner)
         {
             PlayerData pData = PlayerInfoLib.Database.QueryById((CSteamID)owner);
@@ -210,22 +127,7 @@ namespace ApokPT.RocketPlugins
             return msg;
         }
 
-        [RocketCommand("disablecleanup", "disables cleanup on a player", "<\"playername\" | SteamID>", AllowedCaller.Both)]
-        [RocketCommandPermission("disablecleanup")]
-        public void DCUExecute(IRocketPlayer caller, string[] cmd)
-        {
-            if (!Instance.Configuration.Instance.EnableCleanup)
-            {
-                UnturnedChat.Say(caller, Translate("werckingball_dcu_not_enabled"), Color.red);
-                return;
-            }
-            else
-            {
-                DCUSet(caller, cmd);
-            }
-        }
-
-        private void DCUSet(IRocketPlayer caller, string[] cmd)
+        internal void DCUSet(IRocketPlayer caller, string[] cmd)
         {
             if (cmd.Length == 0 || cmd.Length > 1)
             {

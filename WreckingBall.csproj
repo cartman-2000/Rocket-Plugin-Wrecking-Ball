@@ -71,6 +71,9 @@
   <ItemGroup>
     <Compile Include="BuildableType.cs" />
     <Compile Include="Category.cs" />
+    <Compile Include="CommandDisableCleanup.cs" />
+    <Compile Include="CommandListTopPlayers.cs" />
+    <Compile Include="CommandListVehicles.cs" />
     <Compile Include="Destructable.cs" />
     <Compile Include="DestructionProcessing.cs" />
     <Compile Include="Element.cs" />
@@ -79,7 +82,7 @@
     <Compile Include="TeleportType.cs" />
     <Compile Include="WreckingBall.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WreckingBallCommand.cs" />
+    <Compile Include="CommandWreck.cs" />
     <Compile Include="WreckingBallConfiguration.cs" />
     <Compile Include="FlagType.cs" />
     <Compile Include="WreckType.cs" />
