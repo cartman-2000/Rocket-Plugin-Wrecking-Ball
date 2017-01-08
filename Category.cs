@@ -15,7 +15,7 @@ namespace ApokPT.RocketPlugins
         }
 
         [XmlIgnore]
-        public char Id { get; private set; }
+        public char Id { get; set; }
         [XmlAttribute("Id")]
         public string XmlId
         {
@@ -23,7 +23,7 @@ namespace ApokPT.RocketPlugins
             {
                 return Id.ToString();
             }
-            private set
+            set
             {
                 char id;
                 if (!char.TryParse(value, out id))
@@ -33,9 +33,9 @@ namespace ApokPT.RocketPlugins
             }
         }
         [XmlAttribute]
-        public string Name { get; private set; }
+        public string Name { get; set; }
         [XmlIgnore]
-        public ConsoleColor Color { get; private set; }
+        public ConsoleColor Color { get; set; }
         [XmlAttribute("Color")]
         public string XmlColor
         {
@@ -43,7 +43,7 @@ namespace ApokPT.RocketPlugins
             {
                 return Enum.GetName(typeof(ConsoleColor), Color);
             }
-            private set
+            set
             {
                 try
                 {

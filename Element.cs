@@ -13,9 +13,9 @@ namespace ApokPT.RocketPlugins
         }
 
         [XmlAttribute]
-        public ushort Id { get; private set; }
+        public ushort Id { get; set; }
         [XmlIgnore]
-        public char CategoryId { get; private set; }
+        public char CategoryId { get; set; }
         [XmlAttribute("CategoryId")]
         public string XmlCategoryId
         {
@@ -23,7 +23,7 @@ namespace ApokPT.RocketPlugins
             {
                 return CategoryId.ToString();
             }
-            private set
+            set
             {
                 char id;
                 if (!char.TryParse(value, out id))
