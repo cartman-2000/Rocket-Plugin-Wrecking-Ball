@@ -1,6 +1,8 @@
 ﻿using Rocket.API;
+using Rocket.Core.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace ApokPT.RocketPlugins
@@ -30,6 +32,8 @@ namespace ApokPT.RocketPlugins
         public bool LimitSafeGuards = false;
         public float LimitSafeGuardsRatio = .6f;
         public int PlayerElementListCutoff = 100;
+        public uint CategoryListVersion = 0;
+        public uint ElementListVersion = 0;
 
         [XmlArray("Categories"), XmlArrayItem(ElementName = "Category")]
         public List<Category> Categories = new List<Category>();
@@ -39,380 +43,452 @@ namespace ApokPT.RocketPlugins
 
         public void LoadDefaults()
         {
-            if(Categories.Count == 0)
+            string logFormatStart = "Updating {0} list to version {1}";
+            string logFormatEnd = "Finished updating {0}";
+            string categories = "Categories";
+            string elements = "Elements";
+            // set categories list version, don't run through the primary update if there are records currently in the list.
+            if (Categories.Count == 0)
+                CategoryListVersion = 0;
+            else if (Categories.Count != 0 && CategoryListVersion == 0)
+                CategoryListVersion = 1;
+            // set elements list version, don't run through the primary update if there are records currently in the list.
+            if (Elements.Count == 0)
+                ElementListVersion = 0;
+            else if (Elements.Count != 0 && ElementListVersion == 0)
+                ElementListVersion = 1;
+
+            // Initial Category list setup.
+            if(CategoryListVersion == 0)
             {
-                Categories = new List<Category>
-                {
-                    new Category('b', "Bed", ConsoleColor.DarkCyan),
-                    new Category('t', "Trap", ConsoleColor.DarkYellow),
-                    new Category('d', "Door", ConsoleColor.DarkMagenta),
-                    new Category('c', "Container", ConsoleColor.Blue),
-                    new Category('y', "Trophy Container", ConsoleColor.Blue),
-                    new Category('l', "Ladder", ConsoleColor.Magenta),
-                    new Category('w', "Wall", ConsoleColor.DarkMagenta),
-                    new Category('f', "Floor", ConsoleColor.DarkMagenta),
-                    new Category('p', "Pillar", ConsoleColor.DarkMagenta),
-                    new Category('r', "Roof", ConsoleColor.DarkMagenta),
-                    new Category('s', "Stair", ConsoleColor.DarkMagenta),
-                    new Category('m', "Freeform", ConsoleColor.DarkMagenta),
-                    new Category('n', "Sign", ConsoleColor.DarkBlue),
-                    new Category('g', "Guard", ConsoleColor.DarkBlue),
-                    new Category('o', "Protections", ConsoleColor.DarkBlue),
-                    new Category('i', "Illumination", ConsoleColor.Yellow),
-                    new Category('u', "Industrial", ConsoleColor.DarkYellow),
-                    new Category('a', "Agriculture", ConsoleColor.Green),
-                    new Category('D', "Decorations", ConsoleColor.Yellow),
-                    new Category('v', "Vehicles", ConsoleColor.DarkRed),
-                    new Category('z', "Zombies", ConsoleColor.DarkGreen),
-                    new Category('!', "Uncategorized", ConsoleColor.White)
-                };
+                CategoryListVersion = 1;
+                Logger.Log(string.Format(logFormatStart, categories, CategoryListVersion));
+                AddCategory('b', "Bed", ConsoleColor.DarkCyan);
+                AddCategory('t', "Trap", ConsoleColor.DarkYellow);
+                AddCategory('d', "Door", ConsoleColor.DarkMagenta);
+                AddCategory('c', "Container", ConsoleColor.Blue);
+                AddCategory('y', "Trophy Container", ConsoleColor.Blue);
+                AddCategory('l', "Ladder", ConsoleColor.Magenta);
+                AddCategory('w', "Wall", ConsoleColor.DarkMagenta);
+                AddCategory('f', "Floor", ConsoleColor.DarkMagenta);
+                AddCategory('p', "Pillar", ConsoleColor.DarkMagenta);
+                AddCategory('r', "Roof", ConsoleColor.DarkMagenta);
+                AddCategory('s', "Stair", ConsoleColor.DarkMagenta);
+                AddCategory('m', "Freeform", ConsoleColor.DarkMagenta);
+                AddCategory('n', "Sign", ConsoleColor.DarkBlue);
+                AddCategory('g', "Guard", ConsoleColor.DarkBlue);
+                AddCategory('o', "Protections", ConsoleColor.DarkBlue);
+                AddCategory('i', "Illumination", ConsoleColor.Yellow);
+                AddCategory('u', "Industrial", ConsoleColor.DarkYellow);
+                AddCategory('a', "Agriculture", ConsoleColor.Green);
+                AddCategory('D', "Decorations", ConsoleColor.Yellow);
+                AddCategory('v', "Vehicles", ConsoleColor.DarkRed);
+                AddCategory('z', "Zombies", ConsoleColor.DarkGreen);
+                AddCategory('!', "Uncategorized", ConsoleColor.White);
+                Logger.Log(string.Format(logFormatEnd, categories));
             }
-            if(Elements.Count == 0)
+
+            // Initial element list setup.
+            if (ElementListVersion == 0)
             {
-                Elements = new List<Element>
-                {
-                    // Zombie
-                    new Element(9998, 'z'),
+                ElementListVersion = 1;
+                Logger.Log(string.Format(logFormatStart, elements, ElementListVersion));
+                // Zombie
+                AddElement(9998, 'z');
 
-                    // Vehicle
-                    new Element(9999, 'v'),
+                // Vehicle
+                AddElement(9999, 'v');
 
-                    // Bed
-                    new Element(288, 'b'),
-                    new Element(289, 'b'),
-                    new Element(290, 'b'),
-                    new Element(291, 'b'),
-                    new Element(292, 'b'),
-                    new Element(293, 'b'),
-                    new Element(294, 'b'),
-                    new Element(295, 'b'),
-                    new Element(1243, 'b'),
-                    new Element(1309, 'b'),
-                    new Element(1310, 'b'),
-                    new Element(1311, 'b'),
-                    new Element(1312, 'b'),
-                    new Element(1313, 'b'),
-                    new Element(1314, 'b'),
-                    // Trap
-                    new Element(382, 't'),
-                    new Element(383, 't'),
-                    new Element(384, 't'),
-                    new Element(385, 't'),
-                    new Element(386, 't'),
-                    new Element(1101, 't'),
-                    new Element(1102, 't'),
-                    new Element(1113, 't'),
-                    new Element(1119, 't'),
-                    new Element(1130, 't'),
-                    new Element(1131, 't'),
-                    new Element(1227, 't'),
-                    new Element(1241, 't'),
-                    new Element(1244, 't'),
-                    new Element(1372, 't'),
-                    new Element(1373, 't'),
-                    new Element(1393, 't'),
-                    // Door - door
-                    new Element(281, 'd'),
-                    new Element(282, 'd'),
-                    new Element(283, 'd'),
-                    new Element(378, 'd'),
-                    // Door - jail and vault
-                    new Element(284, 'd'),
-                    new Element(286, 'd'),
-                    // Door - gate
-                    new Element(451, 'd'),
-                    new Element(455, 'd'),
-                    new Element(456, 'd'),
-                    new Element(457, 'd'),
-                    new Element(1235, 'd'),
-                    new Element(1236, 'd'),
-                    new Element(1237, 'd'),
-                    new Element(1238, 'd'),
-                    // Door - Hatch
-                    new Element(1329, 'd'),
-                    new Element(1330, 'd'),
-                    new Element(1331, 'd'),
-                    new Element(1332, 'd'),
-                    // Storage
-                    new Element(328, 'c'),
-                    new Element(366, 'c'),
-                    new Element(367, 'c'),
-                    new Element(368, 'c'),
-                    new Element(1374, 'c'),
-                    // Trophy/Weapon rack Containers.
-                    new Element(1202, 'y'),
-                    new Element(1203, 'y'),
-                    new Element(1204, 'y'),
-                    new Element(1205, 'y'),
-                    new Element(1206, 'y'),
-                    new Element(1207, 'y'),
-                    new Element(1220, 'y'),
-                    new Element(1221, 'y'),
-                    new Element(1408, 'y'),
-                    new Element(1409, 'y'),
-                    new Element(1410, 'y'),
-                    new Element(1411, 'y'),
-                    new Element(1412, 'y'),
-                    new Element(1413, 'y'),
-                    // Ladder
-                    new Element(325, 'l'),
-                    new Element(326, 'l'),
-                    new Element(327, 'l'),
-                    new Element(379, 'l'),
-                    // Wall - wall
-                    new Element(33, 'w'),
-                    new Element(57, 'w'),
-                    new Element(58, 'w'),
-                    new Element(371, 'w'),
-                    new Element(1215, 'w'),
-                    new Element(1414, 'w'),
-                    new Element(1415, 'w'),
-                    new Element(1416, 'w'),
-                    new Element(1417, 'w'),
-                    new Element(1418, 'w'),
-                    // Wall - doorway
-                    new Element(32, 'w'),
-                    new Element(49, 'w'),
-                    new Element(50, 'w'),
-                    new Element(370, 'w'),
-                    new Element(1210, 'w'),
-                    // Wall - window
-                    new Element(34, 'w'),
-                    new Element(59, 'w'),
-                    new Element(60, 'w'),
-                    new Element(372, 'w'),
-                    new Element(1216, 'w'),
-                    // Wall - garage
-                    new Element(450, 'w'),
-                    new Element(452, 'w'),
-                    new Element(453, 'w'),
-                    new Element(454, 'w'),
-                    new Element(1211, 'w'),
-                    // Wall - rampart
-                    new Element(442, 'w'),
-                    new Element(444, 'w'),
-                    new Element(445, 'w'),
-                    new Element(446, 'w'),
-                    new Element(1214, 'w'),
-                    // Floor
-                    new Element(31, 'f'),
-                    new Element(51, 'f'),
-                    new Element(52, 'f'),
-                    new Element(369, 'f'),
-                    new Element(1262, 'f'),
-                    new Element(1263, 'f'),
-                    new Element(1264, 'f'),
-                    new Element(1265, 'f'),
-                    // Pillar - pillar
-                    new Element(36, 'p'),
-                    new Element(53, 'p'),
-                    new Element(54, 'p'),
-                    new Element(374, 'p'),
-                    new Element(1212, 'p'),
-                    // Pillar - post
-                    new Element(443, 'p'),
-                    new Element(447, 'p'),
-                    new Element(448, 'p'),
-                    new Element(449, 'p'),
-                    new Element(1213, 'p'),
-                    // Roof - roof
-                    new Element(35, 'r'),
-                    new Element(55, 'r'),
-                    new Element(56, 'r'),
-                    new Element(373, 'r'),
-                    new Element(1266, 'r'),
-                    new Element(1267, 'r'),
-                    new Element(1268, 'r'),
-                    new Element(1269, 'r'),
-                    // Roof - hole
-                    new Element(319, 'r'),
-                    new Element(321, 'r'),
-                    new Element(320, 'r'),
-                    new Element(376, 'r'),
-                    // Stairs - stairs
-                    new Element(316, 's'),
-                    new Element(318, 's'),
-                    new Element(317, 's'),
-                    new Element(375, 's'),
-                    // Stairs - ramps
-                    new Element(322, 's'),
-                    new Element(323, 's'),
-                    new Element(324, 's'),
-                    new Element(377, 's'),
-                    // Free Form Buildables
-                    new Element(1058, 'm'),
-                    new Element(1059, 'm'),
-                    new Element(1060, 'm'),
-                    new Element(1061, 'm'),
-                    new Element(1062, 'm'),
-                    new Element(1063, 'm'),
-                    new Element(1064, 'm'),
-                    new Element(1065, 'm'),
-                    new Element(1066, 'm'),
-                    new Element(1067, 'm'),
-                    new Element(1068, 'm'),
-                    new Element(1069, 'm'),
-                    new Element(1070, 'm'),
-                    new Element(1071, 'm'),
-                    new Element(1072, 'm'),
-                    new Element(1073, 'm'),
-                    new Element(1074, 'm'),
-                    new Element(1075, 'm'),
-                    new Element(1083, 'm'),
-                    new Element(1084, 'm'),
-                    new Element(1085, 'm'),
-                    new Element(1086, 'm'),
-                    new Element(1087, 'm'),
-                    new Element(1088, 'm'),
-                    new Element(1089, 'm'),
-                    new Element(1090, 'm'),
-                    new Element(1091, 'm'),
-                    new Element(1092, 'm'),
-                    new Element(1093, 'm'),
-                    new Element(1094, 'm'),
-                    new Element(1144, 'm'),
-                    new Element(1145, 'm'),
-                    new Element(1146, 'm'),
-                    new Element(1147, 'm'),
-                    new Element(1148, 'm'),
-                    new Element(1149, 'm'),
-                    new Element(1150, 'm'),
-                    new Element(1151, 'm'),
-                    new Element(1152, 'm'),
-                    new Element(1153, 'm'),
-                    new Element(1154, 'm'),
-                    new Element(1155, 'm'),
-                    new Element(1217, 'm'),
-                    new Element(1218, 'm'),
-                    new Element(1239, 'm'),
-                    new Element(1396, 'm'),
-                    new Element(1397, 'm'),
-                    // Signs
-                    new Element(1095, 'n'),
-                    new Element(1096, 'n'),
-                    new Element(1097, 'n'),
-                    new Element(1098, 'n'),
-                    new Element(1231, 'n'),
-                    new Element(1232, 'n'),
-                    new Element(1233, 'n'),
-                    new Element(1234, 'n'),
-                    // Guard
-                    new Element(29, 'g'),
-                    new Element(30, 'g'),
-                    new Element(45, 'g'),
-                    new Element(46, 'g'),
-                    new Element(47, 'g'),
-                    new Element(48, 'g'),
-                    new Element(287, 'g'),
-                    new Element(365, 'g'),
-                    new Element(1223, 'g'),
-                    new Element(1224, 'g'),
-                    new Element(1225, 'g'),
-                    new Element(1226, 'g'),
-                    new Element(1297, 'g'),
-                    new Element(1298, 'g'),
-                    new Element(1299, 'g'),
-                    // Protections
-                    new Element(1050, 'o'),
-                    new Element(1158, 'o'),
-                    new Element(1261, 'o'),
-                    // Light
-                    new Element(359, 'i'),
-                    new Element(360, 'i'),
-                    new Element(361, 'i'),
-                    new Element(362, 'i'),
-                    new Element(459, 'i'),
-                    new Element(1049, 'i'),
-                    new Element(1222, 'i'),
-                    new Element(1255, 'i'),
-                    new Element(1272, 'i'),
-                    new Element(1273, 'i'),
-                    new Element(1274, 'i'),
-                    new Element(1275, 'i'),
-                    new Element(1276, 'i'),
-                    new Element(1277, 'i'),
-                    // Industrial
-                    new Element(458, 'u'),
-                    new Element(1219, 'u'),
-                    new Element(1208, 'u'),
-                    new Element(1228, 'u'),
-                    new Element(1229, 'u'),
-                    new Element(1230, 'u'),
-                    // Agriculture
-                    new Element(330, 'a'),
-                    new Element(331, 'a'),
-                    new Element(336, 'a'),
-                    new Element(339, 'a'),
-                    new Element(341, 'a'),
-                    new Element(343, 'a'),
-                    new Element(345, 'a'),
-                    new Element(1045, 'a'),
-                    new Element(1104, 'a'),
-                    new Element(1105, 'a'),
-                    new Element(1106, 'a'),
-                    new Element(1107, 'a'),
-                    new Element(1108, 'a'),
-                    new Element(1109, 'a'),
-                    new Element(1110, 'a'),
-                    new Element(1345, 'a'),
-                    // Decorations
-                    new Element(1245, 'D'),
-                    new Element(1246, 'D'),
-                    new Element(1247, 'D'),
-                    new Element(1248, 'D'),
-                    new Element(1249, 'D'),
-                    new Element(1250, 'D'),
-                    new Element(1251, 'D'),
-                    new Element(1252, 'D'),
-                    new Element(1253, 'D'),
-                    new Element(1254, 'D'),
-                    new Element(1256, 'D'),
-                    new Element(1257, 'D'),
-                    new Element(1258, 'D'),
-                    new Element(1259, 'D'),
-                    new Element(1260, 'D'),
-                    new Element(1278, 'D'),
-                    new Element(1279, 'D'),
-                    new Element(1280, 'D'),
-                    new Element(1281, 'D'),
-                    new Element(1282, 'D'),
-                    new Element(1283, 'D'),
-                    new Element(1284, 'D'),
-                    new Element(1285, 'D'),
-                    new Element(1286, 'D'),
-                    new Element(1287, 'D'),
-                    new Element(1288, 'D'),
-                    new Element(1289, 'D'),
-                    new Element(1290, 'D'),
-                    new Element(1291, 'D'),
-                    new Element(1292, 'D'),
-                    new Element(1293, 'D'),
-                    new Element(1294, 'D'),
-                    new Element(1295, 'D'),
-                    new Element(1296, 'D'),
-                    new Element(1303, 'D'),
-                    new Element(1304, 'D'),
-                    new Element(1305, 'D'),
-                    new Element(1306, 'D'),
-                    new Element(1307, 'D'),
-                    new Element(1308, 'D'),
-                    new Element(1315, 'D'),
-                    new Element(1316, 'D'),
-                    new Element(1317, 'D'),
-                    new Element(1318, 'D'),
-                    new Element(1319, 'D'),
-                    new Element(1320, 'D'),
-                    new Element(1321, 'D'),
-                    new Element(1322, 'D'),
-                    new Element(1323, 'D'),
-                    new Element(1324, 'D'),
-                    new Element(1325, 'D'),
-                    new Element(1326, 'D'),
-                    new Element(1327, 'D'),
-                    new Element(1328, 'D'),
-                    new Element(1466, 'D'),
-                };
+                // Bed
+                AddElement(288, 'b');
+                AddElement(289, 'b');
+                AddElement(290, 'b');
+                AddElement(291, 'b');
+                AddElement(292, 'b');
+                AddElement(293, 'b');
+                AddElement(294, 'b');
+                AddElement(295, 'b');
+                AddElement(1243, 'b');
+                AddElement(1309, 'b');
+                AddElement(1310, 'b');
+                AddElement(1311, 'b');
+                AddElement(1312, 'b');
+                AddElement(1313, 'b');
+                AddElement(1314, 'b');
+                // Trap
+                AddElement(382, 't');
+                AddElement(383, 't');
+                AddElement(384, 't');
+                AddElement(385, 't');
+                AddElement(386, 't');
+                AddElement(1101, 't');
+                AddElement(1102, 't');
+                AddElement(1113, 't');
+                AddElement(1119, 't');
+                AddElement(1130, 't');
+                AddElement(1131, 't');
+                AddElement(1227, 't');
+                AddElement(1241, 't');
+                AddElement(1244, 't');
+                AddElement(1372, 't');
+                AddElement(1373, 't');
+                AddElement(1393, 't');
+                // Door - door
+                AddElement(281, 'd');
+                AddElement(282, 'd');
+                AddElement(283, 'd');
+                AddElement(378, 'd');
+                // Door - jail and vault
+                AddElement(284, 'd');
+                AddElement(286, 'd');
+                // Door - gate
+                AddElement(451, 'd');
+                AddElement(455, 'd');
+                AddElement(456, 'd');
+                AddElement(457, 'd');
+                AddElement(1235, 'd');
+                AddElement(1236, 'd');
+                AddElement(1237, 'd');
+                AddElement(1238, 'd');
+                // Door - Hatch
+                AddElement(1329, 'd');
+                AddElement(1330, 'd');
+                AddElement(1331, 'd');
+                AddElement(1332, 'd');
+                // Storage
+                AddElement(328, 'c');
+                AddElement(366, 'c');
+                AddElement(367, 'c');
+                AddElement(368, 'c');
+                AddElement(1374, 'c');
+                // Trophy/Weapon rack Containers.
+                AddElement(1202, 'y');
+                AddElement(1203, 'y');
+                AddElement(1204, 'y');
+                AddElement(1205, 'y');
+                AddElement(1206, 'y');
+                AddElement(1207, 'y');
+                AddElement(1220, 'y');
+                AddElement(1221, 'y');
+                AddElement(1408, 'y');
+                AddElement(1409, 'y');
+                AddElement(1410, 'y');
+                AddElement(1411, 'y');
+                AddElement(1412, 'y');
+                AddElement(1413, 'y');
+                // Ladder
+                AddElement(325, 'l');
+                AddElement(326, 'l');
+                AddElement(327, 'l');
+                AddElement(379, 'l');
+                // Wall - wall
+                AddElement(33, 'w');
+                AddElement(57, 'w');
+                AddElement(58, 'w');
+                AddElement(371, 'w');
+                AddElement(1215, 'w');
+                AddElement(1414, 'w');
+                AddElement(1415, 'w');
+                AddElement(1416, 'w');
+                AddElement(1417, 'w');
+                AddElement(1418, 'w');
+                // Wall - doorway
+                AddElement(32, 'w');
+                AddElement(49, 'w');
+                AddElement(50, 'w');
+                AddElement(370, 'w');
+                AddElement(1210, 'w');
+                // Wall - window
+                AddElement(34, 'w');
+                AddElement(59, 'w');
+                AddElement(60, 'w');
+                AddElement(372, 'w');
+                AddElement(1216, 'w');
+                // Wall - garage
+                AddElement(450, 'w');
+                AddElement(452, 'w');
+                AddElement(453, 'w');
+                AddElement(454, 'w');
+                AddElement(1211, 'w');
+                // Wall - rampart
+                AddElement(442, 'w');
+                AddElement(444, 'w');
+                AddElement(445, 'w');
+                AddElement(446, 'w');
+                AddElement(1214, 'w');
+                // Floor
+                AddElement(31, 'f');
+                AddElement(51, 'f');
+                AddElement(52, 'f');
+                AddElement(369, 'f');
+                AddElement(1262, 'f');
+                AddElement(1263, 'f');
+                AddElement(1264, 'f');
+                AddElement(1265, 'f');
+                // Pillar - pillar
+                AddElement(36, 'p');
+                AddElement(53, 'p');
+                AddElement(54, 'p');
+                AddElement(374, 'p');
+                AddElement(1212, 'p');
+                // Pillar - post
+                AddElement(443, 'p');
+                AddElement(447, 'p');
+                AddElement(448, 'p');
+                AddElement(449, 'p');
+                AddElement(1213, 'p');
+                // Roof - roof
+                AddElement(35, 'r');
+                AddElement(55, 'r');
+                AddElement(56, 'r');
+                AddElement(373, 'r');
+                AddElement(1266, 'r');
+                AddElement(1267, 'r');
+                AddElement(1268, 'r');
+                AddElement(1269, 'r');
+                // Roof - hole
+                AddElement(319, 'r');
+                AddElement(321, 'r');
+                AddElement(320, 'r');
+                AddElement(376, 'r');
+                // Stairs - stairs
+                AddElement(316, 's');
+                AddElement(318, 's');
+                AddElement(317, 's');
+                AddElement(375, 's');
+                // Stairs - ramps
+                AddElement(322, 's');
+                AddElement(323, 's');
+                AddElement(324, 's');
+                AddElement(377, 's');
+                // Free Form Buildables
+                AddElement(1058, 'm');
+                AddElement(1059, 'm');
+                AddElement(1060, 'm');
+                AddElement(1061, 'm');
+                AddElement(1062, 'm');
+                AddElement(1063, 'm');
+                AddElement(1064, 'm');
+                AddElement(1065, 'm');
+                AddElement(1066, 'm');
+                AddElement(1067, 'm');
+                AddElement(1068, 'm');
+                AddElement(1069, 'm');
+                AddElement(1070, 'm');
+                AddElement(1071, 'm');
+                AddElement(1072, 'm');
+                AddElement(1073, 'm');
+                AddElement(1074, 'm');
+                AddElement(1075, 'm');
+                AddElement(1083, 'm');
+                AddElement(1084, 'm');
+                AddElement(1085, 'm');
+                AddElement(1086, 'm');
+                AddElement(1087, 'm');
+                AddElement(1088, 'm');
+                AddElement(1089, 'm');
+                AddElement(1090, 'm');
+                AddElement(1091, 'm');
+                AddElement(1092, 'm');
+                AddElement(1093, 'm');
+                AddElement(1094, 'm');
+                AddElement(1144, 'm');
+                AddElement(1145, 'm');
+                AddElement(1146, 'm');
+                AddElement(1147, 'm');
+                AddElement(1148, 'm');
+                AddElement(1149, 'm');
+                AddElement(1150, 'm');
+                AddElement(1151, 'm');
+                AddElement(1152, 'm');
+                AddElement(1153, 'm');
+                AddElement(1154, 'm');
+                AddElement(1155, 'm');
+                AddElement(1217, 'm');
+                AddElement(1218, 'm');
+                AddElement(1239, 'm');
+                AddElement(1396, 'm');
+                AddElement(1397, 'm');
+                // Signs
+                AddElement(1095, 'n');
+                AddElement(1096, 'n');
+                AddElement(1097, 'n');
+                AddElement(1098, 'n');
+                AddElement(1231, 'n');
+                AddElement(1232, 'n');
+                AddElement(1233, 'n');
+                AddElement(1234, 'n');
+                // Guard
+                AddElement(29, 'g');
+                AddElement(30, 'g');
+                AddElement(45, 'g');
+                AddElement(46, 'g');
+                AddElement(47, 'g');
+                AddElement(48, 'g');
+                AddElement(287, 'g');
+                AddElement(365, 'g');
+                AddElement(1223, 'g');
+                AddElement(1224, 'g');
+                AddElement(1225, 'g');
+                AddElement(1226, 'g');
+                AddElement(1297, 'g');
+                AddElement(1298, 'g');
+                AddElement(1299, 'g');
+                // Protections
+                AddElement(1050, 'o');
+                AddElement(1158, 'o');
+                AddElement(1261, 'o');
+                // Light
+                AddElement(359, 'i');
+                AddElement(360, 'i');
+                AddElement(361, 'i');
+                AddElement(362, 'i');
+                AddElement(459, 'i');
+                AddElement(1049, 'i');
+                AddElement(1222, 'i');
+                AddElement(1255, 'i');
+                AddElement(1272, 'i');
+                AddElement(1273, 'i');
+                AddElement(1274, 'i');
+                AddElement(1275, 'i');
+                AddElement(1276, 'i');
+                AddElement(1277, 'i');
+                // Industrial
+                AddElement(458, 'u');
+                AddElement(1219, 'u');
+                AddElement(1208, 'u');
+                AddElement(1228, 'u');
+                AddElement(1229, 'u');
+                AddElement(1230, 'u');
+                // Agriculture
+                AddElement(330, 'a');
+                AddElement(331, 'a');
+                AddElement(336, 'a');
+                AddElement(339, 'a');
+                AddElement(341, 'a');
+                AddElement(343, 'a');
+                AddElement(345, 'a');
+                AddElement(1045, 'a');
+                AddElement(1104, 'a');
+                AddElement(1105, 'a');
+                AddElement(1106, 'a');
+                AddElement(1107, 'a');
+                AddElement(1108, 'a');
+                AddElement(1109, 'a');
+                AddElement(1110, 'a');
+                AddElement(1345, 'a');
+                // Decorations
+                AddElement(1245, 'D');
+                AddElement(1246, 'D');
+                AddElement(1247, 'D');
+                AddElement(1248, 'D');
+                AddElement(1249, 'D');
+                AddElement(1250, 'D');
+                AddElement(1251, 'D');
+                AddElement(1252, 'D');
+                AddElement(1253, 'D');
+                AddElement(1254, 'D');
+                AddElement(1256, 'D');
+                AddElement(1257, 'D');
+                AddElement(1258, 'D');
+                AddElement(1259, 'D');
+                AddElement(1260, 'D');
+                AddElement(1278, 'D');
+                AddElement(1279, 'D');
+                AddElement(1280, 'D');
+                AddElement(1281, 'D');
+                AddElement(1282, 'D');
+                AddElement(1283, 'D');
+                AddElement(1284, 'D');
+                AddElement(1285, 'D');
+                AddElement(1286, 'D');
+                AddElement(1287, 'D');
+                AddElement(1288, 'D');
+                AddElement(1289, 'D');
+                AddElement(1290, 'D');
+                AddElement(1291, 'D');
+                AddElement(1292, 'D');
+                AddElement(1293, 'D');
+                AddElement(1294, 'D');
+                AddElement(1295, 'D');
+                AddElement(1296, 'D');
+                AddElement(1303, 'D');
+                AddElement(1304, 'D');
+                AddElement(1305, 'D');
+                AddElement(1306, 'D');
+                AddElement(1307, 'D');
+                AddElement(1308, 'D');
+                AddElement(1315, 'D');
+                AddElement(1316, 'D');
+                AddElement(1317, 'D');
+                AddElement(1318, 'D');
+                AddElement(1319, 'D');
+                AddElement(1320, 'D');
+                AddElement(1321, 'D');
+                AddElement(1322, 'D');
+                AddElement(1323, 'D');
+                AddElement(1324, 'D');
+                AddElement(1325, 'D');
+                AddElement(1326, 'D');
+                AddElement(1327, 'D');
+                AddElement(1328, 'D');
+                AddElement(1466, 'D');
+                Logger.Log(string.Format(logFormatEnd, elements));
+            }
+
+            // Transfer sentries to the protections category.
+            if (ElementListVersion == 1)
+            {
+                ElementListVersion = 2;
+                Logger.Log(string.Format(logFormatStart, elements, ElementListVersion));
+                AddElement(1244, 'o', true);
+                AddElement(1372, 'o', true);
+                AddElement(1373, 'o', true);
+                Logger.Log(string.Format(logFormatEnd, elements));
+            }
+            // Add new elements to the list.
+            if (ElementListVersion == 2)
+            {
+                ElementListVersion = 3;
+                Logger.Log(string.Format(logFormatStart, elements, ElementListVersion));
+                AddElement(1500, 'm');
+                Logger.Log(string.Format(logFormatEnd, elements));
             }
         }
+
+        public void AddCategory(char catflag, string name, ConsoleColor color, bool update = false)
+        {
+            Category trimmedcat = Categories.FirstOrDefault(catf => catf.Id == catflag);
+            if (trimmedcat != null)
+            {
+                if (!update)
+                    Logger.LogWarning(string.Format("Can't add Category flag {0} to category list, it's already taken by a category named: {1}, with flag: {2}.", catflag, trimmedcat.Name, trimmedcat.Id));
+                else
+                    Categories[Categories.FindIndex(catf => catf.Id == catflag)] = new Category(catflag, name, color);
+            }
+            else
+                Categories.Add(new Category(catflag, name, color));
+        }
+
+        public void AddElement(ushort id, char catflag, bool update = false)
+        {
+            Element trimmedelement = Elements.FirstOrDefault(elid => elid.Id == id);
+            Category trimmedcat = Categories.FirstOrDefault(catf => catf.Id == catflag);
+            if (trimmedelement != null)
+            {
+                if (!update)
+                    Logger.LogWarning(string.Format("Can't add Element ID {0} to category list, it's already set, with a category flag id of: {1}.", id, trimmedelement.CategoryId));
+                else
+                {
+                    if (trimmedcat != null)
+                        Elements[Elements.FindIndex(elid => elid.Id == id)] = new Element(id, catflag);
+                    else
+                        Logger.LogWarning(string.Format("Can't update Element ID: {0}, to another category, the category for flag: {1} doesn't exist.", id, catflag));
+                }
+            }
+            else
+                Elements.Add(new Element(id, catflag));
+        }
+
     }
 }
