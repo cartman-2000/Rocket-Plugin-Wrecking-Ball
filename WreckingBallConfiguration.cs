@@ -454,6 +454,14 @@ namespace ApokPT.RocketPlugins
                 AddElement(1500, 'm');
                 Logger.Log(string.Format(logFormatEnd, elements));
             }
+            // Add the clock to the list with the Decorations flag.
+            if (ElementListVersion == 3)
+            {
+                ElementListVersion = 4;
+                Logger.Log(string.Format(logFormatStart, elements, ElementListVersion));
+                AddElement(1509, 'D');
+                Logger.Log(string.Format(logFormatEnd, elements));
+            }
         }
 
         public void AddCategory(char catflag, string name, ConsoleColor color, bool update = false)
