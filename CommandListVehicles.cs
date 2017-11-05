@@ -66,25 +66,69 @@ namespace ApokPT.RocketPlugins
                 ushort plant = 0;
                 int count = 0;
                 BarricadeRegion barricadeRegion;
-                if (caller is ConsolePlayer || Vector3.Distance(vehicle.transform.position, player.Position) < radius)
+                bool doRun = (caller is ConsolePlayer || 
+                    (vehicle.asset.engine == EEngine.TRAIN && vehicle.trainCars != null && vehicle.trainCars.Length > 1 && vehicle.trainCars.FirstOrDefault(car => Vector3.Distance(car.root.transform.position, player.Position) < radius) != null) || 
+                    Vector3.Distance(vehicle.transform.position, player.Position) < radius);
+                if (doRun)
                 {
                     bool getPInfo = false;
                     if (WreckingBall.Instance.Configuration.Instance.EnablePlayerInfo)
                         getPInfo = WreckingBall.IsPInfoLibLoaded();
-                    string locked = getPInfo ? WreckingBall.Instance.PInfoGenerateMessage((ulong)vehicle.lockedOwner) : vehicle.lockedOwner.ToString();
-                    string msg = string.Empty;
-                    if (vehicle)
-                        if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
-                            count = barricadeRegion.drops.Count;
-                    if (!vehicle.isLocked)
-                        msg = WreckingBall.Instance.Translate("wreckingball_lv_vehicle", vehicle.transform.position.ToString(), vehicle.instanceID, count);
+                    string lockedBy = getPInfo ? WreckingBall.Instance.PInfoGenerateMessage((ulong)vehicle.lockedOwner) : vehicle.lockedOwner.ToString();
+                    ulong signOwner = 0;
+                    string signBy = string.Empty;
+                    bool showSignBy = false;
+                    if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
+                        count = barricadeRegion.drops.Count;
+                    // Handle trains differently.
+                    if (vehicle.asset.engine == EEngine.TRAIN)
+                    {
+                        if (caller is ConsolePlayer || Vector3.Distance(vehicle.transform.position, player.Position) < radius)
+                        {
+                            showSignBy = DestructionProcessing.HasFlaggedElement(vehicle.transform, WreckingBall.Instance.Configuration.Instance.VehicleSignFlag, out signOwner);
+                            if (showSignBy)
+                                signBy = getPInfo ? WreckingBall.Instance.PInfoGenerateMessage(signOwner) : signOwner.ToString();
+                            ProcessMessages(caller, vehicle.transform, vehicle.instanceID, count, lockedBy, vehicle.isLocked, signBy, showSignBy, true);
+                        }
+                        if (vehicle.trainCars != null && vehicle.trainCars.Length > 1)
+                        {
+                            for (int i = 1; i < vehicle.trainCars.Length; i++)
+                            {
+                                if (caller is ConsolePlayer || Vector3.Distance(vehicle.trainCars[i].root.transform.position, player.Position) < radius)
+                                {
+                                    if (BarricadeManager.tryGetPlant(vehicle.trainCars[i].root, out x, out y, out plant, out barricadeRegion))
+                                        count = barricadeRegion.drops.Count;
+                                    showSignBy = DestructionProcessing.HasFlaggedElement(vehicle.trainCars[i].root, WreckingBall.Instance.Configuration.Instance.VehicleSignFlag, out signOwner);
+                                    if (showSignBy)
+                                        signBy = getPInfo ? WreckingBall.Instance.PInfoGenerateMessage(signOwner) : signOwner.ToString();
+                                    ProcessMessages(caller, vehicle.trainCars[i].root, vehicle.instanceID, count, lockedBy, false, signBy, showSignBy, true, true, i);
+                                }
+                            }
+                        }
+                    }
                     else
-                        msg = WreckingBall.Instance.Translate("wreckingball_lv_vehicle_locked", vehicle.transform.position.ToString(), vehicle.instanceID, count, locked);
-                    if (!(caller is ConsolePlayer))
-                        UnturnedChat.Say(caller, msg, Color.yellow);
-                    Logger.Log(msg, ConsoleColor.Yellow);
+                    {
+                        showSignBy = DestructionProcessing.HasFlaggedElement(vehicle.transform, WreckingBall.Instance.Configuration.Instance.VehicleSignFlag, out signOwner);
+                        if (showSignBy)
+                            signBy = getPInfo ? WreckingBall.Instance.PInfoGenerateMessage(signOwner) : signOwner.ToString();
+                        ProcessMessages(caller, vehicle.transform, vehicle.instanceID, count, lockedBy, vehicle.isLocked, signBy, showSignBy);
+                    }
                 }
             }
+        }
+
+        private void ProcessMessages(IRocketPlayer caller, Transform transform, uint instanceID, int count, string lockedBy, bool isLocked, string signBy, bool showSignBy, bool isTrain = false, bool isTrainCar = false, int trainCarId = 0)
+        {
+            string msg = string.Empty;
+            if (!isTrain && !isTrainCar)
+                msg = WreckingBall.Instance.Translate("wreckingball_lv2_vehicle", transform.position.ToString(), instanceID, count, showSignBy ? signBy : "N/A", isLocked ? lockedBy : "N/A");
+            else if (isTrain && !isTrainCar)
+                msg = WreckingBall.Instance.Translate("wreckingball_lv2_train", transform.position.ToString(), instanceID, count, showSignBy ? signBy : "N/A", isLocked ? lockedBy : "N/A");
+            else
+                msg = WreckingBall.Instance.Translate("wreckingball_lv2_traincar", transform.position.ToString(), instanceID, count, showSignBy ? signBy : "N/A", "N/A", trainCarId);
+            if (!(caller is ConsolePlayer))
+                UnturnedChat.Say(caller, msg, Color.yellow);
+            Logger.Log(msg, ConsoleColor.Yellow);
         }
     }
 }

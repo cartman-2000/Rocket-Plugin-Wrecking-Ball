@@ -558,7 +558,7 @@ namespace ApokPT.RocketPlugins
                         if (!vehicle.Key.isEmpty)
                             continue;
                         ulong elementOwner;
-                        bool hasSign = HasFlaggedElement(vehicle.Key.transform, 'n', out elementOwner);
+                        bool hasSign = HasFlaggedElement(vehicle.Key.transform, WreckingBall.Instance.Configuration.Instance.VehicleSignFlag, out elementOwner);
                         if (useSafeGuards && (WreckingBall.Instance.Configuration.Instance.LowElementCountOnly || WreckingBall.Instance.Configuration.Instance.KeepVehiclesWithSigns))
                         {
                             if (WreckingBall.Instance.Configuration.Instance.LimitSafeGuards && v > Math.Round(WreckingBall.Instance.Configuration.Instance.MaxVehiclesAllowed * WreckingBall.Instance.Configuration.Instance.LimitSafeGuardsRatio + numToDestroy, 0))

@@ -29,6 +29,7 @@ namespace ApokPT.RocketPlugins
         public bool LowElementCountOnly = false;
         public ushort MinElementCount = 6;
         public bool KeepVehiclesWithSigns = true;
+        public char VehicleSignFlag = 'n';
         public bool LimitSafeGuards = false;
         public float LimitSafeGuardsRatio = .6f;
         public int PlayerElementListCutoff = 100;
