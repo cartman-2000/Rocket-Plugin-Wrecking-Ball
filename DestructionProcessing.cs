@@ -529,6 +529,9 @@ namespace ApokPT.RocketPlugins
                 {
                     if (vehicle.isDead)
                         continue;
+                    // Don't process trains with the cap, this can bug things up on a server.
+                    if (vehicle.asset.engine == EEngine.TRAIN)
+                        continue;
                     if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
                         vList.Add(vehicle, barricadeRegion.drops.Count);
                     else
@@ -557,7 +560,7 @@ namespace ApokPT.RocketPlugins
                             continue;
                         if (!vehicle.Key.isEmpty)
                             continue;
-                        ulong elementOwner;
+                        ulong elementOwner = 0;
                         bool hasSign = HasFlaggedElement(vehicle.Key.transform, WreckingBall.Instance.Configuration.Instance.VehicleSignFlag, out elementOwner);
                         if (useSafeGuards && (WreckingBall.Instance.Configuration.Instance.LowElementCountOnly || WreckingBall.Instance.Configuration.Instance.KeepVehiclesWithSigns))
                         {
@@ -580,14 +583,8 @@ namespace ApokPT.RocketPlugins
                         i++;
                         if (i > numToDestroy)
                             break;
-                        string msg = string.Empty;
-                        if (vehicle.Key.isLocked)
-                            msg = string.Format("Vehicle #{0}, with InstanceID: {1}, at position: {2} destroyed, Element count: {3}, Locked By: {4}.", v, vehicle.Key.instanceID, vehicle.Key.transform.position.ToString(), vehicle.Value, getPInfo ? WreckingBall.Instance.PInfoGenerateMessage((ulong)vehicle.Key.lockedOwner) : vehicle.Key.lockedOwner.ToString());
-                        else
-                            msg = string.Format("Vehicle #{0}, with InstanceID: {1}, at position: {2} destroyed, Element count: {3}.", v, vehicle.Key.instanceID, vehicle.Key.transform.position.ToString(), vehicle.Value);
-
+                        Logger.Log(string.Format("Vehicle #{0}, with InstanceID: {1}, and Type: {5}({6}), at position: {2} destroyed, Element count: {3}, Sign By {7}, Locked By: {4}.", v, vehicle.Key.instanceID, vehicle.Key.transform.position.ToString(), vehicle.Value, vehicle.Key.isLocked ? (getPInfo ? WreckingBall.Instance.PInfoGenerateMessage((ulong)vehicle.Key.lockedOwner) : vehicle.Key.lockedOwner.ToString()) : "N/A", vehicle.Key.asset.vehicleName, vehicle.Key.asset.id, hasSign ? (getPInfo ? WreckingBall.Instance.PInfoGenerateMessage(elementOwner) : elementOwner.ToString()) : "N/A"));
                         vehicle.Key.askDamage(ushort.MaxValue, false);
-                        Logger.Log(msg);
                     }
                     Logger.Log("Vehicle cleanup finished.", ConsoleColor.Yellow);
                 }
