@@ -369,9 +369,8 @@ namespace ApokPT.RocketPlugins
                 return new TranslationList
                 {
                     { "wreckingball_lv_help", "<radius> - distance to scan cars." },
-                    { "wreckingball_lv2_vehicle", "Vehicle position: {0}, with InstanceID: {1}, Barricade count on car: {2}, Sign By: {3}, Locked By: {4}." },
-                    { "wreckingball_lv2_train", "Train position: {0}, with InstanceID: {1}, Barricade count on Train: {2}, Sign By: {3}, Locked By: {4}." },
-                    { "wreckingball_lv2_traincar", "Train Car#{5} position: {0}, with InstanceID: {1}, Barricade count on Train Car: {2}, Sign By: {3}, Locked By: {4}." },
+                    { "wreckingball_lv2_vehicle", "Vehicle: {5}({6}) position: {0}, with InstanceID: {1}, Barricade count on car: {2}, Sign By: {3}, Locked By: {4}." },
+                    { "wreckingball_lv2_traincar", "Vehicle: Train Car#{5} position: {0}, with InstanceID: {1}, Barricade count on Train Car: {2}, Sign By: {3}, Locked By: {4}." },
                     { "werckingball_dcu_help", "<\"playername\" | SteamID> - disables cleanup on a player." },
                     { "werckingball_dcu_not_enabled", "This command can only be used if the cleanup feature is enabled on the server." },
                     { "wreckingball_dcu_player_not_found", "Couldn't find a player by that name on the server." },
