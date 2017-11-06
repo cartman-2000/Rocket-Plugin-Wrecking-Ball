@@ -463,25 +463,55 @@ namespace ApokPT.RocketPlugins
                 AddElement(1509, 'D');
                 Logger.Log(string.Format(logFormatEnd, elements));
             }
+            // Update for new features, Change case for the special categories for the vehicles/zombies to upper case, and add a Animals category.
+            if (CategoryListVersion == 1)
+            {
+                CategoryListVersion = 2;
+                Logger.Log(string.Format(logFormatStart, categories, CategoryListVersion));
+                AddCategory('A', "Animals", ConsoleColor.Cyan);
+                AddCategory('V', "Vehicles", ConsoleColor.DarkRed, true, 'v');
+                AddCategory('Z', "Zombies", ConsoleColor.DarkGreen, true, 'z');
+                Logger.Log(string.Format(logFormatEnd, categories));
+            }
+            if (ElementListVersion == 4)
+            {
+                ElementListVersion = 5;
+                Logger.Log(string.Format(logFormatStart, elements, ElementListVersion));
+                AddElement(999, 'V', true, 9999);
+                AddElement(998, 'Z', true, 9998);
+                AddElement(997, 'A');
+                Logger.Log(string.Format(logFormatEnd, elements));
+            }
         }
 
-        public void AddCategory(char catflag, string name, ConsoleColor color, bool update = false)
+        public void AddCategory(char catflag, string name, ConsoleColor color, bool update = false, char? oldID = null)
         {
-            Category trimmedcat = Categories.FirstOrDefault(catf => catf.Id == catflag);
+            Category trimmedcat = Categories.FirstOrDefault(catf => oldID != null ? catf.Id == oldID : catf.Id == catflag);
             if (trimmedcat != null)
             {
                 if (!update)
                     Logger.LogWarning(string.Format("Can't add Category flag {0} to category list, it's already taken by a category named: {1}, with flag: {2}.", catflag, trimmedcat.Name, trimmedcat.Id));
                 else
-                    Categories[Categories.FindIndex(catf => catf.Id == catflag)] = new Category(catflag, name, color);
+                {
+                    if (oldID == null)
+                        Categories[Categories.FindIndex(catf => catf.Id == catflag)] = new Category(catflag, name, color);
+                    else
+                    {
+                        Category trimmedcat2 = Categories.FirstOrDefault(catf => catf.Id == catflag);
+                        if (trimmedcat2 != null)
+                            Logger.LogWarning(string.Format("Can't update Category flag {0} to {1} on category list, it's already taken by a category named: {2}, with flag: {3}.", oldID, catflag, trimmedcat2.Name, trimmedcat2.Id));
+                        else
+                            Categories[Categories.FindIndex(catf => catf.Id == oldID)] = new Category(catflag, name, color);
+                    }
+                }
             }
             else
                 Categories.Add(new Category(catflag, name, color));
         }
 
-        public void AddElement(ushort id, char catflag, bool update = false)
+        public void AddElement(ushort id, char catflag, bool update = false, ushort? oldID = null)
         {
-            Element trimmedelement = Elements.FirstOrDefault(elid => elid.Id == id);
+            Element trimmedelement = Elements.FirstOrDefault(elid => oldID != null ? elid.Id == oldID : elid.Id == id);
             Category trimmedcat = Categories.FirstOrDefault(catf => catf.Id == catflag);
             if (trimmedelement != null)
             {
@@ -490,7 +520,18 @@ namespace ApokPT.RocketPlugins
                 else
                 {
                     if (trimmedcat != null)
-                        Elements[Elements.FindIndex(elid => elid.Id == id)] = new Element(id, catflag);
+                    {
+                        if (oldID == null)
+                            Elements[Elements.FindIndex(elid => elid.Id == id)] = new Element(id, catflag);
+                        else
+                        {
+                            Element trimmedElement2 = Elements.FirstOrDefault(elid => elid.Id == id);
+                            if (trimmedElement2 != null)
+                                Logger.LogWarning(string.Format("Can't update Element ID {0} to {1}, an element with this id is already set, with a category flag id of: {1}.", oldID, id, trimmedElement2.CategoryId));
+                            else
+                                Elements[Elements.FindIndex(elid => elid.Id == oldID)] = new Element(id, catflag);    
+                            }
+                    }
                     else
                         Logger.LogWarning(string.Format("Can't update Element ID: {0}, to another category, the category for flag: {1} doesn't exist.", id, catflag));
                 }
