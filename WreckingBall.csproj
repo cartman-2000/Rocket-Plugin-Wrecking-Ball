@@ -78,6 +78,7 @@
     <Compile Include="DestructionProcessing.cs" />
     <Compile Include="Element.cs" />
     <Compile Include="ElementDataManager.cs" />
+    <Compile Include="ElementType.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="TeleportType.cs" />
     <Compile Include="WreckingBall.cs" />

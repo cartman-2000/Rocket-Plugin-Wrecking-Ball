@@ -137,7 +137,7 @@ namespace ApokPT.RocketPlugins
                 {
                     ulong signOwner = 0;
                     DestructionProcessing.HasFlaggedElement(vindex > 0 ? vehicle.trainCars[vindex].root : vehicle.transform, WreckingBall.Instance.Configuration.Instance.VehicleSignFlag, out signOwner);
-                    msg = string.Format("{0}{1} (Id: {6}:{2}) @ {3}m, Barricade Count: {4}, Sign by {7}, Locked By: {5}", stype, cat.Name, itemId, Math.Round(range, 2), count, lockedOwner > 0 ? getPinfo ? WreckingBall.Instance.PInfoGenerateMessage(lockedOwner) : lockedOwner.ToString() : "N/A", vindex > 0 ? "Train car#" + vindex : eName, signOwner > 0 ? getPinfo ? WreckingBall.Instance.PInfoGenerateMessage(signOwner) : signOwner.ToString() : "N/A");
+                    msg = string.Format("{0}{1} (Id: {6}:{2}) @ {3}m, Barricade Count: {4}, Sign by: {7}, Locked By: {5}", stype, cat.Name, itemId, Math.Round(range, 2), count, lockedOwner > 0 ? getPinfo ? WreckingBall.Instance.PInfoGenerateMessage(lockedOwner) : lockedOwner.ToString() : "N/A", vindex > 0 ? "Train car#" + vindex : eName, signOwner > 0 ? getPinfo ? WreckingBall.Instance.PInfoGenerateMessage(signOwner) : signOwner.ToString() : "N/A");
                 }
                 else
                 {

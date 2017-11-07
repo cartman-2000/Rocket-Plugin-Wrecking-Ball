@@ -5,7 +5,7 @@ namespace ApokPT.RocketPlugins
 {
     class Destructible
     {
-        public Destructible(Transform transform, char type, InteractableVehicle vehicle = null, Zombie zombie = null, Animal animal = null)
+        public Destructible(Transform transform, ElementType type, InteractableVehicle vehicle = null, Zombie zombie = null, Animal animal = null)
         {
             Transform = transform;
             Type = type;
@@ -18,6 +18,6 @@ namespace ApokPT.RocketPlugins
         public Zombie Zombie { get; private set; }
         public InteractableVehicle Vehicle { get; private set; }
         public Transform Transform { get; private set; }
-        public char Type { get; private set; }
+        public ElementType Type { get; private set; }
     }
 }

@@ -157,7 +157,7 @@ namespace ApokPT.RocketPlugins
                 }
                 else if (type == WreckType.Cleanup && WreckingBall.Instance.Configuration.Instance.CleanupLockedCars && vehicle.isLocked && vehicle.lockedOwner == (CSteamID)steamID)
                 {
-                        cleanupList.Add(new Destructible(vehicle.transform, 'V'));
+                        cleanupList.Add(new Destructible(vehicle.transform, ElementType.Vehicle));
                 }
                 else if (type == WreckType.Counts && WreckingBall.Instance.Configuration.Instance.CleanupLockedCars && vehicle.isLocked && vehicle.lockedOwner == (CSteamID)steamID)
                 {
@@ -198,12 +198,23 @@ namespace ApokPT.RocketPlugins
 
             if (type == WreckType.Scan)
             {
-                Logger.Log(string.Format("Player: {0}, ran scan at: {1}, with Flag type: {2}, with Flags: {3}, with ItemID: {4}, with SteamID: {5}", caller is ConsolePlayer ? "Console" : Player.CharacterName + " [" + Player.SteamName + "] (" + Player.CSteamID.ToString() + ")", caller is ConsolePlayer ? "N/A" : Player.Position.ToString(), flagtype.ToString(), Filter.Count > 0 ? string.Join("", Filter.Select(i => i.ToString()).ToArray()) : "N/A", itemID, steamID));
+                uint totalCount = 0;
+                if (WreckingBall.ElementData.reportLists[BuildableType.Element].Count > 0 || WreckingBall.ElementData.reportLists[BuildableType.VehicleElement].Count > 0)
+                {
+                    foreach (KeyValuePair<BuildableType, Dictionary<char, uint>> reportDictionary in WreckingBall.ElementData.reportLists)
+                    {
+                        if (reportDictionary.Value.Count == 0)
+                            continue;
+                        foreach (KeyValuePair<char, uint> reportFilter in reportDictionary.Value)
+                            totalCount += reportFilter.Value;
+                    }
+                }
+                Logger.Log(string.Format("Player: {0}, ran scan at: {1}, with Flag type: {2}, with Flags: {3}, with ItemID: {4}, with SteamID: {5}, number of elements scanned: {6}", caller is ConsolePlayer ? "Console" : Player.CharacterName + " [" + Player.SteamName + "] (" + Player.CSteamID.ToString() + ")", caller is ConsolePlayer ? "N/A" : Player.Position.ToString(), flagtype.ToString(), Filter.Count > 0 ? string.Join("", Filter.Select(i => i.ToString()).ToArray()) : "N/A", itemID, steamID, totalCount));
                 return;
             }
             if (destroyList.Count >= 1 && type == WreckType.Wreck)
             {
-                Logger.Log(string.Format("Player {0}, queued wreck at: {1}, with Flag type: {2}, with Flags: {3}, with itemID: {4}, with StermID: {5}", caller is ConsolePlayer ? "Console" : Player.CharacterName + " [" + Player.SteamName + "] (" + Player.CSteamID.ToString() + ")", caller is ConsolePlayer ? "N/A" : Player.Position.ToString(), flagtype.ToString(), Filter.Count > 0 ? string.Join("", Filter.Select(i => i.ToString()).ToArray()) : "N/A", itemID, steamID));
+                Logger.Log(string.Format("Player {0}, queued wreck at: {1}, with Flag type: {2}, with Flags: {3}, with itemID: {4}, with StermID: {5}, number of elements queued: {6}", caller is ConsolePlayer ? "Console" : Player.CharacterName + " [" + Player.SteamName + "] (" + Player.CSteamID.ToString() + ")", caller is ConsolePlayer ? "N/A" : Player.Position.ToString(), flagtype.ToString(), Filter.Count > 0 ? string.Join("", Filter.Select(i => i.ToString()).ToArray()) : "N/A", itemID, steamID, destroyList.Count));
                 dIdxCount = destroyList.Count;
                 WreckingBall.Instance.Instruct(caller);
             }
@@ -228,16 +239,16 @@ namespace ApokPT.RocketPlugins
             else
             {
                 if (data is StructureData)
-                    destroyList.Add(new Destructible(transform, 's'));
+                    destroyList.Add(new Destructible(transform, ElementType.Structure));
                 if (data is BarricadeData)
-                    destroyList.Add(new Destructible(transform, 'b'));
-                // Add the vehicle to the destruction list, as long as it's not a train.
-                if (data is InteractableVehicle && ((InteractableVehicle)data).asset.engine != EEngine.TRAIN)
-                    destroyList.Add(new Destructible(transform, 'v', data as InteractableVehicle));
+                    destroyList.Add(new Destructible(transform, ElementType.Barricade));
+                // Add the vehicle to the destruction list, as long as it's not a train. Allow a special case where you could destroy a train from using wreck on the console, only.
+                if (data is InteractableVehicle && (((InteractableVehicle)data).asset.engine != EEngine.TRAIN || caller is ConsolePlayer && vindex == 0 && type != WreckType.Counts && type != WreckType.Cleanup))
+                    destroyList.Add(new Destructible(transform, ElementType.Vehicle, data as InteractableVehicle));
                 if (data is Zombie)
-                    destroyList.Add(new Destructible(transform, 'z', null, data as Zombie));
+                    destroyList.Add(new Destructible(transform, ElementType.Zombie, null, data as Zombie));
                 if (data is Animal)
-                    destroyList.Add(new Destructible(transform, 'a', null, null, data as Animal));
+                    destroyList.Add(new Destructible(transform, ElementType.Animal, null, null, data as Animal));
             }
         }
 
@@ -245,6 +256,7 @@ namespace ApokPT.RocketPlugins
         {
             int transformCount = 0;
             int DataCount = 0;
+            ulong owner = 0;
             StructureRegion sRegion = null;
             BarricadeRegion bRegion = null;
             BarricadeData bData = null;
@@ -270,9 +282,15 @@ namespace ApokPT.RocketPlugins
                 transform = isSRegion ? sRegion.drops[i].model : bRegion.drops[i].model;
                 if (i < DataCount)
                     if (isSRegion)
+                    {
                         sData = sRegion.structures[i];
+                        owner = sData.owner;
+                    }
                     else
+                    {
                         bData = bRegion.barricades[i];
+                        owner = bData.owner;
+                    }
                 else
                 {
                     Logger.LogWarning(WreckingBall.Instance.Translate(isSRegion ? "wreckingball_structure_array_sync_error" : "wreckingball_barricade_array_sync_error"));
@@ -287,17 +305,17 @@ namespace ApokPT.RocketPlugins
                     {
                         if (flagtype == FlagType.Normal)
                             WreckProcess(caller, item, distance, pInfoLibLoaded, buildType, type, isSRegion ? (object)sData : bData, transform);
-                        else if (flagtype == FlagType.SteamID && ((isSRegion && sData.owner == steamID) || bData.owner == steamID))
+                        else if (flagtype == FlagType.SteamID && owner == steamID)
                             WreckProcess(caller, item, distance, pInfoLibLoaded, buildType, type, isSRegion ? (object)sData : bData, transform);
                         else if (flagtype == FlagType.ItemID && itemID == item)
                             WreckProcess(caller, item, distance, pInfoLibLoaded, buildType, type, isSRegion ? (object)sData : bData, transform);
                     }
                 }
-                else if (type == WreckType.Cleanup && ((isSRegion && sData.owner == steamID) || bData.owner == steamID))
+                else if (type == WreckType.Cleanup && owner == steamID)
                 {
-                    cleanupList.Add(new Destructible(transform, isSRegion ? 's' : 'b'));
+                    cleanupList.Add(new Destructible(transform, isSRegion ? ElementType.Structure : ElementType.Barricade));
                 }
-                else if (type == WreckType.Counts && ((isSRegion && sData.owner == steamID) || bData.owner == steamID))
+                else if (type == WreckType.Counts && owner == steamID)
                 {
                     if (pElementCounts.ContainsKey(steamID))
                         pElementCounts[steamID]++;
@@ -374,7 +392,7 @@ namespace ApokPT.RocketPlugins
                             Logger.Log(string.Format("Skipping buildables cleanup for player: {0} [{1}] ({2}).", playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
                         else
                         {
-                            Wreck(new RocketPlayer("0"), "*", 100000, new Vector3(0, 0, 0), WreckType.Cleanup, FlagType.SteamID, (ulong)playersListBuildables[plbIdx][0], 0);
+                            Wreck(new ConsolePlayer(), "*", 100000, new Vector3(0, 0, 0), WreckType.Cleanup, FlagType.SteamID, (ulong)playersListBuildables[plbIdx][0], 0);
                             if (cdIdxCount == 0)
                                 Logger.Log(string.Format("No elements found for player: {0} [{1}] ({2}).", playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
                             else
@@ -447,7 +465,7 @@ namespace ApokPT.RocketPlugins
                                 Logger.Log(string.Format("Skipping buildables cleanup for player: {0} [{1}] ({2}).", playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
                             else
                             {
-                                Wreck(new RocketPlayer("0"), "*", 100000, new Vector3(0, 0, 0), WreckType.Cleanup, FlagType.SteamID, (ulong)playersListBuildables[plbIdx][0], 0);
+                                Wreck(new ConsolePlayer(), "*", 100000, new Vector3(0, 0, 0), WreckType.Cleanup, FlagType.SteamID, (ulong)playersListBuildables[plbIdx][0], 0);
                                 if (cdIdxCount == 0)
                                     Logger.Log(string.Format("No elements found for player: {0} [{1}] ({2}).", playersListBuildables[plbIdx][1].ToString(), playersListBuildables[plbIdx][2].ToString(), (ulong)playersListBuildables[plbIdx][0]));
                                 else
@@ -617,24 +635,24 @@ namespace ApokPT.RocketPlugins
                 {
                     Destructible element = type == WreckType.Wreck ? destroyList[dIdx] : cleanupList[cdIdx];
 
-                    if (element.Type == 's')
+                    if (element.Type == ElementType.Structure)
                     {
-                        try { StructureManager.damage(element.Transform, element.Transform.position, 65535, 1, false); }
+                        try { StructureManager.damage(element.Transform, element.Transform.position, ushort.MaxValue, 1, false); }
                         catch { }
                     }
 
-                    else if (element.Type == 'b')
+                    else if (element.Type == ElementType.Barricade)
                     {
-                        try { BarricadeManager.damage(element.Transform, 65535, 1, false); }
+                        try { BarricadeManager.damage(element.Transform, ushort.MaxValue, 1, false); }
                         catch { }
                     }
 
-                    else if (element.Type == 'V')
+                    else if (element.Type == ElementType.Vehicle)
                     {
-                        try { element.Vehicle.askDamage(65535, true); }
+                        try { element.Vehicle.askDamage(ushort.MaxValue, true); }
                         catch { }
                     }
-                    else if (element.Type == 'Z')
+                    else if (element.Type == ElementType.Zombie)
                     {
                         try
                         {
@@ -643,7 +661,7 @@ namespace ApokPT.RocketPlugins
                         }
                         catch { }
                     }
-                    else if (element.Type == 'A')
+                    else if (element.Type == ElementType.Animal)
                     {
                         try
                         {

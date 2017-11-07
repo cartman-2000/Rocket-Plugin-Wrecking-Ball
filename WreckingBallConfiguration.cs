@@ -30,7 +30,28 @@ namespace ApokPT.RocketPlugins
         public bool LowElementCountOnly = false;
         public ushort MinElementCount = 6;
         public bool KeepVehiclesWithSigns = true;
-        public char VehicleSignFlag = 'n';
+
+        [XmlElement("VehicleSignFlag")]
+        public string XmlVehicleSignFlag = "n";
+        [XmlIgnore]
+        public char VehicleSignFlag
+        {
+            get
+            {
+                char id = 'n';
+                if (!char.TryParse(XmlVehicleSignFlag, out id))
+                {
+                    XmlVehicleSignFlag = "n";
+                    WreckingBall.Instance.Configuration.Save();
+                }
+                return id;
+            }
+            set
+            {
+                XmlVehicleSignFlag = value.ToString();
+            }
+        }
+
         public bool LimitSafeGuards = false;
         public float LimitSafeGuardsRatio = .6f;
         public int PlayerElementListCutoff = 100;
