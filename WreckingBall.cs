@@ -336,6 +336,7 @@ namespace ApokPT.RocketPlugins
                 if (!(caller is ConsolePlayer))
                     DestructionProcessing.originalCaller = (UnturnedPlayer)caller;
                 UnturnedChat.Say(caller, Translate("wreckingball_initiated", DestructionProcessing.CalcProcessTime()));
+                Logger.Log(string.Format("Player {0} has initiated wreck.", caller is ConsolePlayer ? "Console" : ((UnturnedPlayer)caller).CharacterName + " [" + ((UnturnedPlayer)caller).SteamName + "] (" + ((UnturnedPlayer)caller).CSteamID.ToString() + ")"));
                 DestructionProcessing.dIdxCount = DestructionProcessing.destroyList.Count;
                 DestructionProcessing.dIdx = 0;
             }

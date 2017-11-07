@@ -67,8 +67,8 @@ namespace ApokPT.RocketPlugins
                 int count = 0;
                 BarricadeRegion barricadeRegion;
                 bool doRun = (caller is ConsolePlayer || 
-                    (vehicle.asset.engine == EEngine.TRAIN && vehicle.trainCars != null && vehicle.trainCars.Length > 1 && vehicle.trainCars.FirstOrDefault(car => Vector3.Distance(car.root.transform.position, player.Position) < radius) != null) || 
-                    Vector3.Distance(vehicle.transform.position, player.Position) < radius);
+                    (vehicle.asset.engine == EEngine.TRAIN && vehicle.trainCars != null && vehicle.trainCars.Length > 1 && vehicle.trainCars.FirstOrDefault(car => Vector3.Distance(car.root.transform.position, player.Position) <= radius) != null) || 
+                    Vector3.Distance(vehicle.transform.position, player.Position) <= radius);
                 if (doRun)
                 {
                     bool getPInfo = false;
@@ -80,7 +80,7 @@ namespace ApokPT.RocketPlugins
                     bool showSignBy = false;
                     if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
                         count = barricadeRegion.drops.Count;
-                    if (caller is ConsolePlayer || Vector3.Distance(vehicle.transform.position, player.Position) < radius)
+                    if (caller is ConsolePlayer || Vector3.Distance(vehicle.transform.position, player.Position) <= radius)
                     {
                         showSignBy = DestructionProcessing.HasFlaggedElement(vehicle.transform, WreckingBall.Instance.Configuration.Instance.VehicleSignFlag, out signOwner);
                         if (showSignBy)
@@ -92,7 +92,7 @@ namespace ApokPT.RocketPlugins
                     {
                         for (int i = 1; i < vehicle.trainCars.Length; i++)
                         {
-                            if (caller is ConsolePlayer || Vector3.Distance(vehicle.trainCars[i].root.transform.position, player.Position) < radius)
+                            if (caller is ConsolePlayer || Vector3.Distance(vehicle.trainCars[i].root.transform.position, player.Position) <= radius)
                             {
                                 if (BarricadeManager.tryGetPlant(vehicle.trainCars[i].root, out x, out y, out plant, out barricadeRegion))
                                     count = barricadeRegion.drops.Count;

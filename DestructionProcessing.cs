@@ -113,9 +113,9 @@ namespace ApokPT.RocketPlugins
             {
 
                 vdistance = Vector3.Distance(vehicle.transform.position, position);
-                if (vdistance <= radius + 92 || 
-                    (vehicle.asset.engine == EEngine.TRAIN && vehicle.trainCars != null && vehicle.trainCars.Length > 1 && vehicle.trainCars.FirstOrDefault(car => Vector3.Distance(car.root.position, position) <= radius + 92) != null) ||
-                    type == WreckType.Counts || type == WreckType.Cleanup)
+                if ((vdistance <= radius + 92 || 
+                    (vehicle.asset.engine == EEngine.TRAIN && vehicle.trainCars != null && vehicle.trainCars.Length > 1 && vehicle.trainCars.FirstOrDefault(car => Vector3.Distance(car.root.position, position) <= radius + 92) != null)) &&
+                    type != WreckType.Counts && type != WreckType.Cleanup)
                 {
                     if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
                     {
@@ -136,8 +136,35 @@ namespace ApokPT.RocketPlugins
                                     ProcessElements(caller, itemID, radius, type, flagtype, Filter, pInfoLibLoaded, barricadeRegion2, position, steamID, BuildableType.VehicleElement);
                         }
                     }
-                    if ((Filter.Contains('V') || Filter.Contains('*')) && type != WreckType.Cleanup && type != WreckType.Counts && (flagtype == FlagType.Normal || (flagtype == FlagType.SteamID && vehicle.isLocked && vehicle.lockedOwner == (CSteamID)steamID)) && vdistance <= radius)
-                        WreckProcess(caller, 999, distance, pInfoLibLoaded, BuildableType.Vehicle, type, vehicle, vehicle.transform, barricadeRegion == null ? 0 : barricadeRegion.drops.Count);
+                    if ((Filter.Contains('V') || Filter.Contains('*')) && type != WreckType.Cleanup && type != WreckType.Counts && (flagtype == FlagType.Normal || (flagtype == FlagType.SteamID && vehicle.isLocked && vehicle.lockedOwner == (CSteamID)steamID)) && vdistance <= radius + 92)
+                    {
+                        if (vdistance <= radius)
+                            WreckProcess(caller, 999, vdistance, pInfoLibLoaded, BuildableType.Vehicle, type, vehicle, vehicle.transform, barricadeRegion == null ? 0 : barricadeRegion.drops.Count, vehicle.isLocked ? (ulong)vehicle.lockedOwner : 0);
+                        if (vehicle.asset.engine == EEngine.TRAIN && vehicle.trainCars != null && vehicle.trainCars.Length > 1)
+                        {
+                            for (int i = 1; i < vehicle.trainCars.Length; i++)
+                            {
+                                BarricadeRegion barricadeRegion2 = null;
+                                if (BarricadeManager.tryGetPlant(vehicle.trainCars[i].root, out x, out y, out plant, out barricadeRegion2))
+                                {
+                                    float tcdistance = Vector3.Distance(vehicle.trainCars[i].root.position, position);
+                                    if (tcdistance <= radius)
+                                        WreckProcess(caller, 999, tcdistance, pInfoLibLoaded, BuildableType.Vehicle, type, vehicle, vehicle.transform, barricadeRegion2 == null ? 0 : barricadeRegion2.drops.Count, 0, i);
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (type == WreckType.Cleanup && WreckingBall.Instance.Configuration.Instance.CleanupLockedCars && vehicle.isLocked && vehicle.lockedOwner == (CSteamID)steamID)
+                {
+                        cleanupList.Add(new Destructible(vehicle.transform, 'V'));
+                }
+                else if (type == WreckType.Counts && WreckingBall.Instance.Configuration.Instance.CleanupLockedCars && vehicle.isLocked && vehicle.lockedOwner == (CSteamID)steamID)
+                {
+                    if (pElementCounts.ContainsKey(steamID))
+                        pElementCounts[steamID]++;
+                    else
+                        pElementCounts.Add(steamID, 1);
                 }
             }
 
@@ -169,10 +196,14 @@ namespace ApokPT.RocketPlugins
             }
 
 
-            if (type == WreckType.Scan) return;
-
+            if (type == WreckType.Scan)
+            {
+                Logger.Log(string.Format("Player: {0}, ran scan at: {1}, with Flag type: {2}, with Flags: {3}, with ItemID: {4}, with SteamID: {5}", caller is ConsolePlayer ? "Console" : Player.CharacterName + " [" + Player.SteamName + "] (" + Player.CSteamID.ToString() + ")", caller is ConsolePlayer ? "N/A" : Player.Position.ToString(), flagtype.ToString(), Filter.Count > 0 ? string.Join("", Filter.Select(i => i.ToString()).ToArray()) : "N/A", itemID, steamID));
+                return;
+            }
             if (destroyList.Count >= 1 && type == WreckType.Wreck)
             {
+                Logger.Log(string.Format("Player {0}, queued wreck at: {1}, with Flag type: {2}, with Flags: {3}, with itemID: {4}, with StermID: {5}", caller is ConsolePlayer ? "Console" : Player.CharacterName + " [" + Player.SteamName + "] (" + Player.CSteamID.ToString() + ")", caller is ConsolePlayer ? "N/A" : Player.Position.ToString(), flagtype.ToString(), Filter.Count > 0 ? string.Join("", Filter.Select(i => i.ToString()).ToArray()) : "N/A", itemID, steamID));
                 dIdxCount = destroyList.Count;
                 WreckingBall.Instance.Instruct(caller);
             }
@@ -184,13 +215,13 @@ namespace ApokPT.RocketPlugins
                 UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_not_found", radius));
         }
 
-        private static void WreckProcess(IRocketPlayer caller, ushort itemID, float distance, bool pInfoLibLoaded, BuildableType buildType, WreckType type, object data, Transform transform, int count = 0)
+        private static void WreckProcess(IRocketPlayer caller, ushort itemID, float distance, bool pInfoLibLoaded, BuildableType buildType, WreckType type, object data, Transform transform, int count = 0, ulong lockedOwner = 0, int vindex = 0)
         {
 
             if (type == WreckType.Scan)
             {
                 if (distance <= 10)
-                    WreckingBall.ElementData.report(caller, itemID, distance, true, pInfoLibLoaded, data, buildType, count);
+                    WreckingBall.ElementData.report(caller, itemID, distance, true, pInfoLibLoaded, data, buildType, count, lockedOwner, vindex);
                 else
                     WreckingBall.ElementData.report(caller, itemID, distance, false, pInfoLibLoaded, data, buildType);
             }
@@ -249,7 +280,7 @@ namespace ApokPT.RocketPlugins
                     break;
                 }
                 float distance = Vector3.Distance(transform.position, position);
-                if (distance < radius && type != WreckType.Cleanup && type != WreckType.Counts)
+                if (distance <= radius && type != WreckType.Cleanup && type != WreckType.Counts)
                 {
                     item = isSRegion ? sData.structure.id : bData.barricade.id;
                     if (WreckingBall.ElementData.filterItem(item, Filter) || Filter.Contains('*') || flagtype == FlagType.ItemID)
@@ -262,17 +293,16 @@ namespace ApokPT.RocketPlugins
                             WreckProcess(caller, item, distance, pInfoLibLoaded, buildType, type, isSRegion ? (object)sData : bData, transform);
                     }
                 }
-                else if (type == WreckType.Cleanup)
+                else if (type == WreckType.Cleanup && ((isSRegion && sData.owner == steamID) || bData.owner == steamID))
                 {
-                    if ((isSRegion && sData.owner == steamID) || bData.owner == steamID)
-                        cleanupList.Add(new Destructible(transform, isSRegion ? 's' : 'b'));
+                    cleanupList.Add(new Destructible(transform, isSRegion ? 's' : 'b'));
                 }
-                else if (type == WreckType.Counts)
+                else if (type == WreckType.Counts && ((isSRegion && sData.owner == steamID) || bData.owner == steamID))
                 {
-                    if (pElementCounts.ContainsKey(isSRegion ? sData.owner : bData.owner))
-                        pElementCounts[isSRegion ? sData.owner : bData.owner]++;
+                    if (pElementCounts.ContainsKey(steamID))
+                        pElementCounts[steamID]++;
                     else
-                        pElementCounts.Add(isSRegion ? sData.owner : bData.owner, 1);
+                        pElementCounts.Add(steamID, 1);
                 }
             }
         }
@@ -635,6 +665,7 @@ namespace ApokPT.RocketPlugins
                     else
                         Logger.Log(WreckingBall.Instance.Translate("wreckingball_complete", dIdx));
                     StructureManager.save();
+                    VehicleManager.save();
                     BarricadeManager.save();
                     Abort(WreckType.Wreck);
                 }

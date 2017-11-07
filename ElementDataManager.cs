@@ -65,7 +65,7 @@ namespace ApokPT.RocketPlugins
             return ((elements.ContainsKey(itemId) && userRequest.Contains(elements[itemId].CategoryId)) || (!elements.ContainsKey(itemId) && userRequest.Contains('!')));
         }
 
-        internal void report(IRocketPlayer caller, ushort itemId, float range, bool printConsole, bool getPinfo, object data, BuildableType type = BuildableType.Element, int count = 0)
+        internal void report(IRocketPlayer caller, ushort itemId, float range, bool printConsole, bool getPinfo, object data, BuildableType type = BuildableType.Element, int count = 0, ulong lockedOwner = 0, int vindex = 0)
         {
             Category cat;
             if (!elements.ContainsKey(itemId))
@@ -110,31 +110,39 @@ namespace ApokPT.RocketPlugins
             {
                 string stype = type == BuildableType.VehicleElement ? "Vehicle Element: " : "Element: ";
                 string msg = string.Empty;
-                Type t = data.GetType();
-                InteractableVehicle vehicle = null;
                 ulong owner = 0;
-                if (type == BuildableType.Vehicle && t.Equals(typeof(InteractableVehicle)))
-                    vehicle = (InteractableVehicle)data;
-                if (type != BuildableType.Vehicle)
+                InteractableVehicle vehicle = null;
+                StructureData sData = null;
+                BarricadeData bData = null;
+                string eName = string.Empty;
+                if (data is BarricadeData)
                 {
-                    if (t.Equals(typeof(BarricadeData)))
-                        owner = ((BarricadeData)data).owner;
-                    else if (t.Equals(typeof(StructureData)))
-                        owner = ((StructureData)data).owner;
+                    bData = data as BarricadeData;
+                    owner = bData.owner;
+                    eName = bData.barricade.asset.itemName;
                 }
-                if (owner == 0 && type != BuildableType.Vehicle)
+                else if (data is StructureData)
                 {
-                    msg = string.Format("{0}{1} (Id: {2}) @ {3}m", stype, cat.Name, itemId, Math.Round(range, 2));
+                    sData = data as StructureData;
+                    owner = sData.owner;
+                    eName = sData.structure.asset.itemName;
                 }
-                else if (type == BuildableType.Vehicle)
-                    if (vehicle.isLocked)
-                        msg = string.Format("{0}{1} (Id: {2}) @ {3}m, Barricade Count: {4}, Locked By: {5}", stype, cat.Name, itemId, Math.Round(range, 2), count, getPinfo ? WreckingBall.Instance.PInfoGenerateMessage((ulong)vehicle.lockedOwner) : vehicle.lockedOwner.ToString());
-                    else
-                        msg = string.Format("{0}{1} (Id: {2}) @ {3}m, Barricade Count: {4}", stype, cat.Name, itemId, Math.Round(range, 2), count);
+                else if (data is InteractableVehicle)
+                {
+                    vehicle = data as InteractableVehicle;
+                    itemId = vehicle.id;
+                    eName = vehicle.asset.vehicleName;
+                }
+                if (type == BuildableType.Vehicle)
+                {
+                    ulong signOwner = 0;
+                    DestructionProcessing.HasFlaggedElement(vindex > 0 ? vehicle.trainCars[vindex].root : vehicle.transform, WreckingBall.Instance.Configuration.Instance.VehicleSignFlag, out signOwner);
+                    msg = string.Format("{0}{1} (Id: {6}:{2}) @ {3}m, Barricade Count: {4}, Sign by {7}, Locked By: {5}", stype, cat.Name, itemId, Math.Round(range, 2), count, lockedOwner > 0 ? getPinfo ? WreckingBall.Instance.PInfoGenerateMessage(lockedOwner) : lockedOwner.ToString() : "N/A", vindex > 0 ? "Train car#" + vindex : eName, signOwner > 0 ? getPinfo ? WreckingBall.Instance.PInfoGenerateMessage(signOwner) : signOwner.ToString() : "N/A");
+                }
                 else
                 {
                     // Generate the message in another method, as the Player info one requires special data types that have to be loaded before executing a method.
-                    msg = string.Format("{0}{1} (Id: {2}) @ {3}m, Owner: {4}", stype, cat.Name, itemId, Math.Round(range, 2), getPinfo ? WreckingBall.Instance.PInfoGenerateMessage(owner) : owner.ToString());
+                    msg = string.Format("{0}{1} (Id: {5}:{2}) @ {3}m, Owner: {4}", stype, cat.Name, itemId, Math.Round(range, 2), owner > 0 ? getPinfo ? WreckingBall.Instance.PInfoGenerateMessage(owner) : owner.ToString() : "N/A", eName);
                 }
 
 

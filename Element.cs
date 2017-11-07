@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Xml.Serialization;
 
 namespace ApokPT.RocketPlugins
@@ -16,7 +17,7 @@ namespace ApokPT.RocketPlugins
         public ushort Id { get; set; }
         [XmlIgnore]
         public char CategoryId { get; set; }
-        [XmlAttribute("CategoryId")]
+        [XmlAttribute("CategoryId"), ComVisible(false)]
         public string XmlCategoryId
         {
             get

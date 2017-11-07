@@ -1,5 +1,6 @@
 ﻿using Rocket.Core.Logging;
 using System;
+using System.Runtime.InteropServices;
 using System.Xml.Serialization;
 
 namespace ApokPT.RocketPlugins
@@ -16,7 +17,7 @@ namespace ApokPT.RocketPlugins
 
         [XmlIgnore]
         public char Id { get; set; }
-        [XmlAttribute("Id")]
+        [XmlAttribute("Id"), ComVisible(false)]
         public string XmlId
         {
             get
@@ -36,7 +37,7 @@ namespace ApokPT.RocketPlugins
         public string Name { get; set; }
         [XmlIgnore]
         public ConsoleColor Color { get; set; }
-        [XmlAttribute("Color")]
+        [XmlAttribute("Color"), ComVisible(false)]
         public string XmlColor
         {
             get

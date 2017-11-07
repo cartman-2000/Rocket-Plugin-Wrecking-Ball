@@ -5,6 +5,8 @@ using System;
 using UnityEngine;
 using System.Collections.Generic;
 
+using Logger = Rocket.Core.Logging.Logger;
+
 namespace ApokPT.RocketPlugins
 {
     public class CommandWreck : IRocketCommand
@@ -89,7 +91,9 @@ namespace ApokPT.RocketPlugins
                                 UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_wreck_permission"), Color.red);
                                 return;
                             }
-                            UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_aborted"));
+                            if (!(caller is ConsolePlayer))
+                                UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_aborted"));
+                            Logger.Log(WreckingBall.Instance.Translate("wreckingball_aborted"));
                             DestructionProcessing.Abort(WreckType.Wreck);
                             break;
                         case "scan":

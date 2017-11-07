@@ -18,6 +18,7 @@ namespace ApokPT.RocketPlugins
         public bool EnableCleanup = false;
         public bool BuildableCleanup = true;
         public float BuildableWaitTime = 30;
+        public bool CleanupLockedCars = true;
         public bool PlayerDataCleanup = true;
         public float PlayerDataWaitTime = 45;
         public float CleanupIntervalTime = 5;
