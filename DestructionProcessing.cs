@@ -111,60 +111,52 @@ namespace ApokPT.RocketPlugins
 
             foreach (InteractableVehicle vehicle in VehicleManager.vehicles)
             {
+                // Process vehicles elements, remove distance limiting on vehicle placement for element scanning, to handle massively misplaced elements on vehicles.
+                if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
+                    ProcessElements(caller, itemID, radius, type, flagtype, Filter, pInfoLibLoaded, barricadeRegion, position, steamID, BuildableType.VehicleElement);
 
-                vdistance = Vector3.Distance(vehicle.transform.position, position);
-                if ((vdistance <= radius + 92 || 
-                    (vehicle.asset.engine == EEngine.TRAIN && vehicle.trainCars != null && vehicle.trainCars.Length > 1 && vehicle.trainCars.FirstOrDefault(car => Vector3.Distance(car.root.position, position) <= radius + 92) != null)) &&
-                    type != WreckType.Counts && type != WreckType.Cleanup)
+                if (vehicle.asset.engine == EEngine.TRAIN && vehicle.trainCars != null && vehicle.trainCars.Length > 1)
                 {
-                    if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
+                    for (int i = 1; i < vehicle.trainCars.Length; i++)
                     {
-                        if (vdistance <= radius + 92 || type == WreckType.Counts || type == WreckType.Cleanup)
-                            ProcessElements(caller, itemID, radius, type, flagtype, Filter, pInfoLibLoaded, barricadeRegion, position, steamID, BuildableType.VehicleElement);
+                        BarricadeRegion barricadeRegion2 = null;
+                        if (BarricadeManager.tryGetPlant(vehicle.trainCars[i].root, out x, out y, out plant, out barricadeRegion2))
+                            ProcessElements(caller, itemID, radius, type, flagtype, Filter, pInfoLibLoaded, barricadeRegion2, position, steamID, BuildableType.VehicleElement);
                     }
-                    else
-                    {
-                        barricadeRegion = null;
-                    }
+                }
+                // Process Vehicles.
+                if ((Filter.Contains('V') || Filter.Contains('*')) && type != WreckType.Cleanup && type != WreckType.Counts && (flagtype == FlagType.Normal || (flagtype == FlagType.SteamID && vehicle.isLocked && vehicle.lockedOwner == (CSteamID)steamID)))
+                {
+                    vdistance = Vector3.Distance(vehicle.transform.position, position);
+                    if (vdistance <= radius)
+                        WreckProcess(caller, 999, vdistance, pInfoLibLoaded, BuildableType.Vehicle, type, vehicle, vehicle.transform, barricadeRegion == null ? 0 : barricadeRegion.drops.Count, vehicle.isLocked ? (ulong)vehicle.lockedOwner : 0);
                     if (vehicle.asset.engine == EEngine.TRAIN && vehicle.trainCars != null && vehicle.trainCars.Length > 1)
                     {
                         for (int i = 1; i < vehicle.trainCars.Length; i++)
                         {
                             BarricadeRegion barricadeRegion2 = null;
                             if (BarricadeManager.tryGetPlant(vehicle.trainCars[i].root, out x, out y, out plant, out barricadeRegion2))
-                                if (Vector3.Distance(vehicle.trainCars[i].root.position, position) <= radius + 92 || type == WreckType.Counts || type == WreckType.Cleanup)
-                                    ProcessElements(caller, itemID, radius, type, flagtype, Filter, pInfoLibLoaded, barricadeRegion2, position, steamID, BuildableType.VehicleElement);
-                        }
-                    }
-                    if ((Filter.Contains('V') || Filter.Contains('*')) && type != WreckType.Cleanup && type != WreckType.Counts && (flagtype == FlagType.Normal || (flagtype == FlagType.SteamID && vehicle.isLocked && vehicle.lockedOwner == (CSteamID)steamID)) && vdistance <= radius + 92)
-                    {
-                        if (vdistance <= radius)
-                            WreckProcess(caller, 999, vdistance, pInfoLibLoaded, BuildableType.Vehicle, type, vehicle, vehicle.transform, barricadeRegion == null ? 0 : barricadeRegion.drops.Count, vehicle.isLocked ? (ulong)vehicle.lockedOwner : 0);
-                        if (vehicle.asset.engine == EEngine.TRAIN && vehicle.trainCars != null && vehicle.trainCars.Length > 1)
-                        {
-                            for (int i = 1; i < vehicle.trainCars.Length; i++)
                             {
-                                BarricadeRegion barricadeRegion2 = null;
-                                if (BarricadeManager.tryGetPlant(vehicle.trainCars[i].root, out x, out y, out plant, out barricadeRegion2))
-                                {
-                                    float tcdistance = Vector3.Distance(vehicle.trainCars[i].root.position, position);
-                                    if (tcdistance <= radius)
-                                        WreckProcess(caller, 999, tcdistance, pInfoLibLoaded, BuildableType.Vehicle, type, vehicle, vehicle.transform, barricadeRegion2 == null ? 0 : barricadeRegion2.drops.Count, 0, i);
-                                }
+                                float tcdistance = Vector3.Distance(vehicle.trainCars[i].root.position, position);
+                                if (tcdistance <= radius)
+                                    WreckProcess(caller, 999, tcdistance, pInfoLibLoaded, BuildableType.Vehicle, type, vehicle, vehicle.transform, barricadeRegion2 == null ? 0 : barricadeRegion2.drops.Count, 0, i);
                             }
                         }
                     }
                 }
+
                 else if (type == WreckType.Cleanup && WreckingBall.Instance.Configuration.Instance.CleanupLockedCars && vehicle.isLocked && vehicle.lockedOwner == (CSteamID)steamID)
                 {
-                        cleanupList.Add(new Destructible(vehicle.transform, ElementType.Vehicle));
+                    cleanupList.Add(new Destructible(vehicle.transform, ElementType.Vehicle));
                 }
-                else if (type == WreckType.Counts && WreckingBall.Instance.Configuration.Instance.CleanupLockedCars && vehicle.isLocked && vehicle.lockedOwner == (CSteamID)steamID)
+                // Add Locked vehicles to the top players count, if the cleanup locked vehicles feature is active.
+                else if (type == WreckType.Counts && WreckingBall.Instance.Configuration.Instance.CleanupLockedCars && vehicle.isLocked)
                 {
-                    if (pElementCounts.ContainsKey(steamID))
-                        pElementCounts[steamID]++;
+                    ulong vOwner = (ulong)vehicle.lockedOwner;
+                    if (pElementCounts.ContainsKey(vOwner))
+                        pElementCounts[vOwner]++;
                     else
-                        pElementCounts.Add(steamID, 1);
+                        pElementCounts.Add(vOwner, 1);
                 }
             }
 
@@ -315,12 +307,12 @@ namespace ApokPT.RocketPlugins
                 {
                     cleanupList.Add(new Destructible(transform, isSRegion ? ElementType.Structure : ElementType.Barricade));
                 }
-                else if (type == WreckType.Counts && owner == steamID)
+                else if (type == WreckType.Counts)
                 {
-                    if (pElementCounts.ContainsKey(steamID))
-                        pElementCounts[steamID]++;
+                    if (pElementCounts.ContainsKey(owner))
+                        pElementCounts[owner]++;
                     else
-                        pElementCounts.Add(steamID, 1);
+                        pElementCounts.Add(owner, 1);
                 }
             }
         }
@@ -489,7 +481,7 @@ namespace ApokPT.RocketPlugins
             }
         }
 
-        internal static bool HasFlaggedElement(Transform vehicleTransform, char flag, out ulong elementSteamID)
+        internal static bool HasFlaggedElement(Transform vehicleTransform, out ulong elementSteamID)
         {
             byte x = 0;
             byte y = 0;
@@ -507,7 +499,7 @@ namespace ApokPT.RocketPlugins
                     for (int e = 0; e < DataCount; e++)
                     {
                         bData = barricadeRegion.barricades[e];
-                        if (WreckingBall.ElementData.filterItem(bData.barricade.id, new List<char> { flag }))
+                        if (WreckingBall.ElementData.filterItem(bData.barricade.id, new List<char> { WreckingBall.Instance.Configuration.Instance.VehicleSignFlag }))
                         {
                             match = true;
                             elementSteamID = bData.owner;
@@ -567,7 +559,7 @@ namespace ApokPT.RocketPlugins
                         if (!vehicle.Key.isEmpty)
                             continue;
                         ulong elementOwner = 0;
-                        bool hasSign = HasFlaggedElement(vehicle.Key.transform, WreckingBall.Instance.Configuration.Instance.VehicleSignFlag, out elementOwner);
+                        bool hasSign = HasFlaggedElement(vehicle.Key.transform, out elementOwner);
                         if (useSafeGuards && (WreckingBall.Instance.Configuration.Instance.LowElementCountOnly || WreckingBall.Instance.Configuration.Instance.KeepVehiclesWithSigns))
                         {
                             if (WreckingBall.Instance.Configuration.Instance.LimitSafeGuards && v > Math.Round(WreckingBall.Instance.Configuration.Instance.MaxVehiclesAllowed * WreckingBall.Instance.Configuration.Instance.LimitSafeGuardsRatio + numToDestroy, 0))
@@ -649,7 +641,27 @@ namespace ApokPT.RocketPlugins
 
                     else if (element.Type == ElementType.Vehicle)
                     {
-                        try { element.Vehicle.askDamage(ushort.MaxValue, true); }
+                        try {
+                            // Output log entry if a vehicle is destroyed by a cleanup.
+                            if (type == WreckType.Cleanup)
+                            {
+                                ulong vFlagOwner = 0;
+                                byte x;
+                                byte y;
+                                ushort plant;
+                                BarricadeRegion barricadeRegion;
+                                bool getPInfo = WreckingBall.IsPInfoLibLoaded();
+                                Logger.Log(string.Format("Cleanup: Vehicle with InstanceID: {0}, and Type: {1}({2}), at position: {3} destroyed, Element count: {4}, Sign By {5}, Locked By: {6}.", 
+                                    element.Vehicle.instanceID, 
+                                    element.Vehicle.asset.vehicleName, 
+                                    element.Vehicle.asset.id, 
+                                    element.Vehicle.transform.position.ToString(), 
+                                    BarricadeManager.tryGetPlant(element.Vehicle.transform, out x, out y, out plant, out barricadeRegion) ? barricadeRegion.drops.Count : 0, 
+                                    element.Vehicle.isLocked ? (getPInfo ? WreckingBall.Instance.PInfoGenerateMessage((ulong)element.Vehicle.lockedOwner) : element.Vehicle.lockedOwner.ToString()) : "N/A", 
+                                    HasFlaggedElement(element.Vehicle.transform, out vFlagOwner) ? (getPInfo ? WreckingBall.Instance.PInfoGenerateMessage(vFlagOwner) : vFlagOwner.ToString()) : "N/A"));
+                            }
+                            element.Vehicle.askDamage(ushort.MaxValue, true);
+                        }
                         catch { }
                     }
                     else if (element.Type == ElementType.Zombie)

@@ -66,43 +66,41 @@ namespace ApokPT.RocketPlugins
                 ushort plant = 0;
                 int count = 0;
                 BarricadeRegion barricadeRegion;
-                bool doRun = (caller is ConsolePlayer || 
-                    (vehicle.asset.engine == EEngine.TRAIN && vehicle.trainCars != null && vehicle.trainCars.Length > 1 && vehicle.trainCars.FirstOrDefault(car => Vector3.Distance(car.root.transform.position, player.Position) <= radius) != null) || 
-                    Vector3.Distance(vehicle.transform.position, player.Position) <= radius);
-                if (doRun)
+                bool getPInfo = false;
+                // skip the vehicle in the list if it is destroyed or drowned.
+                if (vehicle.isDead || vehicle.isDrowned)
+                    continue;
+                if (WreckingBall.Instance.Configuration.Instance.EnablePlayerInfo)
+                    getPInfo = WreckingBall.IsPInfoLibLoaded();
+                string lockedBy = getPInfo ? WreckingBall.Instance.PInfoGenerateMessage((ulong)vehicle.lockedOwner) : vehicle.lockedOwner.ToString();
+                ulong signOwner = 0;
+                string signBy = string.Empty;
+                bool showSignBy = false;
+                if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
+                    count = barricadeRegion.drops.Count;
+                if (caller is ConsolePlayer || Vector3.Distance(vehicle.transform.position, player.Position) <= radius)
                 {
-                    bool getPInfo = false;
-                    if (WreckingBall.Instance.Configuration.Instance.EnablePlayerInfo)
-                        getPInfo = WreckingBall.IsPInfoLibLoaded();
-                    string lockedBy = getPInfo ? WreckingBall.Instance.PInfoGenerateMessage((ulong)vehicle.lockedOwner) : vehicle.lockedOwner.ToString();
-                    ulong signOwner = 0;
-                    string signBy = string.Empty;
-                    bool showSignBy = false;
-                    if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
-                        count = barricadeRegion.drops.Count;
-                    if (caller is ConsolePlayer || Vector3.Distance(vehicle.transform.position, player.Position) <= radius)
+                    showSignBy = DestructionProcessing.HasFlaggedElement(vehicle.transform, out signOwner);
+                    if (showSignBy)
+                        signBy = getPInfo ? WreckingBall.Instance.PInfoGenerateMessage(signOwner) : signOwner.ToString();
+                    ProcessMessages(caller, vehicle.transform, vehicle.asset, vehicle.instanceID, count, lockedBy, vehicle.isLocked, signBy, showSignBy);
+                }
+                // Handle train cars too, if in range.
+                if (vehicle.asset.engine == EEngine.TRAIN && vehicle.trainCars != null && vehicle.trainCars.Length > 1)
+                {
+                    for (int i = 1; i < vehicle.trainCars.Length; i++)
                     {
-                        showSignBy = DestructionProcessing.HasFlaggedElement(vehicle.transform, WreckingBall.Instance.Configuration.Instance.VehicleSignFlag, out signOwner);
-                        if (showSignBy)
-                            signBy = getPInfo ? WreckingBall.Instance.PInfoGenerateMessage(signOwner) : signOwner.ToString();
-                        ProcessMessages(caller, vehicle.transform, vehicle.asset, vehicle.instanceID, count, lockedBy, vehicle.isLocked, signBy, showSignBy);
-                    }
-                    // Handle train cars too, if in range.
-                    if (vehicle.asset.engine == EEngine.TRAIN && vehicle.trainCars != null && vehicle.trainCars.Length > 1)
-                    {
-                        for (int i = 1; i < vehicle.trainCars.Length; i++)
+                        if (caller is ConsolePlayer || Vector3.Distance(vehicle.trainCars[i].root.transform.position, player.Position) <= radius)
                         {
-                            if (caller is ConsolePlayer || Vector3.Distance(vehicle.trainCars[i].root.transform.position, player.Position) <= radius)
-                            {
-                                if (BarricadeManager.tryGetPlant(vehicle.trainCars[i].root, out x, out y, out plant, out barricadeRegion))
-                                    count = barricadeRegion.drops.Count;
-                                showSignBy = DestructionProcessing.HasFlaggedElement(vehicle.trainCars[i].root, WreckingBall.Instance.Configuration.Instance.VehicleSignFlag, out signOwner);
-                                if (showSignBy)
-                                    signBy = getPInfo ? WreckingBall.Instance.PInfoGenerateMessage(signOwner) : signOwner.ToString();
-                                ProcessMessages(caller, vehicle.trainCars[i].root, null, vehicle.instanceID, count, lockedBy, false, signBy, showSignBy, true, i);
-                            }
+                            if (BarricadeManager.tryGetPlant(vehicle.trainCars[i].root, out x, out y, out plant, out barricadeRegion))
+                                count = barricadeRegion.drops.Count;
+                            showSignBy = DestructionProcessing.HasFlaggedElement(vehicle.trainCars[i].root, out signOwner);
+                            if (showSignBy)
+                                signBy = getPInfo ? WreckingBall.Instance.PInfoGenerateMessage(signOwner) : signOwner.ToString();
+                            ProcessMessages(caller, vehicle.trainCars[i].root, null, vehicle.instanceID, count, lockedBy, false, signBy, showSignBy, true, i);
                         }
                     }
+
                 }
             }
         }
