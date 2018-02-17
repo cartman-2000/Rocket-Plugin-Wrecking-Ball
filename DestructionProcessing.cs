@@ -145,12 +145,12 @@ namespace ApokPT.RocketPlugins
                     }
                 }
 
-                else if (type == WreckType.Cleanup && WreckingBall.Instance.Configuration.Instance.CleanupLockedCars && vehicle.isLocked && vehicle.lockedOwner == (CSteamID)steamID)
+                if (type == WreckType.Cleanup && vehicle.asset.engine != EEngine.TRAIN && WreckingBall.Instance.Configuration.Instance.CleanupLockedCars && vehicle.isLocked && vehicle.lockedOwner == (CSteamID)steamID)
                 {
                     cleanupList.Add(new Destructible(vehicle.transform, ElementType.Vehicle));
                 }
                 // Add Locked vehicles to the top players count, if the cleanup locked vehicles feature is active.
-                else if (type == WreckType.Counts && WreckingBall.Instance.Configuration.Instance.CleanupLockedCars && vehicle.isLocked)
+                if (type == WreckType.Counts && vehicle.asset.engine != EEngine.TRAIN && WreckingBall.Instance.Configuration.Instance.CleanupLockedCars && vehicle.isLocked)
                 {
                     ulong vOwner = (ulong)vehicle.lockedOwner;
                     if (pElementCounts.ContainsKey(vOwner))
