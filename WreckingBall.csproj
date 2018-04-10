@@ -39,7 +39,7 @@
       <HintPath>unturnedlib\Assembly-CSharp-firstpass.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="PlayerInfoLib, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="PlayerInfoLib, Version=1.3.0.2, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>PInfoLib\PlayerInfoLib.dll</HintPath>
       <Private>False</Private>
