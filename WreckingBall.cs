@@ -121,7 +121,7 @@ namespace ApokPT.RocketPlugins
             PlayerData pData = PlayerInfoLib.Database.QueryById((CSteamID)owner);
             string msg = string.Empty;
             if (pData.IsValid())
-                msg = string.Format("{0} {1} [{2}], Seen: {3}:{4}", owner, pData.CharacterName, pData.SteamName, pData.IsLocal() ? "L" : "G", pData.IsLocal() ? pData.LastLoginLocal : pData.LastLoginGlobal);
+                msg = string.Format("{0} {1} [{2}], Seen: {3}:{4}{5}", owner, pData.CharacterName, pData.SteamName, pData.IsLocal() ? "L" : "G", pData.IsLocal() ? pData.LastLoginLocal : pData.LastLoginGlobal, pData.IsLocal() ? string.Format(", IsVip: {0}", pData.IsVip()) : string.Empty);
             else
                 msg = string.Format("{0}, No Player Info.", owner);
             return msg;
