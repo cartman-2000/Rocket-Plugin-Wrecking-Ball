@@ -117,7 +117,7 @@ namespace ApokPT.RocketPlugins
                 {
                     vdistance = Vector3.Distance(vehicle.transform.position, position);
                     if (vdistance <= radius)
-                        WreckProcess(caller, 999, vdistance, pInfoLibLoaded, BuildableType.Vehicle, type, vehicle, vehicle.transform, validVehicleElements ? 0 : barricadeRegion.drops.Count, vehicle.isLocked ? (ulong)vehicle.lockedOwner : 0);
+                        WreckProcess(caller, 999, vdistance, pInfoLibLoaded, BuildableType.Vehicle, type, vehicle, vehicle.transform, !validVehicleElements ? 0 : barricadeRegion.drops.Count, vehicle.isLocked ? (ulong)vehicle.lockedOwner : 0);
                     if (vehicle.asset.engine == EEngine.TRAIN && vehicle.trainCars != null && vehicle.trainCars.Length > 1)
                     {
                         for (int i = 1; i < vehicle.trainCars.Length; i++)
