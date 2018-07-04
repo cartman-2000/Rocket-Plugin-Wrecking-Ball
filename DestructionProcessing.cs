@@ -39,7 +39,7 @@ namespace ApokPT.RocketPlugins
 
         internal static bool syncError;
 
-        internal static void Wreck(IRocketPlayer caller, string filter, uint radius, Vector3 position, WreckType type, FlagType flagtype, ulong steamID, ushort itemID)
+        internal static void Wreck(IRocketPlayer caller, string filter, float radius, Vector3 position, WreckType type, FlagType flagtype, ulong steamID, ushort itemID)
         {
             bool pInfoLibLoaded = false;
             syncError = false;
@@ -87,7 +87,7 @@ namespace ApokPT.RocketPlugins
                 for (int l = 0; l < StructureManager.regions.GetLength(1); l++)
                 {
                     // check to see if the region is out of range, skip if it is.
-                    if (position.RegionOutOfRange(k, l, radius) && type != WreckType.Cleanup && type != WreckType.Counts)
+                    if (!radius.IsNaN() && position.RegionOutOfRange(k, l, radius) && type != WreckType.Cleanup && type != WreckType.Counts)
                         continue;
 
                     structureRegion = StructureManager.regions[k, l];
@@ -100,7 +100,7 @@ namespace ApokPT.RocketPlugins
                 for (int l = 0; l < BarricadeManager.BarricadeRegions.GetLength(1); l++)
                 {
                     // check to see if the region is out of range, skip if it is.
-                    if (position.RegionOutOfRange(k, l, radius) && type != WreckType.Cleanup && type != WreckType.Counts)
+                    if (!radius.IsNaN() && position.RegionOutOfRange(k, l, radius) && type != WreckType.Cleanup && type != WreckType.Counts)
                         continue;
 
                     barricadeRegion = BarricadeManager.BarricadeRegions[k, l];
@@ -116,7 +116,7 @@ namespace ApokPT.RocketPlugins
                 if ((Filter.Contains('V') || Filter.Contains('*')) && type != WreckType.Cleanup && type != WreckType.Counts && (flagtype == FlagType.Normal || (flagtype == FlagType.SteamID && vehicle.isLocked && vehicle.lockedOwner == (CSteamID)steamID)))
                 {
                     vdistance = Vector3.Distance(vehicle.transform.position, position);
-                    if (vdistance <= radius)
+                    if ((!radius.IsNaN() && vdistance <= radius) || (radius.IsNaN() && (vehicle.transform.position.x.IsNaN() || vehicle.transform.position.y.IsNaN() || vehicle.transform.position.z.IsNaN())))
                         WreckProcess(caller, 999, vdistance, pInfoLibLoaded, BuildableType.Vehicle, type, vehicle, vehicle.transform, !validVehicleElements ? 0 : barricadeRegion.drops.Count, vehicle.isLocked ? (ulong)vehicle.lockedOwner : 0);
                     if (vehicle.asset.engine == EEngine.TRAIN && vehicle.trainCars != null && vehicle.trainCars.Length > 1)
                     {
@@ -202,12 +202,12 @@ namespace ApokPT.RocketPlugins
                             totalCount += reportFilter.Value;
                     }
                 }
-                Logger.Log(string.Format("Player: {0}, ran scan at: {1}, with Flag type: {2}, with Flags: {3}, with ItemID: {4}, with SteamID: {5}, number of elements scanned: {6}", caller is ConsolePlayer ? "Console" : Player.CharacterName + " [" + Player.SteamName + "] (" + Player.CSteamID.ToString() + ")", caller is ConsolePlayer ? "N/A" : Player.Position.ToString(), flagtype.ToString(), Filter.Count > 0 ? string.Join("", Filter.Select(i => i.ToString()).ToArray()) : "N/A", itemID, steamID, totalCount));
+                Logger.Log(string.Format("Player: {0}, ran scan at: {1}, with Radius: {7}, with Flag type: {2}, with Flags: {3}, with ItemID: {4}, with SteamID: {5}, number of elements scanned: {6}", caller is ConsolePlayer ? "Console" : Player.CharacterName + " [" + Player.SteamName + "] (" + Player.CSteamID.ToString() + ")", caller is ConsolePlayer ? "N/A" : Player.Position.ToString(), flagtype.ToString(), Filter.Count > 0 ? string.Join("", Filter.Select(i => i.ToString()).ToArray()) : "N/A", itemID, steamID, totalCount, radius.IsNaN() ? "NaN(NaN Check)" : radius.ToString()));
                 return;
             }
             if (destroyList.Count >= 1 && type == WreckType.Wreck)
             {
-                Logger.Log(string.Format("Player {0}, queued wreck at: {1}, with Flag type: {2}, with Flags: {3}, with itemID: {4}, with StermID: {5}, number of elements queued: {6}", caller is ConsolePlayer ? "Console" : Player.CharacterName + " [" + Player.SteamName + "] (" + Player.CSteamID.ToString() + ")", caller is ConsolePlayer ? "N/A" : Player.Position.ToString(), flagtype.ToString(), Filter.Count > 0 ? string.Join("", Filter.Select(i => i.ToString()).ToArray()) : "N/A", itemID, steamID, destroyList.Count));
+                Logger.Log(string.Format("Player {0}, queued wreck at: {1}, with Radius: {7}, with Flag type: {2}, with Flags: {3}, with itemID: {4}, with StermID: {5}, number of elements queued: {6}", caller is ConsolePlayer ? "Console" : Player.CharacterName + " [" + Player.SteamName + "] (" + Player.CSteamID.ToString() + ")", caller is ConsolePlayer ? "N/A" : Player.Position.ToString(), flagtype.ToString(), Filter.Count > 0 ? string.Join("", Filter.Select(i => i.ToString()).ToArray()) : "N/A", itemID, steamID, destroyList.Count, radius.IsNaN() ? "NaN(NaN Check)" : radius.ToString()));
                 dIdxCount = destroyList.Count;
                 WreckingBall.Instance.Instruct(caller);
             }
@@ -245,7 +245,7 @@ namespace ApokPT.RocketPlugins
             }
         }
 
-        private static void ProcessElements(IRocketPlayer caller, ushort itemID, uint radius, WreckType type, FlagType flagtype, List<char> Filter, bool pInfoLibLoaded, object region , Vector3 position, ulong steamID, BuildableType buildType)
+        private static void ProcessElements(IRocketPlayer caller, ushort itemID, float radius, WreckType type, FlagType flagtype, List<char> Filter, bool pInfoLibLoaded, object region , Vector3 position, ulong steamID, BuildableType buildType)
         {
             int transformCount = 0;
             int DataCount = 0;
@@ -291,7 +291,7 @@ namespace ApokPT.RocketPlugins
                     break;
                 }
                 float distance = Vector3.Distance(transform.position, position);
-                if (distance <= radius && type != WreckType.Cleanup && type != WreckType.Counts)
+                if (((!radius.IsNaN() && distance <= radius) || (radius.IsNaN() &&  (transform.position.x.IsNaN() || transform.position.y.IsNaN() || transform.position.z.IsNaN()))) && type != WreckType.Cleanup && type != WreckType.Counts)
                 {
                     item = isSRegion ? sData.structure.id : bData.barricade.id;
                     if (WreckingBall.ElementData.filterItem(item, Filter) || Filter.Contains('*') || flagtype == FlagType.ItemID)

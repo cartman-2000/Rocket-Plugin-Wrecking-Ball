@@ -177,7 +177,7 @@ namespace ApokPT.RocketPlugins
             }
         }
 
-        internal void Scan(IRocketPlayer caller, string filter, uint radius, Vector3 position, FlagType flagType, ulong steamID, ushort itemID)
+        internal void Scan(IRocketPlayer caller, string filter, float radius, Vector3 position, FlagType flagType, ulong steamID, ushort itemID)
         {
             DestructionProcessing.Wreck(caller, filter, radius, position, WreckType.Scan, flagType, steamID, itemID);
             if (ElementData.reportLists[BuildableType.Element].Count > 0 || ElementData.reportLists[BuildableType.VehicleElement].Count > 0)
@@ -195,9 +195,11 @@ namespace ApokPT.RocketPlugins
                     }
                     if (report != "") report = report.Remove(report.Length - 1);
                     string type = reportDictionary.Key == BuildableType.VehicleElement ? "Vehicle Element" : "Element";
-                    UnturnedChat.Say(caller, Translate("wreckingball_scan", totalCount, type, radius, report));
+                    if (radius.IsNaN())
+                        UnturnedChat.Say(caller, Translate("wreckingball_scan_nan_check"));
+                    UnturnedChat.Say(caller, Translate("wreckingball_scan", totalCount, type, radius.ToString(), report));
                     if (Instance.Configuration.Instance.LogScans && !(caller is ConsolePlayer))
-                        Logger.Log(Translate("wreckingball_scan", totalCount, type, radius, report));
+                        Logger.Log(Translate("wreckingball_scan", totalCount, type, radius.ToString(), report));
                 }
             }
             else
@@ -379,6 +381,7 @@ namespace ApokPT.RocketPlugins
                     { "wreckingball_dcu_cleanup_disabled", "Auto Cleanup has been disabled for player {0} [{1}] ({2})" },
                     { "wreckingball_dcu_cleanup_enabled", "Auto Cleanup has been enabled for player {0} [{1}] ({2})" },
                     { "wreckingball_scan", "Found {0} elements of type: {1}, @ {2}m:{3}" },
+                    { "wreckingball_scan_nan_check", "Running NaN Position check!" },
                     { "wreckingball_map_clear", "Map has no elements!" },
                     { "wreckingball_not_found", "No elements found in a {0} radius!" },
                     { "wreckingball_complete", "Wrecking Ball complete! {0} elements(s) Destroyed!" },

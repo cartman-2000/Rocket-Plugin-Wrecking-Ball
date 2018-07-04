@@ -114,9 +114,14 @@ namespace ApokPT.RocketPlugins
                                 }
                                 ushort itemID = 0;
                                 if (ushort.TryParse(oper[1], out itemID))
-                                    WreckingBall.Instance.Scan(caller, oper[1], Convert.ToUInt32(oper[2]), position, FlagType.ItemID, 0, itemID);
+                                    WreckingBall.Instance.Scan(caller, oper[1], Convert.ToSingle(oper[2]), position, FlagType.ItemID, 0, itemID);
                                 else
-                                    WreckingBall.Instance.Scan(caller, oper[1], Convert.ToUInt32(oper[2]), position, FlagType.Normal, 0, 0);
+                                {
+                                    if (oper[2].ToLower() == "nan")
+                                        WreckingBall.Instance.Scan(caller, oper[1], float.NaN, position, FlagType.Normal, 0, 0);
+                                    else
+                                    WreckingBall.Instance.Scan(caller, oper[1], Convert.ToSingle(oper[2]), position, FlagType.Normal, 0, 0);
+                                }
                             }
                             else if ((oper.Length == 4 && !(caller is ConsolePlayer)) || (oper.Length == 7 && caller is ConsolePlayer))
                             {
@@ -130,7 +135,7 @@ namespace ApokPT.RocketPlugins
                                     }
                                 }
                                 if (oper[1].isCSteamID(out steamID))
-                                    WreckingBall.Instance.Scan(caller, oper[2], Convert.ToUInt32(oper[3]), position, FlagType.SteamID, (ulong)steamID, 0);
+                                    WreckingBall.Instance.Scan(caller, oper[2], Convert.ToSingle(oper[3]), position, FlagType.SteamID, (ulong)steamID, 0);
                                 else
                                     UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_scan"));
                             }
@@ -193,9 +198,14 @@ namespace ApokPT.RocketPlugins
                                 }
                                 ushort itemID = 0;
                                 if (ushort.TryParse(oper[0], out itemID))
-                                    DestructionProcessing.Wreck(caller, oper[0], Convert.ToUInt32(oper[1]), position, WreckType.Wreck, FlagType.ItemID, 0, itemID);
+                                    DestructionProcessing.Wreck(caller, oper[0], Convert.ToSingle(oper[1]), position, WreckType.Wreck, FlagType.ItemID, 0, itemID);
                                 else
-                                    DestructionProcessing.Wreck(caller, oper[0], Convert.ToUInt32(oper[1]), position, WreckType.Wreck, FlagType.Normal, 0, 0);
+                                {
+                                    if (oper[1].ToLower() == "nan")
+                                        DestructionProcessing.Wreck(caller, oper[0], float.NaN, position, WreckType.Wreck, FlagType.Normal, 0, 0);
+                                    else
+                                        DestructionProcessing.Wreck(caller, oper[0], Convert.ToSingle(oper[1]), position, WreckType.Wreck, FlagType.Normal, 0, 0);
+                                }
                             }
                             else if ((oper.Length == 3 && !(caller is ConsolePlayer)) || (oper.Length == 6 && caller is ConsolePlayer))
                             {
@@ -209,7 +219,7 @@ namespace ApokPT.RocketPlugins
                                 }
                                 ulong steamID = 0;
                                 if (oper[0].isCSteamID(out steamID))
-                                    DestructionProcessing.Wreck(caller, oper[1], Convert.ToUInt32(oper[2]), position, WreckType.Wreck, FlagType.SteamID, steamID, 0);
+                                    DestructionProcessing.Wreck(caller, oper[1], Convert.ToSingle(oper[2]), position, WreckType.Wreck, FlagType.SteamID, steamID, 0);
                                 else
                                     UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help"));
                             }

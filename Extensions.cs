@@ -8,7 +8,7 @@ namespace ApokPT.RocketPlugins
 {
     public static class Extensions
     {
-        public static bool RegionOutOfRange(this Vector3 point, int x, int y, uint radius)
+        public static bool RegionOutOfRange(this Vector3 point, int x, int y, float radius)
         {
             Vector3 regionPoint;
             Regions.tryGetPoint((byte)x, (byte)y, out regionPoint);
@@ -47,5 +47,9 @@ namespace ApokPT.RocketPlugins
             return false;
         }
 
+        public static bool IsNaN(this float f)
+        {
+            return float.IsNaN(f);
+        }
     }
 }
