@@ -668,7 +668,7 @@ namespace ApokPT.RocketPlugins
                     {
                         try
                         {
-                            for (int z = 0; z < 10 && !element.Zombie.isDead; z++)
+                            for (int z = 0; z < 1000 && !element.Zombie.isDead; z++)
                                 element.Zombie.askDamage(ushort.MaxValue, element.Zombie.transform.up, out pKill, out xp);
                         }
                         catch (Exception ex) { Logger.LogException(ex, "Error in killing zombie."); }
@@ -677,8 +677,8 @@ namespace ApokPT.RocketPlugins
                     {
                         try
                         {
-                            for (int a = 0; a < 100 && !element.Animal.isDead; a++)
-                                element.Animal.askDamage(byte.MaxValue, element.Animal.transform.up, out pKill, out xp);
+                            for (int a = 0; a < 1000 && !element.Animal.isDead; a++)
+                                element.Animal.askDamage(ushort.MaxValue, element.Animal.transform.up, out pKill, out xp);
                         }
                         catch (Exception ex) { Logger.LogException(ex, "Error in killing animal."); }
                     }
