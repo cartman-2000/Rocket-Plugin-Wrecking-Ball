@@ -211,7 +211,7 @@ namespace ApokPT.RocketPlugins
 
         }
 
-        internal void Teleport(IRocketPlayer caller, TeleportType teleportType)
+        internal void Teleport(IRocketPlayer caller, TeleportType teleportType, ulong ulSteamID)
         {
 
             if (StructureManager.regions.LongLength == 0 && BarricadeManager.BarricadeRegions.LongLength == 0)
@@ -225,88 +225,174 @@ namespace ApokPT.RocketPlugins
             Vector3 tpVector;
             bool match = false;
             int tries = 0;
+            int x = 0;
+            int xCount = 0;
+            int z = 0;
+            int zCount = 0;
+            int idx = 0;
+            int idxCount = 0;
 
             Transform current = null;
-
-            while (tries < 2000 && !match)
+            List<Destructible> items = new List<Destructible>();
+            // Steam id matching.
+            if (ulSteamID != 0)
             {
-                tries++;
-                int x = 0;
-                int xCount = 0;
-                int z = 0;
-                int zCount = 0;
-                int idx = 0;
-                int idxCount = 0;
                 switch (teleportType)
                 {
                     case TeleportType.Structures:
                         xCount = StructureManager.regions.GetLength(0);
                         zCount = StructureManager.regions.GetLength(1);
-                        if (xCount == 0)
-                            continue;
-                        x = UnityEngine.Random.Range(0, xCount - 1);
-                        if (zCount == 0)
-                            continue;
-                        z = UnityEngine.Random.Range(0, zCount - 1);
-                        idxCount = StructureManager.regions[x, z].structures.Count;
-                        if (idxCount == 0)
-                            continue;
-                        idx = UnityEngine.Random.Range(0, idxCount - 1);
-
-                        try
+                        for (x = 0; x < xCount; x++)
                         {
-                            current = StructureManager.regions[x, z].drops[idx].model;
+                            for (z = 0; z < zCount; z++)
+                            {
+                                idxCount = StructureManager.regions[x, z].drops.Count;
+                                for (int k = 0; k < idxCount; k++)
+                                {
+                                    if (StructureManager.regions[x, z].structures[k].owner == ulSteamID)
+                                        items.Add(new Destructible(StructureManager.regions[x, z].drops[k].model, ElementType.Structure));
+                                }
+                            }
                         }
-                        catch
+                        if (items.Count > 0)
                         {
-                            continue;
+                            idx = UnityEngine.Random.Range(0, items.Count - 1);
+                            try
+                            {
+                                current = items[idx].Transform;
+                                match = true;
+                            }
+                            catch
+                            { }
                         }
-
-                        if (Vector3.Distance(current.position, player.Position) > 20)
-                            match = true;
                         break;
                     case TeleportType.Barricades:
-                        xCount = BarricadeManager.BarricadeRegions.GetLength(0);
-                        zCount = BarricadeManager.BarricadeRegions.GetLength(1);
-                        if (xCount == 0)
-                            continue;
-                        x = UnityEngine.Random.Range(0, xCount - 1);
-                        if (zCount == 0)
-                            continue;
-                        z = UnityEngine.Random.Range(0, zCount - 1);
-                        idxCount = BarricadeManager.BarricadeRegions[x, z].drops.Count;
-                        if (idxCount == 0)
-                            continue;
-                        idx = UnityEngine.Random.Range(0, idxCount - 1);
-
-                        try
+                        xCount = BarricadeManager.regions.GetLength(0);
+                        zCount = BarricadeManager.regions.GetLength(1);
+                        for (x = 0; x < xCount; x++)
                         {
-                            current = BarricadeManager.BarricadeRegions[x, z].drops[idx].model;
+                            for (z = 0; z < zCount; z++)
+                            {
+                                idxCount = BarricadeManager.regions[x, z].drops.Count;
+                                for (int k = 0; k < idxCount; k++)
+                                {
+                                    if (BarricadeManager.regions[x, z].barricades[k].owner == ulSteamID)
+                                        items.Add(new Destructible(BarricadeManager.regions[x, z].drops[k].model, ElementType.Barricade));
+                                }
+                            }
                         }
-                        catch
+                        if (items.Count > 0)
                         {
-                            continue;
+                            idx = UnityEngine.Random.Range(0, items.Count - 1);
+                            try
+                            {
+                                current = items[idx].Transform;
+                                match = true;
+                            }
+                            catch
+                            { }
                         }
-
-                        if (Vector3.Distance(current.position, player.Position) > 20)
-                            match = true;
                         break;
                     case TeleportType.Vehicles:
                         int vCount = VehicleManager.vehicles.Count;
-                        int vRand = UnityEngine.Random.Range(0, vCount - 1);
-                        try
+                        for (x = 0; x < vCount; x++)
                         {
-                            current = VehicleManager.vehicles[vRand].transform;
+                            if ((ulong)VehicleManager.vehicles[x].lockedOwner == ulSteamID)
+                            {
+                                items.Add(new Destructible(VehicleManager.vehicles[x].transform, ElementType.Vehicle, VehicleManager.vehicles[x]));
+                            }
                         }
-                        catch
+                        if (items.Count > 0)
                         {
-                            continue;
+                            idx = UnityEngine.Random.Range(0, items.Count - 1);
+                            try
+                            {
+                                current = items[idx].Transform;
+                                match = true;
+                            }
+                            catch
+                            { }
                         }
-                        if (Vector3.Distance(current.position, player.Position) > 20)
-                            match = true;
                         break;
-                    default:
-                        return;
+                }
+            }
+            // Standard random search.
+            else
+            {
+                while (tries < 2000 && !match)
+                {
+                    tries++;
+                    switch (teleportType)
+                    {
+                        case TeleportType.Structures:
+                            xCount = StructureManager.regions.GetLength(0);
+                            zCount = StructureManager.regions.GetLength(1);
+                            if (xCount == 0)
+                                continue;
+                            x = UnityEngine.Random.Range(0, xCount - 1);
+                            if (zCount == 0)
+                                continue;
+                            z = UnityEngine.Random.Range(0, zCount - 1);
+                            idxCount = StructureManager.regions[x, z].structures.Count;
+                            if (idxCount == 0)
+                                continue;
+                            idx = UnityEngine.Random.Range(0, idxCount - 1);
+
+                            try
+                            {
+                                current = StructureManager.regions[x, z].drops[idx].model;
+                            }
+                            catch
+                            {
+                                continue;
+                            }
+
+                            if (Vector3.Distance(current.position, player.Position) > 20)
+                                match = true;
+                            break;
+                        case TeleportType.Barricades:
+                            xCount = BarricadeManager.BarricadeRegions.GetLength(0);
+                            zCount = BarricadeManager.BarricadeRegions.GetLength(1);
+                            if (xCount == 0)
+                                continue;
+                            x = UnityEngine.Random.Range(0, xCount - 1);
+                            if (zCount == 0)
+                                continue;
+                            z = UnityEngine.Random.Range(0, zCount - 1);
+                            idxCount = BarricadeManager.BarricadeRegions[x, z].drops.Count;
+                            if (idxCount == 0)
+                                continue;
+                            idx = UnityEngine.Random.Range(0, idxCount - 1);
+
+                            try
+                            {
+                                current = BarricadeManager.BarricadeRegions[x, z].drops[idx].model;
+                            }
+                            catch
+                            {
+                                continue;
+                            }
+
+                            if (Vector3.Distance(current.position, player.Position) > 20)
+                                match = true;
+                            break;
+                        case TeleportType.Vehicles:
+                            int vCount = VehicleManager.vehicles.Count;
+                            int vRand = UnityEngine.Random.Range(0, vCount - 1);
+                            try
+                            {
+                                current = VehicleManager.vehicles[vRand].transform;
+                            }
+                            catch
+                            {
+                                continue;
+                            }
+                            if (Vector3.Distance(current.position, player.Position) > 20)
+                                match = true;
+                            break;
+                        default:
+                            return;
+                    }
                 }
             }
             if(match)
@@ -390,7 +476,7 @@ namespace ApokPT.RocketPlugins
                     { "wreckingball_aborted", "Wrecking Ball Aborted! Destruction queue cleared!" },
                     { "wreckingball_help", "Please define filter and radius: /wreck <filter> <radius> or /wreck teleport b|s" },
                     { "wreckingball_help_console", "Please define filter, radius and position: /wreck <filter> <radius> <x> <y> <z>" },
-                    { "wreckingball_help_teleport", "Please define type for teleport: /wreck teleport s|b|v" },
+                    { "wreckingball_help_teleport2", "Please define type for teleport: /wreck teleport <s|b|v>, or /w teleport <steamid> <s|b|v>" },
                     { "wreckingball_help_scan", "Please define a scan filter and radius: /wreck scan <filter> <radius>" },
                     { "wreckingball_help_scan_console", "Please define a scan filter, radius and position: /wreck scan <filter> <radius> <x> <y> <z>" },
                     { "wreckingball_queued", "{0} elements(s) found, ~{1} sec(s) to complete run." },

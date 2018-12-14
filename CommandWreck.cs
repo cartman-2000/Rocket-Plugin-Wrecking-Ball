@@ -151,32 +151,42 @@ namespace ApokPT.RocketPlugins
                                 UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_teleport_permission"), Color.red);
                                 return;
                             }
+                            ulong ulSteamID = 0;
+                            bool firstSteamID = false;
+                            if (oper.Length > 1 && oper[1].isCSteamID(out ulSteamID))
+                                firstSteamID = true;
                             if (oper.Length > 1)
                             {
+
                                 if (caller is ConsolePlayer)
                                 {
                                     UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_teleport_not_allowed"));
                                     break;
                                 }
-                                switch (oper[1])
+                                string ch = string.Empty;
+                                if (firstSteamID && oper.Length > 2)
+                                    ch = oper[2];
+                                else if (!firstSteamID)
+                                    ch = oper[1];
+                                switch (ch)
                                 {
                                     case "b":
-                                        WreckingBall.Instance.Teleport(player, TeleportType.Barricades);
+                                        WreckingBall.Instance.Teleport(player, TeleportType.Barricades, ulSteamID);
                                         break;
                                     case "s":
-                                        WreckingBall.Instance.Teleport(player, TeleportType.Structures);
+                                        WreckingBall.Instance.Teleport(player, TeleportType.Structures, ulSteamID);
                                         break;
                                     case "v":
-                                        WreckingBall.Instance.Teleport(player, TeleportType.Vehicles);
+                                        WreckingBall.Instance.Teleport(player, TeleportType.Vehicles, ulSteamID);
                                         break;
                                     default:
-                                        UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_teleport"));
+                                        UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_teleport2"));
                                         break;
                                 }
                             }
                             else
                             {
-                                UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_teleport"));
+                                UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_teleport2"));
                                 break;
                             }
                             break;
