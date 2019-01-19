@@ -297,14 +297,16 @@ namespace ApokPT.RocketPlugins
                         int vCount = VehicleManager.vehicles.Count;
                         for (x = 0; x < vCount; x++)
                         {
-                            if ((ulong)VehicleManager.vehicles[x].lockedOwner == ulSteamID)
+                            if (VehicleManager.vehicles[x].isLocked && (ulong)VehicleManager.vehicles[x].lockedOwner == ulSteamID)
                             {
+                                Logger.Log(VehicleManager.vehicles[x].lockedOwner.ToString() + ":"+ VehicleManager.vehicles[x].instanceID.ToString());
                                 items.Add(new Destructible(VehicleManager.vehicles[x].transform, ElementType.Vehicle, VehicleManager.vehicles[x]));
                             }
                         }
                         if (items.Count > 0)
                         {
                             idx = UnityEngine.Random.Range(0, items.Count - 1);
+                            Logger.Log(idx.ToString());
                             try
                             {
                                 current = items[idx].Transform;
