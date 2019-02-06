@@ -1,4 +1,6 @@
-﻿using PlayerInfoLibrary;
+﻿using DynShop;
+using fr34kyn01535.Uconomy;
+using PlayerInfoLibrary;
 using Rocket.API;
 using Rocket.API.Collections;
 using Rocket.API.Extensions;
@@ -11,8 +13,9 @@ using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using UnityEngine;
-
+using DatabaseManager = PlayerInfoLibrary.DatabaseManager;
 using Logger = Rocket.Core.Logging.Logger;
 
 namespace ApokPT.RocketPlugins
@@ -22,6 +25,14 @@ namespace ApokPT.RocketPlugins
         // Singleton
         public static WreckingBall Instance;
         public static ElementDataManager ElementData;
+        internal static bool isDynShopPresent = false;
+        internal static bool isUconomyPresent = false;
+        internal static bool isPlayerInfoLibPresent = false;
+        internal static bool isDynShopLoaded = false;
+        internal static bool isUconomyLoaded = false;
+        internal static bool isPlayerInfoLibLoaded = false;
+        internal static bool debug = false;
+
 
         protected override void Load()
         {
@@ -38,21 +49,16 @@ namespace ApokPT.RocketPlugins
                 Instance.Configuration.Instance.DestructionsPerInterval = 1;
                 Logger.LogWarning("Error: DestructionsPerInterval config value must be at or above 1.");
             }
-            if (Instance.Configuration.Instance.EnablePlayerInfo || Instance.Configuration.Instance.EnableCleanup)
+            if (Instance.Configuration.Instance.EnableCleanup)
             {
-                // Check to see whether the PlayerInfoLib plugin is present on this server.
-                if (!CheckPlayerInfoLib())
-                {
-                    Logger.LogWarning("The Player Info Library plugin isn't loaded on this server, setting related options to false.");
-                    Instance.Configuration.Instance.EnablePlayerInfo = false;
-                    Instance.Configuration.Instance.EnableCleanup = false;
-                }
-                else
-                {
-                    CheckCleanup();
-                }
+                CheckCleanup();
+
             }
             Instance.Configuration.Save();
+            debug = Instance.Configuration.Instance.Debug;
+            // Register plugin dependency check.
+            Level.onPostLevelLoaded += _PostLevelLoaded;
+
         }
 
         protected override void Unload()
@@ -69,51 +75,157 @@ namespace ApokPT.RocketPlugins
                 DestructionProcessing.Abort(WreckType.Cleanup);
             }
             ElementData = null;
+            Level.onPostLevelLoaded -= _PostLevelLoaded;
+        }
+
+        private void _PostLevelLoaded(int level)
+        {
+            OnPluginLoading += OnPluginsLoading;
+            OnPluginUnloading += OnPluginsUnloading;
+            if (IsDependencyLoaded("DynShop"))
+                isDynShopPresent = true;
+            if (IsDependencyLoaded("Uconomy"))
+                isUconomyPresent = true;
+            if (IsDependencyLoaded("PlayerInfoLib"))
+                isPlayerInfoLibPresent = true;
+            if (isDynShopPresent)
+                isDynShopLoaded = IsDynShopLoaded();
+            if (isUconomyPresent)
+                isUconomyLoaded = IsUconomyLoaded();
+            if (isPlayerInfoLibPresent)
+                isPlayerInfoLibLoaded = IsPlayerInfoLibLoaded();
+        }
+
+        private void OnPluginsLoading(IRocketPlugin plugin, ref bool cancelLoading)
+        {
+            // Check final plugin load state.
+            new Thread((ThreadStart)(() =>
+            {
+                Thread.Sleep(2000);
+                if (debug)
+                    Logger.LogWarning("Checking plugin dependencies for WB plugin.");
+                if (plugin.Name == "DynShop")
+                    isDynShopLoaded = IsDynShopLoaded();
+                if (plugin.Name == "Uconomy")
+                    isUconomyLoaded = IsUconomyLoaded();
+                if (plugin.Name == "PlayerInfoLib")
+                    isPlayerInfoLibLoaded = IsPlayerInfoLibLoaded();
+                if (debug)
+                {
+                    Logger.Log("DynShop: " + isDynShopLoaded.ToString());
+                    Logger.Log("Uconomy: " + isUconomyLoaded.ToString());
+                    Logger.Log("PlayerInfoLib: " + isPlayerInfoLibLoaded.ToString());
+                }
+            }))
+            { IsBackground = true }.Start();
+
+        }
+        private void OnPluginsUnloading(IRocketPlugin plugin)
+        {
+            if (plugin.Name == "DynShop")
+                isDynShopLoaded = false;
+            if (plugin.Name == "Uconomy")
+                isUconomyLoaded = false;
+            if (plugin.Name == "PlayerInfoLib")
+                isPlayerInfoLibLoaded = false;
+        }
+
+        private bool IsPlayerInfoLibLoaded()
+        {
+            return PlayerInfoLib.Instance.State == PluginState.Loaded && PlayerInfoLib.Database.Initialized;
+        }
+
+        private bool IsDynShopLoaded()
+        {
+            return DShop.Instance.State == PluginState.Loaded && DShop.Instance.Database.IsLoaded;
+        }
+
+        private bool IsUconomyLoaded()
+        {
+            return Uconomy.Instance.State == PluginState.Loaded;
         }
 
         private static void CheckCleanup()
         {
-            if (Instance.Configuration.Instance.EnableCleanup && DatabaseManager.DatabaseInterfaceVersion < 2)
+
+            if (Instance.Configuration.Instance.BuildableWaitTime < 1)
             {
-                Logger.LogWarning("The Player Info Library is outdated, the WreckingBall cleanup feature in this plugin will be disabled.");
-                Instance.Configuration.Instance.EnableCleanup = false;
+                Instance.Configuration.Instance.BuildableWaitTime = 30;
             }
-            else if (Instance.Configuration.Instance.EnableCleanup)
+            if (Instance.Configuration.Instance.PlayerDataWaitTime < 1)
             {
-                if (Instance.Configuration.Instance.BuildableWaitTime < 1)
-                {
-                    Instance.Configuration.Instance.BuildableWaitTime = 30;
-                }
-                if (Instance.Configuration.Instance.PlayerDataWaitTime < 1)
-                {
-                    Instance.Configuration.Instance.PlayerDataWaitTime = 45;
-                }
-                if (Instance.Configuration.Instance.CleanupIntervalTime < 1)
-                {
-                    Instance.Configuration.Instance.CleanupIntervalTime = 5;
-                }
-                if (Instance.Configuration.Instance.CleanupPerInterval < 1)
-                {
-                    Instance.Configuration.Instance.CleanupPerInterval = 10;
-                }
+                Instance.Configuration.Instance.PlayerDataWaitTime = 45;
+            }
+            if (Instance.Configuration.Instance.CleanupIntervalTime < 1)
+            {
+                Instance.Configuration.Instance.CleanupIntervalTime = 5;
+            }
+            if (Instance.Configuration.Instance.CleanupPerInterval < 1)
+            {
+                Instance.Configuration.Instance.CleanupPerInterval = 10;
             }
         }
 
-        private static bool CheckPlayerInfoLib()
+        public void VehicleBuyBack(InteractableVehicle vehicle)
         {
             try
             {
-                return Type.GetType("PlayerInfoLibrary.DatabaseManager,PlayerInfoLib") != null;
+                if (vehicle.isLocked && vehicle.lockedOwner != CSteamID.Nil)
+                {
+                    VehicleInfo info = DShop.Instance.Database.GetVehicleInfo((ulong)vehicle.lockedOwner, vehicle.id);
+                    ShopObject svehicle = DShop.Instance.Database.GetItem(ItemType.Vehicle, vehicle.id);
+                    if (info != null && svehicle.ItemID == vehicle.id && svehicle.RestrictBuySell != RestrictBuySell.BuyOnly)
+                    {
+                        Uconomy.Instance.Database.CheckSetupAccount(vehicle.lockedOwner);
+                        Uconomy.Instance.Database.IncreaseBalance(vehicle.lockedOwner.ToString(), Math.Round(decimal.Multiply(svehicle.BuyCost, svehicle.SellMultiplier), 2));
+                        DShop.Instance.Database.DeleteVehicleInfo(info);
+                        bool getPInfo = WreckingBall.isPlayerInfoLibLoaded;
+                        Logger.Log(string.Format("Vehicle buyback successfull for: InstanceID: {0}, and Type: {1}({2}), at position: {3} , Sign By: {4}, Locked By: {5}.",
+                            vehicle.instanceID,
+                            vehicle.asset.vehicleName,
+                            vehicle.id, vehicle.transform.ToString(),
+                            DestructionProcessing.HasFlaggedElement(vehicle.transform, out ulong vFlagOwner) ? (getPInfo ? Instance.PInfoGenerateMessage(vFlagOwner) : vFlagOwner.ToString()) : "N/A",
+                            vehicle.isLocked ? (getPInfo ? Instance.PInfoGenerateMessage((ulong)vehicle.lockedOwner) : vehicle.lockedOwner.ToString()) : "N/A"));
+                    }
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                return false;
+                Logger.LogException(ex, "There was an error with trying to process a vehicle buyback.");
             }
         }
 
-        internal static bool IsPInfoLibLoaded()
+        public void VehicleElementDrop(InteractableVehicle vehicle, bool shouldDestroy = true, Transform trainCarTransform = null)
         {
-            return (PlayerInfoLib.Instance.State == PluginState.Loaded && PlayerInfoLib.Database.Initialized);
+            if ((vehicle.asset.engine == EEngine.TRAIN && trainCarTransform == null) || vehicle.isDead)
+                return;
+            if (BarricadeManager.tryGetPlant(vehicle.asset.engine == EEngine.TRAIN ? trainCarTransform : vehicle.transform, out byte x, out byte y, out ushort plant, out BarricadeRegion vregion))
+            {
+                for (int i = vregion.drops.Count - 1; i >= 0; i--)
+                {
+                    try
+                    {
+                        Item item = new Item(vregion.barricades[i].barricade.id, true);
+                        ItemManager.dropItem(item, vregion.drops[i].model.position, false, true, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        // You can get an error, if there's a mismatch in the barricades and drops lists for the region(should rarely ever happen, mostly ever happens when elements are destroyed by a thread outside of the main thread, eg by plugin.).
+                        Logger.LogException(ex, "Error in dropping an element off of the vehicle.");
+                    }
+                    if (shouldDestroy)
+                    {
+                        try
+                        {
+                            BarricadeManager.damage(vregion.drops[i].model, ushort.MaxValue, 1, false);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.LogException(ex, "Error in destroying vehicle barricade.");
+                        }
+                    }
+                }
+            }
         }
 
         public string PInfoGenerateMessage(ulong owner)
@@ -148,31 +260,24 @@ namespace ApokPT.RocketPlugins
                     }
                     steamID = (ulong)player.CSteamID;
                 }
-                if (IsPInfoLibLoaded())
+                PlayerData pData = PlayerInfoLib.Database.QueryById((CSteamID)steamID, false);
+                if (!pData.IsLocal())
                 {
-                    PlayerData pData = PlayerInfoLib.Database.QueryById((CSteamID)steamID, false);
-                    if (!pData.IsLocal())
-                    {
-                        UnturnedChat.Say(caller, Translate("wreckingball_dcu_hasnt_played"), Color.red);
-                        return;
-                    }
-                    if (pData.CleanedBuildables && pData.CleanedPlayerData)
-                    {
-                        PlayerInfoLib.Database.SetOption(pData.SteamID, OptionType.Buildables, false);
-                        PlayerInfoLib.Database.SetOption(pData.SteamID, OptionType.PlayerFiles, false);
-                        UnturnedChat.Say(caller, Translate("wreckingball_dcu_cleanup_enabled", pData.CharacterName, pData.SteamName, pData.SteamID));
+                    UnturnedChat.Say(caller, Translate("wreckingball_dcu_hasnt_played"), Color.red);
+                    return;
+                }
+                if (pData.CleanedBuildables && pData.CleanedPlayerData)
+                {
+                    PlayerInfoLib.Database.SetOption(pData.SteamID, OptionType.Buildables, false);
+                    PlayerInfoLib.Database.SetOption(pData.SteamID, OptionType.PlayerFiles, false);
+                    UnturnedChat.Say(caller, Translate("wreckingball_dcu_cleanup_enabled", pData.CharacterName, pData.SteamName, pData.SteamID));
 
-                    }
-                    else
-                    {
-                        PlayerInfoLib.Database.SetOption(pData.SteamID, OptionType.Buildables, true);
-                        PlayerInfoLib.Database.SetOption(pData.SteamID, OptionType.PlayerFiles, true);
-                        UnturnedChat.Say(caller, Translate("wreckingball_dcu_cleanup_disabled", pData.CharacterName, pData.SteamName, pData.SteamID));
-                    }
                 }
                 else
                 {
-                    UnturnedChat.Say(caller, Translate("werckingball_dcu_not_enabled"), Color.red);
+                    PlayerInfoLib.Database.SetOption(pData.SteamID, OptionType.Buildables, true);
+                    PlayerInfoLib.Database.SetOption(pData.SteamID, OptionType.PlayerFiles, true);
+                    UnturnedChat.Say(caller, Translate("wreckingball_dcu_cleanup_disabled", pData.CharacterName, pData.SteamName, pData.SteamID));
                 }
             }
         }
@@ -250,7 +355,7 @@ namespace ApokPT.RocketPlugins
                                 for (int k = 0; k < idxCount; k++)
                                 {
                                     if (StructureManager.regions[x, z].structures[k].owner == ulSteamID)
-                                        items.Add(new Destructible(StructureManager.regions[x, z].drops[k].model, ElementType.Structure));
+                                        items.Add(new Destructible(StructureManager.regions[x, z].drops[k].model, ElementType.Structure, StructureManager.regions[x, z].structures[k].structure.id));
                                 }
                             }
                         }
@@ -277,7 +382,7 @@ namespace ApokPT.RocketPlugins
                                 for (int k = 0; k < idxCount; k++)
                                 {
                                     if (BarricadeManager.regions[x, z].barricades[k].owner == ulSteamID)
-                                        items.Add(new Destructible(BarricadeManager.regions[x, z].drops[k].model, ElementType.Barricade));
+                                        items.Add(new Destructible(BarricadeManager.regions[x, z].drops[k].model, ElementType.Barricade, BarricadeManager.regions[x, z].barricades[k].barricade.id));
                                 }
                             }
                         }
@@ -300,7 +405,7 @@ namespace ApokPT.RocketPlugins
                             if (VehicleManager.vehicles[x].isLocked && (ulong)VehicleManager.vehicles[x].lockedOwner == ulSteamID)
                             {
                                 Logger.Log(VehicleManager.vehicles[x].lockedOwner.ToString() + ":"+ VehicleManager.vehicles[x].instanceID.ToString());
-                                items.Add(new Destructible(VehicleManager.vehicles[x].transform, ElementType.Vehicle, VehicleManager.vehicles[x]));
+                                items.Add(new Destructible(VehicleManager.vehicles[x].transform, ElementType.Vehicle, VehicleManager.vehicles[x].id, VehicleManager.vehicles[x]));
                             }
                         }
                         if (items.Count > 0)

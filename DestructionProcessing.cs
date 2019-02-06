@@ -56,9 +56,9 @@ namespace ApokPT.RocketPlugins
             {
                 WreckingBall.ElementData.reportLists[BuildableType.Element].Clear();
                 WreckingBall.ElementData.reportLists[BuildableType.VehicleElement].Clear();
-                if (WreckingBall.Instance.Configuration.Instance.EnablePlayerInfo)
+                if (WreckingBall.Instance.Configuration.Instance.EnablePlayerInfo && WreckingBall.isPlayerInfoLibPresent && WreckingBall.isPlayerInfoLibLoaded)
                 {
-                    pInfoLibLoaded = WreckingBall.IsPInfoLibLoaded();
+                    pInfoLibLoaded = true;
                 }
             }
             UnturnedPlayer Player = null;
@@ -135,7 +135,7 @@ namespace ApokPT.RocketPlugins
 
                 if (type == WreckType.Cleanup && vehicle.asset.engine != EEngine.TRAIN && WreckingBall.Instance.Configuration.Instance.CleanupLockedCars && vehicle.isLocked && vehicle.lockedOwner == (CSteamID)steamID)
                 {
-                    cleanupList.Add(new Destructible(vehicle.transform, ElementType.Vehicle, vehicle));
+                    cleanupList.Add(new Destructible(vehicle.transform, ElementType.Vehicle, vehicle.asset.id, vehicle));
                 }
                 // Add Locked vehicles to the top players count, if the cleanup locked vehicles feature is active.
                 if (type == WreckType.Counts && vehicle.asset.engine != EEngine.TRAIN && WreckingBall.Instance.Configuration.Instance.CleanupLockedCars && vehicle.isLocked)
@@ -232,16 +232,16 @@ namespace ApokPT.RocketPlugins
             else
             {
                 if (data is StructureData)
-                    destroyList.Add(new Destructible(transform, ElementType.Structure));
+                    destroyList.Add(new Destructible(transform, ElementType.Structure, itemID));
                 if (data is BarricadeData)
-                    destroyList.Add(new Destructible(transform, ElementType.Barricade));
+                    destroyList.Add(new Destructible(transform, ElementType.Barricade, itemID));
                 // Add the vehicle to the destruction list, as long as it's not a train. Allow a special case where you could destroy a train from using wreck on the console, only.
                 if (data is InteractableVehicle && (((InteractableVehicle)data).asset.engine != EEngine.TRAIN || caller is ConsolePlayer && vindex == 0 && type != WreckType.Counts && type != WreckType.Cleanup))
-                    destroyList.Add(new Destructible(transform, ElementType.Vehicle, data as InteractableVehicle));
+                    destroyList.Add(new Destructible(transform, ElementType.Vehicle, itemID, data as InteractableVehicle));
                 if (data is Zombie)
-                    destroyList.Add(new Destructible(transform, ElementType.Zombie, null, data as Zombie));
+                    destroyList.Add(new Destructible(transform, ElementType.Zombie, itemID, null, data as Zombie));
                 if (data is Animal)
-                    destroyList.Add(new Destructible(transform, ElementType.Animal, null, null, data as Animal));
+                    destroyList.Add(new Destructible(transform, ElementType.Animal, itemID, null, null, data as Animal));
             }
         }
 
@@ -306,7 +306,7 @@ namespace ApokPT.RocketPlugins
                 }
                 else if (type == WreckType.Cleanup && owner == steamID)
                 {
-                    cleanupList.Add(new Destructible(transform, isSRegion ? ElementType.Structure : ElementType.Barricade));
+                    cleanupList.Add(new Destructible(transform, isSRegion ? ElementType.Structure : ElementType.Barricade, isSRegion ? sData.structure.id : bData.barricade.id));
                 }
                 else if (type == WreckType.Counts)
                 {
@@ -360,7 +360,7 @@ namespace ApokPT.RocketPlugins
                     cdIdxCount = 0;
                     try
                     {
-                        if (!syncError && WreckingBall.IsPInfoLibLoaded())
+                        if (!syncError && WreckingBall.isPlayerInfoLibLoaded)
                             PlayerInfoLib.Database.SetOption((CSteamID)((ulong)playersListBuildables[plbIdx][0]), OptionType.Buildables, true);
                     }
                     catch (Exception ex)
@@ -415,8 +415,8 @@ namespace ApokPT.RocketPlugins
                             found = true;
                         }
                     }
-                    if (WreckingBall.IsPInfoLibLoaded())
-                        PlayerInfoLib.Database.SetOption((CSteamID)((ulong)pf[0]), OptionType.PlayerFiles, true);
+                    if (WreckingBall.isPlayerInfoLibLoaded)
+                        PlayerInfoLib.Database.SetOption((CSteamID)(ulong)pf[0], OptionType.PlayerFiles, true);
                 }
                 catch (Exception ex)
                 {
@@ -444,7 +444,7 @@ namespace ApokPT.RocketPlugins
                 lastGetCleanupInfo = DateTime.Now;
                 if (WreckingBall.Instance.Configuration.Instance.BuildableCleanup)
                 {
-                    if (playersListBuildables.Count == 0 && WreckingBall.IsPInfoLibLoaded())
+                    if (playersListBuildables.Count == 0 && WreckingBall.isPlayerInfoLibLoaded)
                     {
                         GetCleanupList(OptionType.Buildables, WreckingBall.Instance.Configuration.Instance.BuildableWaitTime, WreckingBall.Instance.Configuration.Instance.CleanupPerInterval);
                         if (playersListBuildables.Count != 0)
@@ -468,7 +468,7 @@ namespace ApokPT.RocketPlugins
                 }
                 if (WreckingBall.Instance.Configuration.Instance.PlayerDataCleanup)
                 {
-                    if (playersListFiles.Count == 0 && WreckingBall.IsPInfoLibLoaded())
+                    if (playersListFiles.Count == 0 && WreckingBall.isPlayerInfoLibLoaded)
                     {
                         GetCleanupList(OptionType.PlayerFiles, WreckingBall.Instance.Configuration.Instance.PlayerDataWaitTime, WreckingBall.Instance.Configuration.Instance.CleanupPerInterval);
                         if (playersListFiles.Count != 0)
@@ -547,8 +547,8 @@ namespace ApokPT.RocketPlugins
                     }
                     bool useSafeGuards = true;
                     bool getPInfo = false;
-                    if (WreckingBall.Instance.Configuration.Instance.EnablePlayerInfo)
-                        getPInfo = WreckingBall.IsPInfoLibLoaded();
+                    if (WreckingBall.Instance.Configuration.Instance.EnablePlayerInfo && WreckingBall.isPlayerInfoLibPresent && WreckingBall.isPlayerInfoLibLoaded)
+                        getPInfo = true;
                     restart:
                     int v = 0;
                     foreach (KeyValuePair<InteractableVehicle, int> vehicle in vList)
@@ -582,6 +582,14 @@ namespace ApokPT.RocketPlugins
                         if (i > numToDestroy)
                             break;
                         Logger.Log(string.Format("Vehicle #{0}, with InstanceID: {1}, and Type: {5}({6}), at position: {2} destroyed, Element count: {3}, Sign By {7}, Locked By: {4}.", v, vehicle.Key.instanceID, vehicle.Key.transform.position.ToString(), vehicle.Value, vehicle.Key.isLocked ? (getPInfo ? WreckingBall.Instance.PInfoGenerateMessage((ulong)vehicle.Key.lockedOwner) : vehicle.Key.lockedOwner.ToString()) : "N/A", vehicle.Key.asset.vehicleName, vehicle.Key.asset.id, hasSign ? (getPInfo ? WreckingBall.Instance.PInfoGenerateMessage(elementOwner) : elementOwner.ToString()) : "N/A"));
+                        if (WreckingBall.Instance.Configuration.Instance.EnableVehicleBuyBack && WreckingBall.isDynShopLoaded && WreckingBall.isUconomyLoaded)
+                        {
+                            WreckingBall.Instance.VehicleBuyBack(vehicle.Key);
+                        }
+                        else if (WreckingBall.Instance.Configuration.Instance.EnableVehicleBuyBack)
+                            Logger.LogWarning("EnableVehicleBuyBack was enabled, but either/both the plugins, Uconomy and DynShop, aren't present/loaded.");
+                        if (WreckingBall.Instance.Configuration.Instance.EnableVehicleElementDrop)
+                            WreckingBall.Instance.VehicleElementDrop(vehicle.Key);
                         vehicle.Key.askDamage(ushort.MaxValue, false);
                     }
                     Logger.Log("Vehicle cleanup finished.", ConsoleColor.Yellow);
@@ -629,13 +637,37 @@ namespace ApokPT.RocketPlugins
 
                     if (element.Type == ElementType.Structure)
                     {
-                        try { StructureManager.damage(element.Transform, element.Transform.position, ushort.MaxValue, 1, false); }
+                        try
+                        {
+                            if (WreckingBall.Instance.Configuration.Instance.EnableDestroyedElementDrop)
+                            {
+                                try
+                                {
+                                    Item item = new Item(element.ItemID, true);
+                                    ItemManager.dropItem(item, element.Transform.position, false, true, true);
+                                }
+                                catch (Exception ex) { Logger.LogException(ex, "Error in dropping an item for a destroyed structure."); }
+                            }
+                            StructureManager.damage(element.Transform, element.Transform.position, ushort.MaxValue, 1, false);
+                        }
                         catch (Exception ex) { Logger.LogException(ex, "Error in destroying structure."); }
                     }
 
-                    else if (element.Type == ElementType.Barricade)
+                    else if (element.Type == ElementType.Barricade || element.Type == ElementType.VehicleBarricade)
                     {
-                        try { BarricadeManager.damage(element.Transform, ushort.MaxValue, 1, false); }
+                        try
+                        {
+                            if ((element.Type == ElementType.VehicleBarricade && WreckingBall.Instance.Configuration.Instance.EnableVehicleElementDrop) || (element.Type == ElementType.Barricade && WreckingBall.Instance.Configuration.Instance.EnableDestroyedElementDrop))
+                            {
+                                try
+                                {
+                                    Item item = new Item(element.ItemID, true);
+                                    ItemManager.dropItem(item, element.Transform.position, false, true, true);
+                                }
+                                catch (Exception ex) { Logger.LogException(ex, "Error in dropping an item for a destroyed" + (element.Type == ElementType.VehicleBarricade ? " vehicle" : string.Empty) + " barricade."); }
+                            }
+                            BarricadeManager.damage(element.Transform, ushort.MaxValue, 1, false);
+                        }
                         catch (Exception ex) { Logger.LogException(ex, "Error in destroying barricade."); }
                     }
 
@@ -650,7 +682,7 @@ namespace ApokPT.RocketPlugins
                                 byte y;
                                 ushort plant;
                                 BarricadeRegion barricadeRegion;
-                                bool getPInfo = WreckingBall.IsPInfoLibLoaded();
+                                bool getPInfo = WreckingBall.isPlayerInfoLibLoaded;
                                 Logger.Log(string.Format("Cleanup: Vehicle with InstanceID: {0}, and Type: {1}({2}), at position: {3} destroyed, Element count: {4}, Sign By: {5}, Locked By: {6}.",
                                     element.Vehicle.instanceID,
                                     element.Vehicle.asset.vehicleName,
@@ -660,7 +692,26 @@ namespace ApokPT.RocketPlugins
                                     HasFlaggedElement(element.Vehicle.transform, out vFlagOwner) ? (getPInfo ? WreckingBall.Instance.PInfoGenerateMessage(vFlagOwner) : vFlagOwner.ToString()) : "N/A",
                                     element.Vehicle.isLocked ? (getPInfo ? WreckingBall.Instance.PInfoGenerateMessage((ulong)element.Vehicle.lockedOwner) : element.Vehicle.lockedOwner.ToString()) : "N/A")); 
                             }
-                            element.Vehicle.askDamage(ushort.MaxValue, true);
+                            if (WreckingBall.Instance.Configuration.Instance.EnableVehicleBuyBack && WreckingBall.isDynShopLoaded && WreckingBall.isUconomyLoaded)
+                            {
+                                WreckingBall.Instance.VehicleBuyBack(element.Vehicle);
+                            }
+                            else if (WreckingBall.Instance.Configuration.Instance.EnableVehicleBuyBack)
+                                Logger.LogWarning("EnableVehicleBuyBack was enabled, but either/both the plugins, Uconomy and DynShop, aren't present/loaded.");
+                            if (WreckingBall.Instance.Configuration.Instance.EnableVehicleElementDrop)
+                            {
+                                if (element.Vehicle.asset.engine == EEngine.TRAIN && element.Vehicle.trainCars != null && element.Vehicle.trainCars.Count() > 1)
+                                {
+                                    foreach (TrainCar car in element.Vehicle.trainCars)
+                                    {
+                                        WreckingBall.Instance.VehicleElementDrop(element.Vehicle, true, car.root);
+                                    }
+                                }
+                                else
+                                    WreckingBall.Instance.VehicleElementDrop(element.Vehicle);
+                            }
+                            if (!element.Vehicle.isDead)
+                                element.Vehicle.askDamage(ushort.MaxValue, false);
                         }
                         catch (Exception ex) { Logger.LogException(ex, "Error in destroying vehicle."); }
                     }

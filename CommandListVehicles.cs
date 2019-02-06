@@ -70,8 +70,8 @@ namespace ApokPT.RocketPlugins
                 // skip the vehicle in the list if it is destroyed or drowned.
                 if (vehicle.isDead || vehicle.isDrowned)
                     continue;
-                if (WreckingBall.Instance.Configuration.Instance.EnablePlayerInfo)
-                    getPInfo = WreckingBall.IsPInfoLibLoaded();
+                if (WreckingBall.Instance.Configuration.Instance.EnablePlayerInfo && WreckingBall.isPlayerInfoLibPresent && WreckingBall.isPlayerInfoLibLoaded)
+                    getPInfo = true;
                 string lockedBy = getPInfo ? WreckingBall.Instance.PInfoGenerateMessage((ulong)vehicle.lockedOwner) : vehicle.lockedOwner.ToString();
                 ulong signOwner = 0;
                 string signBy = string.Empty;

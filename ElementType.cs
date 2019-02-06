@@ -3,6 +3,7 @@
     public enum ElementType
     {
         Barricade,
+        VehicleBarricade,
         Structure,
         Vehicle,
         Zombie,

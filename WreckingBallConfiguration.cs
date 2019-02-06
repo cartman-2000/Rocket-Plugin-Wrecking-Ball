@@ -10,6 +10,7 @@ namespace ApokPT.RocketPlugins
     public class WreckingBallConfiguration : IRocketPluginConfiguration
     {
         public bool Enabled = true;
+        public bool Debug = false;
         public float DestructionRate = 10;
         public uint DestructionsPerInterval = 10;
         public bool LogScans = false;
@@ -30,6 +31,9 @@ namespace ApokPT.RocketPlugins
         public bool LowElementCountOnly = false;
         public ushort MinElementCount = 6;
         public bool KeepVehiclesWithSigns = true;
+        public bool EnableVehicleElementDrop = true;
+        public bool EnableVehicleBuyBack = false;
+        public bool EnableDestroyedElementDrop = true;
 
         [XmlElement("VehicleSignFlag")]
         public string XmlVehicleSignFlag = "n";

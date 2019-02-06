@@ -51,8 +51,8 @@ namespace ApokPT.RocketPlugins
             DestructionProcessing.pElementCounts.Clear();
 
             bool getPInfo = false;
-            if (WreckingBall.Instance.Configuration.Instance.EnablePlayerInfo)
-                getPInfo = WreckingBall.IsPInfoLibLoaded();
+            if (WreckingBall.Instance.Configuration.Instance.EnablePlayerInfo && WreckingBall.isPlayerInfoLibPresent && WreckingBall.isPlayerInfoLibLoaded)
+                getPInfo = true;
 
             foreach (KeyValuePair<ulong, int> value in shortenedList)
             {

@@ -42,15 +42,10 @@ namespace ApokPT.RocketPlugins
 
         public void Execute(IRocketPlayer caller, string[] command)
         {
-            if (!WreckingBall.Instance.Configuration.Instance.EnableCleanup)
-            {
-                UnturnedChat.Say(caller, WreckingBall.Instance.Translate("werckingball_dcu_not_enabled"), Color.red);
-                return;
-            }
-            else
-            {
+            if (WreckingBall.Instance.Configuration.Instance.EnableCleanup && WreckingBall.isPlayerInfoLibPresent && WreckingBall.isPlayerInfoLibLoaded)
                 WreckingBall.Instance.DCUSet(caller, command);
-            }
+            else
+                UnturnedChat.Say(caller, WreckingBall.Instance.Translate("werckingball_dcu_not_enabled"), Color.red);
         }
     }
 }
