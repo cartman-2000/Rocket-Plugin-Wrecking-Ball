@@ -546,9 +546,27 @@ namespace ApokPT.RocketPlugins
                 {
                     DestructionProcessing.lastRunTimeWreck = DateTime.Now;
                     if (DestructionProcessing.processing)
-                        DestructionProcessing.DestructionLoop(WreckType.Wreck);
+                    {
+                        try
+                        {
+                            DestructionProcessing.DestructionLoop(WreckType.Wreck);
+                        }
+                        catch
+                        {
+                            DestructionProcessing.Abort(WreckType.Wreck);
+                        }
+                    }
                     if (DestructionProcessing.cleanupProcessingBuildables)
-                        DestructionProcessing.DestructionLoop(WreckType.Cleanup);
+                    {
+                        try
+                        {
+                            DestructionProcessing.DestructionLoop(WreckType.Cleanup);
+                        }
+                        catch
+                        {
+                            DestructionProcessing.Abort(WreckType.Cleanup);
+                        }
+                    }
                 }
                 if (Instance.Configuration.Instance.EnableCleanup)
                     DestructionProcessing.HandleCleanup();

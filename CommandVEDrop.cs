@@ -32,7 +32,7 @@ namespace ApokPT.RocketPlugins
         {
             UnturnedPlayer player = (UnturnedPlayer)caller;
             Ray ray = new Ray(player.Player.look.aim.position, player.Player.look.aim.forward);
-            RaycastInfo raycastInfo = DamageTool.raycast(ray, 5f, RayMasks.VEHICLE);
+            RaycastInfo raycastInfo = DamageTool.raycast(ray, 10f, RayMasks.VEHICLE);
             if (raycastInfo.vehicle != null)
             {
                 bool getPInfo = false;
@@ -55,7 +55,7 @@ namespace ApokPT.RocketPlugins
             }
             else
             {
-                UnturnedChat.Say(caller, "Couldn't find a vehicle in the direction you're looking, or too far away, within 5 units.");
+                UnturnedChat.Say(caller, "Couldn't find a vehicle in the direction you're looking, or too far away, within 10 units.");
             }
         }
     }
