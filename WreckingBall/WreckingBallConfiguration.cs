@@ -553,7 +553,7 @@ namespace ApokPT.RocketPlugins
                         {
                             Element trimmedElement2 = Elements.FirstOrDefault(elid => elid.Id == id);
                             if (trimmedElement2 != null)
-                                Logger.LogWarning(string.Format("Can't update Element ID {0} to {1}, an element with this id is already set, with a category flag id of: {1}.", oldID, id, trimmedElement2.CategoryId));
+                                Logger.LogWarning(string.Format("Can't update Element ID {0} to {1}, an element with this id is already set, with a category flag id of: {2}.", oldID, id, trimmedElement2.CategoryId));
                             else
                                 Elements[Elements.FindIndex(elid => elid.Id == oldID)] = new Element(id, catflag);    
                             }
