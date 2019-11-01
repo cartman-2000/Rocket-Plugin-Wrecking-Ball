@@ -61,11 +61,7 @@ namespace ApokPT.RocketPlugins
             }
             foreach (InteractableVehicle vehicle in VehicleManager.vehicles)
             {
-                byte x = 0;
-                byte y = 0;
-                ushort plant = 0;
                 int count = 0;
-                BarricadeRegion barricadeRegion;
                 bool getPInfo = false;
                 // skip the vehicle in the list if it is destroyed or drowned.
                 if (vehicle.isDead || vehicle.isDrowned)
@@ -76,7 +72,7 @@ namespace ApokPT.RocketPlugins
                 ulong signOwner = 0;
                 string signBy = string.Empty;
                 bool showSignBy = false;
-                if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
+                if (BarricadeManager.tryGetPlant(vehicle.transform, out byte x, out byte y, out ushort plant, out BarricadeRegion barricadeRegion))
                     count = barricadeRegion.drops.Count;
                 if (caller is ConsolePlayer || Vector3.Distance(vehicle.transform.position, player.Position) <= radius)
                 {
@@ -107,7 +103,7 @@ namespace ApokPT.RocketPlugins
 
         private void ProcessMessages(IRocketPlayer caller, Transform transform, Asset asset, uint instanceID, int count, string lockedBy, bool isLocked, string signBy, bool showSignBy, bool isTrainCar = false, int trainCarId = 0)
         {
-            string msg = string.Empty;
+            string msg;
             if (!isTrainCar)
                 msg = WreckingBall.Instance.Translate("wreckingball_lv2_vehicle", transform.position.ToString(), instanceID, count, showSignBy ? signBy : "N/A", isLocked ? lockedBy : "N/A", ((VehicleAsset)asset).vehicleName, asset.id);
             else

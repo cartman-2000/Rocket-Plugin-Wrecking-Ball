@@ -42,8 +42,7 @@ namespace ApokPT.RocketPlugins
         {
             get
             {
-                char id = 'n';
-                if (!char.TryParse(XmlVehicleSignFlag, out id))
+                if (!char.TryParse(XmlVehicleSignFlag, out char id))
                 {
                     XmlVehicleSignFlag = "n";
                     WreckingBall.Instance.Configuration.Save();

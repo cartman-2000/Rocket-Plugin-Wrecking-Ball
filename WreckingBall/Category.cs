@@ -26,8 +26,7 @@ namespace ApokPT.RocketPlugins
             }
             set
             {
-                char id;
-                if (!char.TryParse(value, out id))
+                if (!char.TryParse(value, out char id))
                     Id = '*';
                 else
                     Id = id;

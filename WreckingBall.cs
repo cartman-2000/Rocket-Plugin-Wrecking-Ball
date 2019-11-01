@@ -17,6 +17,7 @@ using System.Threading;
 using UnityEngine;
 using DatabaseManager = PlayerInfoLibrary.DatabaseManager;
 using Logger = Rocket.Core.Logging.Logger;
+using Math = System.Math;
 
 namespace ApokPT.RocketPlugins
 {
@@ -57,7 +58,7 @@ namespace ApokPT.RocketPlugins
             Instance.Configuration.Save();
             debug = Instance.Configuration.Instance.Debug;
             // Register plugin dependency check.
-            Level.onPostLevelLoaded += _PostLevelLoaded;
+            Level.onPostLevelLoaded += IPostLevelLoaded;
 
         }
 
@@ -75,10 +76,10 @@ namespace ApokPT.RocketPlugins
                 DestructionProcessing.Abort(WreckType.Cleanup);
             }
             ElementData = null;
-            Level.onPostLevelLoaded -= _PostLevelLoaded;
+            Level.onPostLevelLoaded -= IPostLevelLoaded;
         }
 
-        private void _PostLevelLoaded(int level)
+        private void IPostLevelLoaded(int level)
         {
             OnPluginLoading += OnPluginsLoading;
             OnPluginUnloading += OnPluginsUnloading;
@@ -199,7 +200,7 @@ namespace ApokPT.RocketPlugins
         {
             if ((vehicle.asset.engine == EEngine.TRAIN && trainCarTransform == null) || vehicle.isDead)
                 return;
-            if (BarricadeManager.tryGetPlant(vehicle.asset.engine == EEngine.TRAIN ? trainCarTransform : vehicle.transform, out byte x, out byte y, out ushort plant, out BarricadeRegion vregion))
+            if (BarricadeManager.tryGetPlant(vehicle.asset.engine == EEngine.TRAIN ? trainCarTransform : vehicle.transform, out _, out _, out _, out BarricadeRegion vregion))
             {
                 for (int i = vregion.drops.Count - 1; i >= 0; i--)
                 {
@@ -231,7 +232,7 @@ namespace ApokPT.RocketPlugins
         public string PInfoGenerateMessage(ulong owner)
         {
             PlayerData pData = PlayerInfoLib.Database.QueryById((CSteamID)owner);
-            string msg = string.Empty;
+            string msg;
             if (pData.IsValid())
                 msg = string.Format("{0} {1} [{2}], Seen: {3}:{4}{5}", owner, pData.CharacterName, pData.SteamName, pData.IsLocal() ? "L" : "G", pData.IsLocal() ? pData.LastLoginLocal : pData.LastLoginGlobal, pData.IsLocal() ? string.Format(", IsVip: {0}", pData.IsVip()) : string.Empty);
             else
@@ -248,11 +249,9 @@ namespace ApokPT.RocketPlugins
             }
             else
             {
-                ulong steamID = 0;
-                UnturnedPlayer player = null;
-                if (!cmd[0].isCSteamID(out steamID))
+                if (!cmd[0].IsCSteamID(out ulong steamID))
                 {
-                    player = UnturnedPlayer.FromName(cmd[0]);
+                    UnturnedPlayer player = UnturnedPlayer.FromName(cmd[0]);
                     if (player == null)
                     {
                         UnturnedChat.Say(caller, Translate("wreckingball_dcu_player_not_found"), Color.red);
@@ -330,15 +329,14 @@ namespace ApokPT.RocketPlugins
             Vector3 tpVector;
             bool match = false;
             int tries = 0;
-            int x = 0;
-            int xCount = 0;
-            int z = 0;
-            int zCount = 0;
-            int idx = 0;
-            int idxCount = 0;
-
             Transform current = null;
             List<Destructible> items = new List<Destructible>();
+            int idx;
+            int idxCount;
+            int zCount;
+            int z;
+            int xCount;
+            int x;
             // Steam id matching.
             if (ulSteamID != 0)
             {
@@ -404,7 +402,7 @@ namespace ApokPT.RocketPlugins
                         {
                             if (VehicleManager.vehicles[x].isLocked && (ulong)VehicleManager.vehicles[x].lockedOwner == ulSteamID)
                             {
-                                Logger.Log(VehicleManager.vehicles[x].lockedOwner.ToString() + ":"+ VehicleManager.vehicles[x].instanceID.ToString());
+                                Logger.Log(VehicleManager.vehicles[x].lockedOwner.ToString() + ":" + VehicleManager.vehicles[x].instanceID.ToString());
                                 items.Add(new Destructible(VehicleManager.vehicles[x].transform, ElementType.Vehicle, VehicleManager.vehicles[x].id, VehicleManager.vehicles[x]));
                             }
                         }
@@ -502,7 +500,7 @@ namespace ApokPT.RocketPlugins
                     }
                 }
             }
-            if(match)
+            if (match)
             {
                 tpVector = new Vector3(current.position.x, teleportType == TeleportType.Vehicles ? current.position.y + 4 : current.position.y + 2, current.position.z);
                 player.Teleport(tpVector, player.Rotation);
