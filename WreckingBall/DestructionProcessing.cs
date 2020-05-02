@@ -570,12 +570,6 @@ namespace ApokPT.RocketPlugins
                         if (i > numToDestroy)
                             break;
                         Logger.Log(string.Format("Vehicle #{0}, with InstanceID: {1}, and Type: {5}({6}), at position: {2} destroyed, Element count: {3}, Sign By {7}, Locked By: {4}.", v, vehicle.Key.instanceID, vehicle.Key.transform.position.ToString(), vehicle.Value, vehicle.Key.isLocked ? (getPInfo ? WreckingBall.Instance.PInfoGenerateMessage((ulong)vehicle.Key.lockedOwner) : vehicle.Key.lockedOwner.ToString()) : "N/A", vehicle.Key.asset.vehicleName, vehicle.Key.asset.id, hasSign ? (getPInfo ? WreckingBall.Instance.PInfoGenerateMessage(elementOwner) : elementOwner.ToString()) : "N/A"));
-                        if (WreckingBall.Instance.Configuration.Instance.EnableVehicleBuyBack && WreckingBall.isDynShopLoaded && WreckingBall.isUconomyLoaded)
-                        {
-                            WreckingBall.Instance.VehicleBuyBack(vehicle.Key);
-                        }
-                        else if (WreckingBall.Instance.Configuration.Instance.EnableVehicleBuyBack)
-                            Logger.LogWarning("EnableVehicleBuyBack was enabled, but either/both the plugins, Uconomy and DynShop, aren't present/loaded.");
                         if (WreckingBall.Instance.Configuration.Instance.EnableVehicleElementDrop)
                             WreckingBall.Instance.VehicleElementDrop(vehicle.Key);
                         vehicle.Key.askDamage(ushort.MaxValue, false);
@@ -675,12 +669,6 @@ namespace ApokPT.RocketPlugins
                                     HasFlaggedElement(element.Vehicle.transform, out ulong vFlagOwner) ? (getPInfo ? WreckingBall.Instance.PInfoGenerateMessage(vFlagOwner) : vFlagOwner.ToString()) : "N/A",
                                     element.Vehicle.isLocked ? (getPInfo ? WreckingBall.Instance.PInfoGenerateMessage((ulong)element.Vehicle.lockedOwner) : element.Vehicle.lockedOwner.ToString()) : "N/A")); 
                             }
-                            if (WreckingBall.Instance.Configuration.Instance.EnableVehicleBuyBack && WreckingBall.isDynShopLoaded && WreckingBall.isUconomyLoaded)
-                            {
-                                WreckingBall.Instance.VehicleBuyBack(element.Vehicle);
-                            }
-                            else if (WreckingBall.Instance.Configuration.Instance.EnableVehicleBuyBack)
-                                Logger.LogWarning("EnableVehicleBuyBack was enabled, but either/both the plugins, Uconomy and DynShop, aren't present/loaded.");
                             if (WreckingBall.Instance.Configuration.Instance.EnableVehicleElementDrop)
                             {
                                 if (element.Vehicle.asset.engine == EEngine.TRAIN && element.Vehicle.trainCars != null && element.Vehicle.trainCars.Count() > 1)

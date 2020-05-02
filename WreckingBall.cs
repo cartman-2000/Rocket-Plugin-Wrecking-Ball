@@ -1,6 +1,4 @@
-﻿using DynShop;
-using fr34kyn01535.Uconomy;
-using PlayerInfoLibrary;
+﻿using PlayerInfoLibrary;
 using Rocket.API;
 using Rocket.API.Collections;
 using Rocket.API.Extensions;
@@ -67,7 +65,7 @@ namespace ApokPT.RocketPlugins
             if (DestructionProcessing.processing)
             {
                 if (DestructionProcessing.originalCaller != null)
-                    UnturnedChat.Say(DestructionProcessing.originalCaller, Translate("wreckingball_reload_abort"), Color.yellow);
+                    UnturnedChat.Say(DestructionProcessing.originalCaller, Translate("wreckingball_reload_abort"), Color.yellow, "https://i.imgur.com/yP6buzW.png");
                 Logger.LogWarning(Translate("wreckingball_reload_abort"));
                 DestructionProcessing.Abort(WreckType.Wreck);
             }
@@ -89,10 +87,6 @@ namespace ApokPT.RocketPlugins
                 isUconomyPresent = true;
             if (IsDependencyLoaded("PlayerInfoLib"))
                 isPlayerInfoLibPresent = true;
-            if (isDynShopPresent)
-                isDynShopLoaded = IsDynShopLoaded();
-            if (isUconomyPresent)
-                isUconomyLoaded = IsUconomyLoaded();
             if (isPlayerInfoLibPresent)
                 isPlayerInfoLibLoaded = IsPlayerInfoLibLoaded();
         }
@@ -105,10 +99,6 @@ namespace ApokPT.RocketPlugins
                 Thread.Sleep(2000);
                 if (debug)
                     Logger.LogWarning("Checking plugin dependencies for WB plugin.");
-                if (plugin.Name == "DynShop")
-                    isDynShopLoaded = IsDynShopLoaded();
-                if (plugin.Name == "Uconomy")
-                    isUconomyLoaded = IsUconomyLoaded();
                 if (plugin.Name == "PlayerInfoLib")
                     isPlayerInfoLibLoaded = IsPlayerInfoLibLoaded();
                 if (debug)
@@ -136,16 +126,6 @@ namespace ApokPT.RocketPlugins
             return PlayerInfoLib.Instance.State == PluginState.Loaded && PlayerInfoLib.Database.Initialized;
         }
 
-        private bool IsDynShopLoaded()
-        {
-            return DShop.Instance.State == PluginState.Loaded && DShop.Instance.Database.IsLoaded;
-        }
-
-        private bool IsUconomyLoaded()
-        {
-            return Uconomy.Instance.State == PluginState.Loaded;
-        }
-
         private static void CheckCleanup()
         {
 
@@ -164,35 +144,6 @@ namespace ApokPT.RocketPlugins
             if (Instance.Configuration.Instance.CleanupPerInterval < 1)
             {
                 Instance.Configuration.Instance.CleanupPerInterval = 10;
-            }
-        }
-
-        public void VehicleBuyBack(InteractableVehicle vehicle)
-        {
-            try
-            {
-                if (vehicle.isLocked && vehicle.lockedOwner != CSteamID.Nil)
-                {
-                    VehicleInfo info = DShop.Instance.Database.GetVehicleInfo((ulong)vehicle.lockedOwner, vehicle.id);
-                    ShopObject svehicle = DShop.Instance.Database.GetItem(ItemType.Vehicle, vehicle.id);
-                    if (info != null && svehicle.ItemID == vehicle.id && svehicle.RestrictBuySell != RestrictBuySell.BuyOnly)
-                    {
-                        Uconomy.Instance.Database.CheckSetupAccount(vehicle.lockedOwner);
-                        Uconomy.Instance.Database.IncreaseBalance(vehicle.lockedOwner.ToString(), Math.Round(decimal.Multiply(svehicle.BuyCost, svehicle.SellMultiplier), 2));
-                        DShop.Instance.Database.DeleteVehicleInfo(info);
-                        bool getPInfo = WreckingBall.isPlayerInfoLibLoaded;
-                        Logger.Log(string.Format("Vehicle buyback successfull for: InstanceID: {0}, and Type: {1}({2}), at position: {3} , Sign By: {4}, Locked By: {5}.",
-                            vehicle.instanceID,
-                            vehicle.asset.vehicleName,
-                            vehicle.id, vehicle.transform.ToString(),
-                            DestructionProcessing.HasFlaggedElement(vehicle.transform, out ulong vFlagOwner) ? (getPInfo ? Instance.PInfoGenerateMessage(vFlagOwner) : vFlagOwner.ToString()) : "N/A",
-                            vehicle.isLocked ? (getPInfo ? Instance.PInfoGenerateMessage((ulong)vehicle.lockedOwner) : vehicle.lockedOwner.ToString()) : "N/A"));
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogException(ex, "There was an error with trying to process a vehicle buyback.");
             }
         }
 
@@ -244,7 +195,7 @@ namespace ApokPT.RocketPlugins
         {
             if (cmd.Length == 0 || cmd.Length > 1)
             {
-                UnturnedChat.Say(caller, Translate("werckingball_dcu_help"));
+                UnturnedChat.Say(caller, Translate("werckingball_dcu_help"), "https://i.imgur.com/FeIvao9.png");
                 return;
             }
             else
@@ -254,7 +205,7 @@ namespace ApokPT.RocketPlugins
                     UnturnedPlayer player = UnturnedPlayer.FromName(cmd[0]);
                     if (player == null)
                     {
-                        UnturnedChat.Say(caller, Translate("wreckingball_dcu_player_not_found"), Color.red);
+                        UnturnedChat.Say(caller, Translate("wreckingball_dcu_player_not_found"), Color.red, "https://i.imgur.com/FeIvao9.png");
                         return;
                     }
                     steamID = (ulong)player.CSteamID;
@@ -262,21 +213,21 @@ namespace ApokPT.RocketPlugins
                 PlayerData pData = PlayerInfoLib.Database.QueryById((CSteamID)steamID, false);
                 if (!pData.IsLocal())
                 {
-                    UnturnedChat.Say(caller, Translate("wreckingball_dcu_hasnt_played"), Color.red);
+                    UnturnedChat.Say(caller, Translate("wreckingball_dcu_hasnt_played"), Color.red, "https://i.imgur.com/FeIvao9.png");
                     return;
                 }
                 if (pData.CleanedBuildables && pData.CleanedPlayerData)
                 {
                     PlayerInfoLib.Database.SetOption(pData.SteamID, OptionType.Buildables, false);
                     PlayerInfoLib.Database.SetOption(pData.SteamID, OptionType.PlayerFiles, false);
-                    UnturnedChat.Say(caller, Translate("wreckingball_dcu_cleanup_enabled", pData.CharacterName, pData.SteamName, pData.SteamID));
+                    UnturnedChat.Say(caller, Translate("wreckingball_dcu_cleanup_enabled", pData.CharacterName, pData.SteamName, pData.SteamID), "https://i.imgur.com/yP6buzW.png");
 
                 }
                 else
                 {
                     PlayerInfoLib.Database.SetOption(pData.SteamID, OptionType.Buildables, true);
                     PlayerInfoLib.Database.SetOption(pData.SteamID, OptionType.PlayerFiles, true);
-                    UnturnedChat.Say(caller, Translate("wreckingball_dcu_cleanup_disabled", pData.CharacterName, pData.SteamName, pData.SteamID));
+                    UnturnedChat.Say(caller, Translate("wreckingball_dcu_cleanup_disabled", pData.CharacterName, pData.SteamName, pData.SteamID), "https://i.imgur.com/yP6buzW.png");
                 }
             }
         }
@@ -300,15 +251,15 @@ namespace ApokPT.RocketPlugins
                     if (report != "") report = report.Remove(report.Length - 1);
                     string type = reportDictionary.Key == BuildableType.VehicleElement ? "Vehicle Element" : "Element";
                     if (radius.IsNaN())
-                        UnturnedChat.Say(caller, Translate("wreckingball_scan_nan_check"));
-                    UnturnedChat.Say(caller, Translate("wreckingball_scan", totalCount, type, radius.ToString(), report));
+                        UnturnedChat.Say(caller, Translate("wreckingball_scan_nan_check"), "https://i.imgur.com/yP6buzW.png");
+                    UnturnedChat.Say(caller, Translate("wreckingball_scan", totalCount, type, radius.ToString(), report), "https://i.imgur.com/yP6buzW.png");
                     if (Instance.Configuration.Instance.LogScans && !(caller is ConsolePlayer))
                         Logger.Log(Translate("wreckingball_scan", totalCount, type, radius.ToString(), report));
                 }
             }
             else
             {
-                UnturnedChat.Say(caller, Translate("wreckingball_not_found", radius));
+                UnturnedChat.Say(caller, Translate("wreckingball_not_found", radius), "https://i.imgur.com/yP6buzW.png");
             }
 
 
@@ -320,7 +271,7 @@ namespace ApokPT.RocketPlugins
 
             if (StructureManager.regions.LongLength == 0 && BarricadeManager.BarricadeRegions.LongLength == 0)
             {
-                UnturnedChat.Say(caller, Translate("wreckingball_map_clear"));
+                UnturnedChat.Say(caller, Translate("wreckingball_map_clear"), "https://i.imgur.com/yP6buzW.png");
                 return;
             }
 
@@ -506,29 +457,29 @@ namespace ApokPT.RocketPlugins
                 player.Teleport(tpVector, player.Rotation);
                 return;
             }
-            UnturnedChat.Say(caller, Translate("wreckingball_teleport_not_found"));
+            UnturnedChat.Say(caller, Translate("wreckingball_teleport_not_found"), "https://i.imgur.com/FeIvao9.png");
         }
 
         internal void Instruct(IRocketPlayer caller)
         {
-            UnturnedChat.Say(caller, Translate("wreckingball_queued", DestructionProcessing.dIdxCount, DestructionProcessing.CalcProcessTime()));
+            UnturnedChat.Say(caller, Translate("wreckingball_queued", DestructionProcessing.dIdxCount, DestructionProcessing.CalcProcessTime()), "https://i.imgur.com/yP6buzW.png");
             if (DestructionProcessing.syncError)
-                UnturnedChat.Say(caller, Translate("wreckingball_sync_error"));
-            UnturnedChat.Say(caller, Translate("wreckingball_prompt"));
+                UnturnedChat.Say(caller, Translate("wreckingball_sync_error"), "https://i.imgur.com/FeIvao9.png");
+            UnturnedChat.Say(caller, Translate("wreckingball_prompt"), "https://i.imgur.com/yP6buzW.png");
         }
 
         internal void Confirm(IRocketPlayer caller)
         {
             if (DestructionProcessing.destroyList.Count <= 0)
             {
-                UnturnedChat.Say(caller, Instance.Translate("wreckingball_help"));
+                UnturnedChat.Say(caller, Instance.Translate("wreckingball_help"), "https://i.imgur.com/yP6buzW.png");
             }
             else
             {
                 DestructionProcessing.processing = true;
                 if (!(caller is ConsolePlayer))
                     DestructionProcessing.originalCaller = (UnturnedPlayer)caller;
-                UnturnedChat.Say(caller, Translate("wreckingball_initiated", DestructionProcessing.CalcProcessTime()));
+                UnturnedChat.Say(caller, Translate("wreckingball_initiated", DestructionProcessing.CalcProcessTime()), "https://i.imgur.com/yP6buzW.png");
                 Logger.Log(string.Format("Player {0} has initiated wreck.", caller is ConsolePlayer ? "Console" : ((UnturnedPlayer)caller).CharacterName + " [" + ((UnturnedPlayer)caller).SteamName + "] (" + ((UnturnedPlayer)caller).CSteamID.ToString() + ")"));
                 DestructionProcessing.dIdxCount = DestructionProcessing.destroyList.Count;
                 DestructionProcessing.dIdx = 0;

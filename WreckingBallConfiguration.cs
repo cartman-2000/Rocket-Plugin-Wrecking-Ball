@@ -32,7 +32,6 @@ namespace ApokPT.RocketPlugins
         public ushort MinElementCount = 6;
         public bool KeepVehiclesWithSigns = true;
         public bool EnableVehicleElementDrop = true;
-        public bool EnableVehicleBuyBack = false;
         public bool EnableDestroyedElementDrop = true;
 
         [XmlElement("VehicleSignFlag")]
