@@ -11,6 +11,7 @@ using System.Linq;
 using UnityEngine;
 
 using Logger = Rocket.Core.Logging.Logger;
+using Math = System.Math;
 
 namespace ApokPT.RocketPlugins
 {
@@ -76,9 +77,6 @@ namespace ApokPT.RocketPlugins
 
             float distance = 0;
             float vdistance = 0;
-            byte x;
-            byte y;
-            ushort plant;
             StructureRegion structureRegion;
             BarricadeRegion barricadeRegion;
 
@@ -111,7 +109,7 @@ namespace ApokPT.RocketPlugins
 
             foreach (InteractableVehicle vehicle in VehicleManager.vehicles)
             {
-                bool validVehicleElements = BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion);
+                bool validVehicleElements = BarricadeManager.tryGetPlant(vehicle.transform, out byte x, out byte y, out ushort plant, out barricadeRegion);
                 // Process Vehicles.
                 if ((Filter.Contains('V') || Filter.Contains('*')) && type != WreckType.Cleanup && type != WreckType.Counts && (flagtype == FlagType.Normal || (flagtype == FlagType.SteamID && vehicle.isLocked && vehicle.lockedOwner == (CSteamID)steamID)))
                 {
@@ -122,8 +120,7 @@ namespace ApokPT.RocketPlugins
                     {
                         for (int i = 1; i < vehicle.trainCars.Length; i++)
                         {
-                            BarricadeRegion barricadeRegion2 = null;
-                            if (BarricadeManager.tryGetPlant(vehicle.trainCars[i].root, out x, out y, out plant, out barricadeRegion2))
+                            if (BarricadeManager.tryGetPlant(vehicle.trainCars[i].root, out x, out y, out plant, out BarricadeRegion barricadeRegion2))
                             {
                                 float tcdistance = Vector3.Distance(vehicle.trainCars[i].root.position, position);
                                 if (tcdistance <= radius)
@@ -154,8 +151,7 @@ namespace ApokPT.RocketPlugins
                 {
                     for (int i = 1; i < vehicle.trainCars.Length; i++)
                     {
-                        BarricadeRegion barricadeRegion2 = null;
-                        if (BarricadeManager.tryGetPlant(vehicle.trainCars[i].root, out x, out y, out plant, out barricadeRegion2))
+                        if (BarricadeManager.tryGetPlant(vehicle.trainCars[i].root, out x, out y, out plant, out BarricadeRegion barricadeRegion2))
                             ProcessElements(caller, itemID, radius, type, flagtype, Filter, pInfoLibLoaded, barricadeRegion2, position, steamID, BuildableType.VehicleElement);
                     }
                 }
@@ -225,9 +221,9 @@ namespace ApokPT.RocketPlugins
             if (type == WreckType.Scan)
             {
                 if (distance <= 10)
-                    WreckingBall.ElementData.report(caller, itemID, distance, true, pInfoLibLoaded, data, buildType, count, lockedOwner, vindex);
+                    WreckingBall.ElementData.Report(caller, itemID, distance, true, pInfoLibLoaded, data, buildType, count, lockedOwner, vindex);
                 else
-                    WreckingBall.ElementData.report(caller, itemID, distance, false, pInfoLibLoaded, data, buildType);
+                    WreckingBall.ElementData.Report(caller, itemID, distance, false, pInfoLibLoaded, data, buildType);
             }
             else
             {
@@ -247,16 +243,13 @@ namespace ApokPT.RocketPlugins
 
         private static void ProcessElements(IRocketPlayer caller, ushort itemID, float radius, WreckType type, FlagType flagtype, List<char> Filter, bool pInfoLibLoaded, object region , Vector3 position, ulong steamID, BuildableType buildType)
         {
-            int transformCount = 0;
-            int DataCount = 0;
-            ulong owner = 0;
             StructureRegion sRegion = null;
             BarricadeRegion bRegion = null;
             BarricadeData bData = null;
             StructureData sData = null;
-            Transform transform = null;
-            ushort item = 0;
             bool isSRegion = region is StructureRegion;
+            int DataCount;
+            int transformCount;
             if (isSRegion)
             {
                 sRegion = region as StructureRegion;
@@ -272,7 +265,8 @@ namespace ApokPT.RocketPlugins
 
             for (int i = 0; i < transformCount; i++)
             {
-                transform = isSRegion ? sRegion.drops[i].model : bRegion.drops[i].model;
+                Transform transform = isSRegion ? sRegion.drops[i].model : bRegion.drops[i].model;
+                ulong owner;
                 if (i < DataCount)
                     if (isSRegion)
                     {
@@ -293,8 +287,8 @@ namespace ApokPT.RocketPlugins
                 float distance = Vector3.Distance(transform.position, position);
                 if (((!radius.IsNaN() && distance <= radius) || (radius.IsNaN() &&  (transform.position.x.IsNaN() || transform.position.y.IsNaN() || transform.position.z.IsNaN()))) && type != WreckType.Cleanup && type != WreckType.Counts)
                 {
-                    item = isSRegion ? sData.structure.id : bData.barricade.id;
-                    if (WreckingBall.ElementData.filterItem(item, Filter) || Filter.Contains('*') || flagtype == FlagType.ItemID)
+                    ushort item = isSRegion ? sData.structure.id : bData.barricade.id;
+                    if (WreckingBall.ElementData.FilterItem(item, Filter) || Filter.Contains('*') || flagtype == FlagType.ItemID)
                     {
                         if (flagtype == FlagType.Normal)
                             WreckProcess(caller, item, distance, pInfoLibLoaded, buildType, type, isSRegion ? (object)sData : bData, transform);
@@ -483,12 +477,8 @@ namespace ApokPT.RocketPlugins
 
         internal static bool HasFlaggedElement(Transform vehicleTransform, out ulong elementSteamID)
         {
-            byte x = 0;
-            byte y = 0;
-            ushort plant = 0;
-            BarricadeRegion barricadeRegion;
             elementSteamID = 0;
-            if (BarricadeManager.tryGetPlant(vehicleTransform, out x, out y, out plant, out barricadeRegion))
+            if (BarricadeManager.tryGetPlant(vehicleTransform, out _, out _, out _, out BarricadeRegion barricadeRegion))
             {
                 int transformCount = barricadeRegion.drops.Count;
                 int DataCount = barricadeRegion.barricades.Count;
@@ -499,7 +489,7 @@ namespace ApokPT.RocketPlugins
                     for (int e = 0; e < DataCount; e++)
                     {
                         bData = barricadeRegion.barricades[e];
-                        if (WreckingBall.ElementData.filterItem(bData.barricade.id, new List<char> { WreckingBall.Instance.Configuration.Instance.VehicleSignFlag }))
+                        if (WreckingBall.ElementData.FilterItem(bData.barricade.id, new List<char> { WreckingBall.Instance.Configuration.Instance.VehicleSignFlag }))
                         {
                             match = true;
                             elementSteamID = bData.owner;
@@ -522,7 +512,6 @@ namespace ApokPT.RocketPlugins
                 byte x = 0;
                 byte y = 0;
                 ushort plant = 0;
-                BarricadeRegion barricadeRegion;
                 foreach (InteractableVehicle vehicle in VehicleManager.vehicles)
                 {
                     if (vehicle.isDead)
@@ -530,7 +519,7 @@ namespace ApokPT.RocketPlugins
                     // Don't process trains with the cap, this can bug things up on a server.
                     if (vehicle.asset.engine == EEngine.TRAIN)
                         continue;
-                    if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out barricadeRegion))
+                    if (BarricadeManager.tryGetPlant(vehicle.transform, out x, out y, out plant, out BarricadeRegion barricadeRegion))
                         vList.Add(vehicle, barricadeRegion.drops.Count);
                     else
                         vList.Add(vehicle, 0);
@@ -558,8 +547,7 @@ namespace ApokPT.RocketPlugins
                             continue;
                         if (!vehicle.Key.isEmpty)
                             continue;
-                        ulong elementOwner = 0;
-                        bool hasSign = HasFlaggedElement(vehicle.Key.transform, out elementOwner);
+                        bool hasSign = HasFlaggedElement(vehicle.Key.transform, out ulong elementOwner);
                         if (useSafeGuards && (WreckingBall.Instance.Configuration.Instance.LowElementCountOnly || WreckingBall.Instance.Configuration.Instance.KeepVehiclesWithSigns))
                         {
                             if (WreckingBall.Instance.Configuration.Instance.LimitSafeGuards && v > Math.Round(WreckingBall.Instance.Configuration.Instance.MaxVehiclesAllowed * WreckingBall.Instance.Configuration.Instance.LimitSafeGuardsRatio + numToDestroy, 0))
@@ -582,12 +570,6 @@ namespace ApokPT.RocketPlugins
                         if (i > numToDestroy)
                             break;
                         Logger.Log(string.Format("Vehicle #{0}, with InstanceID: {1}, and Type: {5}({6}), at position: {2} destroyed, Element count: {3}, Sign By {7}, Locked By: {4}.", v, vehicle.Key.instanceID, vehicle.Key.transform.position.ToString(), vehicle.Value, vehicle.Key.isLocked ? (getPInfo ? WreckingBall.Instance.PInfoGenerateMessage((ulong)vehicle.Key.lockedOwner) : vehicle.Key.lockedOwner.ToString()) : "N/A", vehicle.Key.asset.vehicleName, vehicle.Key.asset.id, hasSign ? (getPInfo ? WreckingBall.Instance.PInfoGenerateMessage(elementOwner) : elementOwner.ToString()) : "N/A"));
-                        if (WreckingBall.Instance.Configuration.Instance.EnableVehicleBuyBack && WreckingBall.isDynShopLoaded && WreckingBall.isUconomyLoaded)
-                        {
-                            WreckingBall.Instance.VehicleBuyBack(vehicle.Key);
-                        }
-                        else if (WreckingBall.Instance.Configuration.Instance.EnableVehicleBuyBack)
-                            Logger.LogWarning("EnableVehicleBuyBack was enabled, but either/both the plugins, Uconomy and DynShop, aren't present/loaded.");
                         if (WreckingBall.Instance.Configuration.Instance.EnableVehicleElementDrop)
                             WreckingBall.Instance.VehicleElementDrop(vehicle.Key);
                         vehicle.Key.askDamage(ushort.MaxValue, false);
@@ -677,27 +659,16 @@ namespace ApokPT.RocketPlugins
                             // Output log entry if a vehicle is destroyed by a cleanup.
                             if (type == WreckType.Cleanup)
                             {
-                                ulong vFlagOwner = 0;
-                                byte x;
-                                byte y;
-                                ushort plant;
-                                BarricadeRegion barricadeRegion;
                                 bool getPInfo = WreckingBall.isPlayerInfoLibLoaded;
                                 Logger.Log(string.Format("Cleanup: Vehicle with InstanceID: {0}, and Type: {1}({2}), at position: {3} destroyed, Element count: {4}, Sign By: {5}, Locked By: {6}.",
                                     element.Vehicle.instanceID,
                                     element.Vehicle.asset.vehicleName,
                                     element.Vehicle.asset.id,
                                     element.Vehicle.transform.position.ToString(),
-                                    BarricadeManager.tryGetPlant(element.Vehicle.transform, out x, out y, out plant, out barricadeRegion) ? barricadeRegion.drops.Count : 0,
-                                    HasFlaggedElement(element.Vehicle.transform, out vFlagOwner) ? (getPInfo ? WreckingBall.Instance.PInfoGenerateMessage(vFlagOwner) : vFlagOwner.ToString()) : "N/A",
+                                    BarricadeManager.tryGetPlant(element.Vehicle.transform, out byte x, out byte y, out ushort plant, out BarricadeRegion barricadeRegion) ? barricadeRegion.drops.Count : 0,
+                                    HasFlaggedElement(element.Vehicle.transform, out ulong vFlagOwner) ? (getPInfo ? WreckingBall.Instance.PInfoGenerateMessage(vFlagOwner) : vFlagOwner.ToString()) : "N/A",
                                     element.Vehicle.isLocked ? (getPInfo ? WreckingBall.Instance.PInfoGenerateMessage((ulong)element.Vehicle.lockedOwner) : element.Vehicle.lockedOwner.ToString()) : "N/A")); 
                             }
-                            if (WreckingBall.Instance.Configuration.Instance.EnableVehicleBuyBack && WreckingBall.isDynShopLoaded && WreckingBall.isUconomyLoaded)
-                            {
-                                WreckingBall.Instance.VehicleBuyBack(element.Vehicle);
-                            }
-                            else if (WreckingBall.Instance.Configuration.Instance.EnableVehicleBuyBack)
-                                Logger.LogWarning("EnableVehicleBuyBack was enabled, but either/both the plugins, Uconomy and DynShop, aren't present/loaded.");
                             if (WreckingBall.Instance.Configuration.Instance.EnableVehicleElementDrop)
                             {
                                 if (element.Vehicle.asset.engine == EEngine.TRAIN && element.Vehicle.trainCars != null && element.Vehicle.trainCars.Count() > 1)

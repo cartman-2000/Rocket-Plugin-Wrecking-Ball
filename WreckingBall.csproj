@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <AssemblyVersion>3.7.0.2</AssemblyVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <Description>A plugin to clean up clutter on a server.</Description>
+    <Copyright>Cartman-2000 �  2015</Copyright>
+    <PackageProjectUrl>https://github.com/cartman-2000/Rocket-Plugin-Wrecking-Ball</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/cartman-2000/Rocket-Plugin-Wrecking-Ball</RepositoryUrl>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <Version>3.7.0.2</Version>
+    <PackageId>WreckingBall</PackageId>
+    <Authors>WreckingBall</Authors>
+    <Product>WreckingBall</Product>
+    <ProjectGuid>{23327B21-BC82-41B3-91AB-519427DB22BA}</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RootNamespace>WreckingBall</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Libraries\Unity\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Libraries\Unity\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="PlayerInfoLib, Version=1.3.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Libraries\aLP2 Plugins\PlayerInfoLib.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Rocket.API, Version=2.6.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Libraries\Rocket\Rocket.API.dll</HintPath>
+    </Reference>
+    <Reference Include="Rocket.Core, Version=2.4.8.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Libraries\Rocket\Rocket.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Rocket.Unturned, Version=4.9.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Libraries\Rocket\Rocket.Unturned.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Libraries\Unity\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Libraries\Unity\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Libraries\Unity\UnityEngine.PhysicsModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="WreckingBall\BuildableType.cs" />
+    <Compile Include="WreckingBall\Category.cs" />
+    <Compile Include="Commands\CommandDisableCleanup.cs" />
+    <Compile Include="Commands\CommandListTopPlayers.cs" />
+    <Compile Include="Commands\CommandListVehicles.cs" />
+    <Compile Include="Commands\CommandVEDrop.cs" />
+    <Compile Include="Commands\CommandWreck.cs" />
+    <Compile Include="WreckingBall\Destructable.cs" />
+    <Compile Include="WreckingBall\DestructionProcessing.cs" />
+    <Compile Include="WreckingBall\Element.cs" />
+    <Compile Include="WreckingBall\ElementDataManager.cs" />
+    <Compile Include="WreckingBall\ElementType.cs" />
+    <Compile Include="WreckingBall\Extensions.cs" />
+    <Compile Include="WreckingBall\FlagType.cs" />
+    <Compile Include="WreckingBall\TeleportType.cs" />
+    <Compile Include="WreckingBall.cs" />
+    <Compile Include="WreckingBallConfiguration.cs" />
+    <Compile Include="WreckingBall\WreckType.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

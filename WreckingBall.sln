@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.489
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28729.10
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WreckingBall", "WreckingBall\WreckingBall.csproj", "{190DF053-0E1B-4DF3-B24F-C52959E57BC6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WreckingBall", "WreckingBall.csproj", "{23327B21-BC82-41B3-91AB-519427DB22BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{190DF053-0E1B-4DF3-B24F-C52959E57BC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{190DF053-0E1B-4DF3-B24F-C52959E57BC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{190DF053-0E1B-4DF3-B24F-C52959E57BC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{190DF053-0E1B-4DF3-B24F-C52959E57BC6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23327B21-BC82-41B3-91AB-519427DB22BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23327B21-BC82-41B3-91AB-519427DB22BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23327B21-BC82-41B3-91AB-519427DB22BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23327B21-BC82-41B3-91AB-519427DB22BA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {8ADC542C-7EC3-48B4-8566-D2FAC9CB7B3E}
+		SolutionGuid = {87DC12E1-68F8-4125-9A9A-1AADA61BF71F}
 	EndGlobalSection
 EndGlobal

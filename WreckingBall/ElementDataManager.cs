@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using Logger = Rocket.Core.Logging.Logger;
+using Math = System.Math;
 
 namespace ApokPT.RocketPlugins
 {
@@ -60,12 +61,12 @@ namespace ApokPT.RocketPlugins
             }
         }
 
-        internal bool filterItem(ushort itemId, List<char> userRequest)
+        internal bool FilterItem(ushort itemId, List<char> userRequest)
         {
             return ((elements.ContainsKey(itemId) && userRequest.Contains(elements[itemId].CategoryId)) || (!elements.ContainsKey(itemId) && userRequest.Contains('!')));
         }
 
-        internal void report(IRocketPlayer caller, ushort itemId, float range, bool printConsole, bool getPinfo, object data, BuildableType type = BuildableType.Element, int count = 0, ulong lockedOwner = 0, int vindex = 0)
+        internal void Report(IRocketPlayer caller, ushort itemId, float range, bool printConsole, bool getPinfo, object data, BuildableType type = BuildableType.Element, int count = 0, ulong lockedOwner = 0, int vindex = 0)
         {
             Category cat;
             if (!elements.ContainsKey(itemId))
@@ -109,21 +110,18 @@ namespace ApokPT.RocketPlugins
             if (printConsole || !elements.ContainsKey(itemId))
             {
                 string stype = type == BuildableType.VehicleElement ? "Vehicle Element: " : "Element: ";
-                string msg = string.Empty;
                 ulong owner = 0;
                 InteractableVehicle vehicle = null;
-                StructureData sData = null;
-                BarricadeData bData = null;
                 string eName = string.Empty;
                 if (data is BarricadeData)
                 {
-                    bData = data as BarricadeData;
+                    BarricadeData bData = data as BarricadeData;
                     owner = bData.owner;
                     eName = bData.barricade.asset.itemName;
                 }
                 else if (data is StructureData)
                 {
-                    sData = data as StructureData;
+                    StructureData sData = data as StructureData;
                     owner = sData.owner;
                     eName = sData.structure.asset.itemName;
                 }
@@ -133,10 +131,11 @@ namespace ApokPT.RocketPlugins
                     itemId = vehicle.id;
                     eName = vehicle.asset.vehicleName;
                 }
+
+                string msg;
                 if (type == BuildableType.Vehicle)
                 {
-                    ulong signOwner = 0;
-                    DestructionProcessing.HasFlaggedElement(vindex > 0 ? vehicle.trainCars[vindex].root : vehicle.transform, out signOwner);
+                    DestructionProcessing.HasFlaggedElement(vindex > 0 ? vehicle.trainCars[vindex].root : vehicle.transform, out ulong signOwner);
                     msg = string.Format("{0}{1} (Id: {6}:{2}, Instance ID: {8}) @ {3}m, Barricade Count: {4}, Sign by: {7}, Locked By: {5}", stype, cat.Name, itemId, Math.Round(range, 2), count, lockedOwner > 0 ? getPinfo ? WreckingBall.Instance.PInfoGenerateMessage(lockedOwner) : lockedOwner.ToString() : "N/A", vindex > 0 ? "Train car#" + vindex : eName, signOwner > 0 ? getPinfo ? WreckingBall.Instance.PInfoGenerateMessage(signOwner) : signOwner.ToString() : "N/A", vehicle.instanceID.ToString());
                 }
                 else
