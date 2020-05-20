@@ -17,6 +17,7 @@ using System.Threading;
 using UnityEngine;
 using DatabaseManager = PlayerInfoLibrary.DatabaseManager;
 using Logger = Rocket.Core.Logging.Logger;
+using Math = System.Math;
 
 namespace ApokPT.RocketPlugins
 {
@@ -248,9 +249,8 @@ namespace ApokPT.RocketPlugins
             }
             else
             {
-                ulong steamID = 0;
                 UnturnedPlayer player = null;
-                if (!cmd[0].isCSteamID(out steamID))
+                if (!cmd[0].IsCSteamID(out ulong steamID))
                 {
                     player = UnturnedPlayer.FromName(cmd[0]);
                     if (player == null)
@@ -505,7 +505,7 @@ namespace ApokPT.RocketPlugins
             if(match)
             {
                 tpVector = new Vector3(current.position.x, teleportType == TeleportType.Vehicles ? current.position.y + 4 : current.position.y + 2, current.position.z);
-                player.Teleport(tpVector, player.Rotation);
+                player.Player.teleportToLocationUnsafe(tpVector, player.Rotation);
                 return;
             }
             UnturnedChat.Say(caller, Translate("wreckingball_teleport_not_found"));

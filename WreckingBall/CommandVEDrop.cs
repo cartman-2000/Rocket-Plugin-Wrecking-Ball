@@ -40,9 +40,8 @@ namespace ApokPT.RocketPlugins
                     getPInfo = true;
                 if (!raycastInfo.vehicle.isDead)
                 {
-                    ulong signOwner = 0;
                     bool showSignOwner = false;
-                    showSignOwner = DestructionProcessing.HasFlaggedElement(raycastInfo.transform, out signOwner);
+                    showSignOwner = DestructionProcessing.HasFlaggedElement(raycastInfo.transform, out ulong signOwner);
                     string signmsg = getPInfo ? WreckingBall.Instance.PInfoGenerateMessage(signOwner) : signOwner.ToString();
                     string lockedmsg = raycastInfo.vehicle.isLocked ? (!getPInfo || raycastInfo.vehicle.lockedOwner == CSteamID.Nil ? raycastInfo.vehicle.lockedOwner.ToString() : WreckingBall.Instance.PInfoGenerateMessage((ulong)raycastInfo.vehicle.lockedOwner)) : "N/A";
                     string msg = string.Format("Dropping elements off of vehicle: {0}({1}), InstanceID: {2}, Locked Owner: {3}, SignOwner {4}.", raycastInfo.vehicle.asset.name, raycastInfo.vehicle.id, raycastInfo.vehicle.instanceID,

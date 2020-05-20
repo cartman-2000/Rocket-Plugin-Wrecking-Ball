@@ -1,21 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net35;net40</TargetFrameworks>
-    <AssemblyVersion>3.7.0.2</AssemblyVersion>
+    <TargetFrameworks>net45</TargetFrameworks>
+    <AssemblyVersion>3.7.0.3</AssemblyVersion>
     <Description>A plugin to clean up clutter on a server.</Description>
     <Copyright>Cartman-2000 �  2015</Copyright>
     <PackageProjectUrl>https://github.com/cartman-2000/Rocket-Plugin-Wrecking-Ball</PackageProjectUrl>
     <RepositoryUrl>https://github.com/cartman-2000/Rocket-Plugin-Wrecking-Ball</RepositoryUrl>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <Version>3.7.0.2</Version>
+    <Version>3.7.0.3</Version>
     <PackageId>WreckingBall</PackageId>
     <Authors>WreckingBall</Authors>
     <Product>WreckingBall</Product>
   </PropertyGroup>
   
-  <!-- .NET 4.0 references, compilation flags and build options -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net40' ">		
+  <!-- .NET 4.x references, compilation flags and build options -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">		
       <Reference Include="lib.net4\Assembly-CSharp.dll">
         <Private>false</Private>
       </Reference>
@@ -32,31 +32,8 @@
         <Private>false</Private>
       </Reference>
   </ItemGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net40'">
-      <DefineConstants>NET40</DefineConstants>
-  </PropertyGroup>
-  
-    <!-- .NET 3.5 references, compilation flags and build options -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net35' ">		
-      <Reference Include="lib.net2\Assembly-CSharp.dll">
-        <Private>false</Private>
-      </Reference>
-      <Reference Include="lib.net2\Assembly-CSharp-firstpass.dll">
-        <Private>false</Private>
-      </Reference>
-      <Reference Include="lib.net2\UnityEngine.CoreModule.dll">
-        <Private>false</Private>
-      </Reference>
-      <Reference Include="lib.net2\UnityEngine.dll">
-        <Private>false</Private>
-      </Reference>
-      <Reference Include="lib.dynshop.net35\DynShop.dll">
-        <Private>false</Private>
-      </Reference>
-
-  </ItemGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net35'">
-      <DefineConstants>NET35</DefineConstants>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45'">
+      <DefineConstants>NET45</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

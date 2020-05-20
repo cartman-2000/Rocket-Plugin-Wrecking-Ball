@@ -112,20 +112,18 @@ namespace ApokPT.RocketPlugins
                                         break;
                                     }
                                 }
-                                ushort itemID = 0;
-                                if (ushort.TryParse(oper[1], out itemID))
+                                if (ushort.TryParse(oper[1], out ushort itemID))
                                     WreckingBall.Instance.Scan(caller, oper[1], Convert.ToSingle(oper[2]), position, FlagType.ItemID, 0, itemID);
                                 else
                                 {
                                     if (oper[2].ToLower() == "nan")
                                         WreckingBall.Instance.Scan(caller, oper[1], float.NaN, position, FlagType.Normal, 0, 0);
                                     else
-                                    WreckingBall.Instance.Scan(caller, oper[1], Convert.ToSingle(oper[2]), position, FlagType.Normal, 0, 0);
+                                        WreckingBall.Instance.Scan(caller, oper[1], Convert.ToSingle(oper[2]), position, FlagType.Normal, 0, 0);
                                 }
                             }
                             else if ((oper.Length == 4 && !(caller is ConsolePlayer)) || (oper.Length == 7 && caller is ConsolePlayer))
                             {
-                                ulong steamID = 0;
                                 if (caller is ConsolePlayer)
                                 {
                                     if (!cmd.GetVectorFromCmd(4, out position))
@@ -134,7 +132,7 @@ namespace ApokPT.RocketPlugins
                                         break;
                                     }
                                 }
-                                if (oper[1].isCSteamID(out steamID))
+                                if (oper[1].IsCSteamID(out ulong steamID))
                                     WreckingBall.Instance.Scan(caller, oper[2], Convert.ToSingle(oper[3]), position, FlagType.SteamID, (ulong)steamID, 0);
                                 else
                                     UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help_scan"));
@@ -153,7 +151,7 @@ namespace ApokPT.RocketPlugins
                             }
                             ulong ulSteamID = 0;
                             bool firstSteamID = false;
-                            if (oper.Length > 1 && oper[1].isCSteamID(out ulSteamID))
+                            if (oper.Length > 1 && oper[1].IsCSteamID(out ulSteamID))
                                 firstSteamID = true;
                             if (oper.Length > 1)
                             {
@@ -206,8 +204,7 @@ namespace ApokPT.RocketPlugins
                                         break;
                                     }
                                 }
-                                ushort itemID = 0;
-                                if (ushort.TryParse(oper[0], out itemID))
+                                if (ushort.TryParse(oper[0], out ushort itemID))
                                     DestructionProcessing.Wreck(caller, oper[0], Convert.ToSingle(oper[1]), position, WreckType.Wreck, FlagType.ItemID, 0, itemID);
                                 else
                                 {
@@ -227,8 +224,7 @@ namespace ApokPT.RocketPlugins
                                         break;
                                     }
                                 }
-                                ulong steamID = 0;
-                                if (oper[0].isCSteamID(out steamID))
+                                if (oper[0].IsCSteamID(out ulong steamID))
                                     DestructionProcessing.Wreck(caller, oper[1], Convert.ToSingle(oper[2]), position, WreckType.Wreck, FlagType.SteamID, steamID, 0);
                                 else
                                     UnturnedChat.Say(caller, WreckingBall.Instance.Translate("wreckingball_help"));
